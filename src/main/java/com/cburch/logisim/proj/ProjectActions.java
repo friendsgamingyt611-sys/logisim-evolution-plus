@@ -57,11 +57,13 @@ public final class ProjectActions {
     private final Loader loader;
     private final Project proj;
     private final boolean isStartupScreen;
+    private final SplashScreen monitor;
 
-    public CreateFrame(Loader loader, Project proj, boolean isStartup) {
+    public CreateFrame(Loader loader, Project proj, boolean isStartup, SplashScreen monitor) {
       this.loader = loader;
       this.proj = proj;
       this.isStartupScreen = isStartup;
+      this.monitor = monitor;
     }
 
     @Override
@@ -70,12 +72,17 @@ public final class ProjectActions {
         final var frame = createFrame(null, proj);
         frame.setVisible(true);
         frame.toFront();
+        // Close the splash screen now that the main window is visible
+        if (monitor != null) {
+          monitor.close();
+        }
         frame.getCanvas().requestFocus();
         loader.setParent(frame);
         if (isStartupScreen) {
           proj.setStartupScreen(true);
         }
       } catch (Exception e) {
+        if (monitor != null) monitor.close();
         final var result = new StringWriter();
         final var printWriter = new PrintWriter(result);
         e.printStackTrace(printWriter);
@@ -115,7 +122,8 @@ public final class ProjectActions {
     if (monitor != null) monitor.setProgress(SplashScreen.PROJECT_CREATE);
     final var ret = new Project(file);
     if (monitor != null) monitor.setProgress(SplashScreen.FRAME_CREATE);
-    SwingUtilities.invokeLater(new CreateFrame(loader, ret, isStartup));
+    // Pass the monitor into CreateFrame so it closes only after the frame is shown
+    SwingUtilities.invokeLater(new CreateFrame(loader, ret, isStartup, monitor));
     updatecircs(file, ret);
     return ret;
   }

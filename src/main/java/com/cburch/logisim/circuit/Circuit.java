@@ -532,7 +532,7 @@ public class Circuit {
   public Collection<Component> getAllWithin(Bounds bds) {
     final var ret = new LinkedHashSet<Component>();
     for (final var comp : getComponents()) {
-      if (bds.contains(comp.getBounds())) ret.add(comp);
+      if (bds.overlaps(comp.getBounds())) ret.add(comp);
     }
     return ret;
   }
@@ -540,7 +540,7 @@ public class Circuit {
   public Collection<Component> getAllWithin(Bounds bds, Graphics g) {
     final var ret = new LinkedHashSet<Component>();
     for (final var comp : getComponents()) {
-      if (bds.contains(comp.getBounds(g))) ret.add(comp);
+      if (bds.overlaps(comp.getBounds(g))) ret.add(comp);
     }
     return ret;
   }

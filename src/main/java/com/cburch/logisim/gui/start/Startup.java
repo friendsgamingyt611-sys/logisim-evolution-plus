@@ -1056,9 +1056,7 @@ public class Startup implements AWTEventListener {
     if (filesToOpen.isEmpty()) {
       proj = ProjectActions.doNew(monitor);
       proj.setStartupScreen(true);
-      if (showSplash) {
-        monitor.close();
-      }
+      // monitor is now closed by CreateFrame after the main window becomes visible
     } else {
       var numOpened = 0;
       var first = true;
@@ -1096,9 +1094,7 @@ public class Startup implements AWTEventListener {
         }
         if (first) {
           first = false;
-          if (showSplash) {
-            monitor.close();
-          }
+          // monitor is now closed by CreateFrame after the main window becomes visible
           monitor = null;
         }
       }
