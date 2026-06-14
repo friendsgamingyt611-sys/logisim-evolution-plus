@@ -142,7 +142,7 @@ public class Selection extends SelectionBase {
   public Collection<Component> getComponentsWithin(Bounds bds) {
     final var ret = new HashSet<Component>();
     for (final var comp : unionSet) {
-      if (bds.contains(comp.getBounds())) ret.add(comp);
+      if (bds.overlaps(comp.getBounds())) ret.add(comp);
     }
     return ret;
   }
@@ -150,7 +150,7 @@ public class Selection extends SelectionBase {
   public Collection<Component> getComponentsWithin(Bounds bds, Graphics g) {
     final var ret = new HashSet<Component>();
     for (final var comp : unionSet) {
-      if (bds.contains(comp.getBounds(g))) ret.add(comp);
+      if (bds.overlaps(comp.getBounds(g))) ret.add(comp);
     }
     return ret;
   }

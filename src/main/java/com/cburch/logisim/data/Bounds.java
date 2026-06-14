@@ -228,6 +228,11 @@ public class Bounds {
     return (x1 < x0 || y1 < y0) ? EMPTY_BOUNDS : create(x0, y0, x1 - x0, y1 - y0);
   }
 
+  /** Returns true if this bounds overlaps (intersects) with the other bounds area. */
+  public boolean overlaps(Bounds other) {
+    return intersect(other) != EMPTY_BOUNDS;
+  }
+
   // rotates this around (xc,yc) assuming that this is facing in the
   // from direction and the returned bounds should face in the to direction.
   public Bounds rotate(Direction from, Direction to, int xc, int yc) {

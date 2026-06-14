@@ -12,11 +12,13 @@ package com.cburch.logisim.gui.start;
 import static com.cburch.logisim.gui.Strings.S;
 
 import com.cburch.logisim.generated.BuildInfo;
+import java.awt.BasicStroke;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.FontMetrics;
+import java.awt.GradientPaint;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
@@ -65,21 +67,20 @@ public class SplashScreen extends JWindow {
   public SplashScreen() {
     setName(BuildInfo.displayName);
 
-    // Use a clean gradient-style panel
     final var imagePanel = new SplashPanel();
-    imagePanel.setPreferredSize(new Dimension(480, 280));
+    imagePanel.setPreferredSize(new Dimension(520, 300));
 
     progress.setStringPainted(true);
-    progress.setForeground(new Color(0x4a, 0x90, 0xd9));
-    progress.setBackground(new Color(0xe0, 0xe0, 0xe0));
+    progress.setForeground(new Color(0x4a, 0xd4, 0xff));
+    progress.setBackground(new Color(0x1a, 0x2a, 0x3a));
     progress.setBorder(null);
-    progress.setFont(new Font("SansSerif", Font.PLAIN, 12));
+    progress.setFont(new Font("SansSerif", Font.PLAIN, 11));
     progress.setString("");
 
     final var contents = new JPanel(new BorderLayout());
     contents.add(imagePanel, BorderLayout.CENTER);
     contents.add(progress, BorderLayout.SOUTH);
-    contents.setBorder(BorderFactory.createLineBorder(new Color(0x4a, 0x90, 0xd9), 2));
+    contents.setBorder(BorderFactory.createLineBorder(new Color(0x4a, 0xd4, 0xff, 180), 2));
 
     setContentPane(contents);
     pack();
@@ -127,13 +128,18 @@ public class SplashScreen extends JWindow {
   }
 
   /**
-   * Draws a clean centered splash panel with app name, version, and loading indicator.
+   * Draws a premium dark-themed splash panel with circuit board aesthetic.
    */
   private static class SplashPanel extends JPanel {
     private static final long serialVersionUID = 1L;
 
+    // Accent color
+    private static final Color ACCENT = new Color(0x4a, 0xd4, 0xff);
+    private static final Color BG_TOP = new Color(0x0d, 0x1b, 0x2a);
+    private static final Color BG_BOT = new Color(0x1a, 0x2e, 0x44);
+
     SplashPanel() {
-      setBackground(new Color(0xf5, 0xf5, 0xf5));
+      setBackground(BG_TOP);
     }
 
     @Override
@@ -142,34 +148,92 @@ public class SplashScreen extends JWindow {
       final var g2 = (Graphics2D) g;
       g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
       g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+      g2.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
 
       final var w = getWidth();
       final var h = getHeight();
 
-      // App name - large centered
-      g2.setColor(new Color(0x2c, 0x2c, 0x2c));
-      g2.setFont(new Font("SansSerif", Font.BOLD, 28));
-      final var nameFm = g2.getFontMetrics();
-      final var nameStr = BuildInfo.name;
-      g2.drawString(nameStr, (w - nameFm.stringWidth(nameStr)) / 2, h / 2 - 30);
+      // --- Background gradient ---
+      final var grad = new GradientPaint(0, 0, BG_TOP, 0, h, BG_BOT);
+      g2.setPaint(grad);
+      g2.fillRect(0, 0, w, h);
 
-      // Version - smaller below
-      g2.setColor(new Color(0x66, 0x66, 0x66));
+      // --- Subtle grid lines (circuit board feel) ---
+      g2.setColor(new Color(0xff, 0xff, 0xff, 12));
+      g2.setStroke(new BasicStroke(0.5f));
+      for (int x = 0; x < w; x += 20) g2.drawLine(x, 0, x, h);
+      for (int y = 0; y < h; y += 20) g2.drawLine(0, y, w, y);
+
+      // --- Corner accent brackets ---
+      g2.setColor(ACCENT);
+      g2.setStroke(new BasicStroke(2f));
+      final int cs = 18; // corner size
+      final int cm = 10; // corner margin
+      // top-left
+      g2.drawLine(cm, cm, cm + cs, cm);
+      g2.drawLine(cm, cm, cm, cm + cs);
+      // top-right
+      g2.drawLine(w - cm - cs, cm, w - cm, cm);
+      g2.drawLine(w - cm, cm, w - cm, cm + cs);
+      // bottom-left
+      g2.drawLine(cm, h - cm, cm + cs, h - cm);
+      g2.drawLine(cm, h - cm - cs, cm, h - cm);
+      // bottom-right
+      g2.drawLine(w - cm - cs, h - cm, w - cm, h - cm);
+      g2.drawLine(w - cm, h - cm - cs, w - cm, h - cm);
+
+      // --- Decorative circuit nodes (small dots) ---
+      g2.setColor(new Color(ACCENT.getRed(), ACCENT.getGreen(), ACCENT.getBlue(), 60));
+      final int[] nodeX = {50, 80, w - 60, w - 90, 50, w - 70};
+      final int[] nodeY = {50, 80, 50, 80, h - 60, h - 60};
+      for (int i = 0; i < nodeX.length; i++) {
+        g2.fillOval(nodeX[i] - 4, nodeY[i] - 4, 8, 8);
+        g2.setColor(new Color(ACCENT.getRed(), ACCENT.getGreen(), ACCENT.getBlue(), 30));
+        g2.fillOval(nodeX[i] - 8, nodeY[i] - 8, 16, 16);
+        g2.setColor(new Color(ACCENT.getRed(), ACCENT.getGreen(), ACCENT.getBlue(), 60));
+      }
+
+      // --- App name ---
+      g2.setColor(Color.WHITE);
+      g2.setFont(new Font("SansSerif", Font.BOLD, 32));
+      FontMetrics nameFm = g2.getFontMetrics();
+      final var nameStr = BuildInfo.name;
+      final int nameX = (w - nameFm.stringWidth(nameStr)) / 2;
+      final int nameY = h / 2 - 28;
+      // Glow effect
+      g2.setColor(new Color(ACCENT.getRed(), ACCENT.getGreen(), ACCENT.getBlue(), 40));
+      g2.setFont(new Font("SansSerif", Font.BOLD, 34));
+      g2.drawString(nameStr, nameX - 1, nameY + 1);
+      g2.setFont(new Font("SansSerif", Font.BOLD, 32));
+      g2.setColor(Color.WHITE);
+      g2.drawString(nameStr, nameX, nameY);
+
+      // --- Accent underline below title ---
+      g2.setColor(ACCENT);
+      g2.setStroke(new BasicStroke(2f));
+      final int ulW = nameFm.stringWidth(nameStr) + 40;
+      g2.drawLine((w - ulW) / 2, nameY + 8, (w + ulW) / 2, nameY + 8);
+
+      // --- Version ---
+      g2.setColor(new Color(ACCENT.getRed(), ACCENT.getGreen(), ACCENT.getBlue(), 220));
       g2.setFont(new Font("SansSerif", Font.PLAIN, 14));
       final var verStr = "v" + BuildInfo.version;
       final var verFm = g2.getFontMetrics();
-      g2.drawString(verStr, (w - verFm.stringWidth(verStr)) / 2, h / 2);
+      g2.drawString(verStr, (w - verFm.stringWidth(verStr)) / 2, nameY + 34);
 
-      // Loading text - subtle at bottom
-      g2.setColor(new Color(0x99, 0x99, 0x99));
+      // --- Tagline ---
+      g2.setColor(new Color(0xbb, 0xcc, 0xdd, 180));
+      g2.setFont(new Font("SansSerif", Font.ITALIC, 12));
+      final var tagStr = "Digital Logic Design & Simulation";
+      final var tagFm = g2.getFontMetrics();
+      g2.drawString(tagStr, (w - tagFm.stringWidth(tagStr)) / 2, nameY + 58);
+
+      // --- "Starting..." text at bottom ---
+      g2.setColor(new Color(0x88, 0x99, 0xaa, 200));
       g2.setFont(new Font("SansSerif", Font.PLAIN, 11));
       final var loadStr = S.get("progressStarting");
       final var loadFm = g2.getFontMetrics();
-      g2.drawString(loadStr, (w - loadFm.stringWidth(loadStr)) / 2, h - 20);
-
-      // Small accent line
-      g2.setColor(new Color(0x4a, 0x90, 0xd9));
-      g2.fillRect(w / 4, h - 10, w / 2, 3);
+      g2.drawString(loadStr, (w - loadFm.stringWidth(loadStr)) / 2, h - 14);
     }
   }
 
