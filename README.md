@@ -1,8 +1,8 @@
-[![Logisim-evolution](docs/img/logisim-evolution-logo.png)](https://github.com/logisim-evolution/logisim-evolution)
+[![Logisim-evolution+](docs/img/logisim-evolution-logo.png)](https://github.com/logisim-evolution/logisim-evolution)
 
 ---
 
-# Logisim-evolution #
+# Logisim-evolution+ #
 
 * **Table of contents**
   * [Features](#features)
