@@ -1,77 +1,69 @@
 # Logisim-evolution+
 
-Logisim-evolution+ is a new public fork derived from the original Logisim-evolution project.
-This repository is maintained independently and is not the official upstream Logisim-evolution project.
+Logisim-evolution+ is an independent, public fork that continues development
+from code originally released under the GNU General Public License version 3
+(GPLv3). This repository is maintained separately and is not the official
+upstream Logisim-evolution project.
 
-## About
+## Short summary
 
 Logisim-evolution+ is a Java-based digital logic design and simulation tool.
-It focuses on improved canvas interaction, smoother zoom and pan behavior, and a clean open-source development path.
+This fork focuses on improved canvas interactions (smoother pan and
+cursor-anchored zoom), usability refinements, and an explicit, public
+development path under GPLv3.
 
-This code is released under the GNU General Public License version 3 (GPLv3).
-Because this project is derived from GPL-licensed work, its source and releases are also covered by GPLv3.
+## Licensing and copyright
 
-## What this means
+- This repository contains code derived from GPLv3-licensed work.
+- The project and all contributed code in this repository are distributed
+	under the terms of the GNU General Public License version 3 (GPLv3).
+- Original contributors to the upstream project retain their copyrights
+	and their work remains subject to the original GPLv3 terms.
 
-The GPLv3 license allows anyone to:
+What GPLv3 means in practice:
 
-- use the software,
-- inspect and modify the source code,
-- share the software with others,
-- distribute modified versions,
-- and even sell the software.
+- You are free to use, study, modify, and distribute the software.
+- If you distribute the software (or a derivative work), you must make the
+	corresponding source available and license the distributed work under
+	GPLv3 as well.
+- You must preserve copyright and license notices for the parts you
+	distribute, and provide the same rights to downstream recipients.
 
-The GPLv3 also requires that any distribution of this code or any derivative work must:
+For the full license text, see the `LICENSE` file included in this
+repository.
 
-- include or make source code available,
-- remain licensed under GPLv3,
-- preserve the same freedoms for downstream users,
-- and retain original copyright and license notices.
+## Building and running
 
-Because this repository is derived from the original Logisim-evolution codebase, the original contributors retain their copyrights.
-
-## Build and run
-
-### Requirements
+Requirements:
 
 - Java 21 or newer
-- A Unix-like shell on Linux/macOS, or an appropriate shell on Windows
 
-### Build
+Build:
 
 ```bash
 ./gradlew shadowJar
 ```
 
-### Run
+Run (after building):
 
 ```bash
 ./logisim-evolution+
 ```
 
-### Help
+Show runtime help:
 
 ```bash
 ./logisim-evolution+ --help
 ```
 
-## Project goals
+## Contributing
 
-- Provide a responsive canvas experience with cursor-anchored zoom.
-- Improve zoom and pan control behavior.
-- Keep the code open and under GPLv3.
-
-## License
-
-This project is licensed under the GNU General Public License version 3 (GPLv3).
-See `LICENSE` for the full license text.
-
-## Contributions
-
-Contributions to this repository are expected to be made under GPLv3.
-By contributing, you agree that your changes will be licensed under the same GPLv3 terms.
+By contributing to this repository you agree to license your contributions
+under GPLv3. Please include clear contributor licensing information in your
+pull requests and follow the repository contribution guidelines.
 
 ## Disclaimer
 
-This repository is a public fork and is not affiliated with the original Logisim-evolution project.
-The original Logisim-evolution codebase and its contributors retain their copyrights.
+This repository is a separate public fork and is not affiliated with the
+original Logisim-evolution project. The original Logisim-evolution
+contributors retain their copyrights and their code remains under GPLv3.
