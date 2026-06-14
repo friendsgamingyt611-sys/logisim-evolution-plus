@@ -43,6 +43,7 @@ import com.cburch.logisim.proj.ProjectEvent;
 import com.cburch.logisim.proj.ProjectListener;
 import com.cburch.logisim.tools.AddTool;
 import com.cburch.logisim.tools.EditTool;
+import com.cburch.logisim.tools.WiringTool;
 import com.cburch.logisim.tools.Library;
 import com.cburch.logisim.tools.MenuTool;
 import com.cburch.logisim.tools.PokeTool;
@@ -62,6 +63,7 @@ import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.RenderingHints;
+import java.awt.image.BufferedImage;
 import java.awt.event.AdjustmentEvent;
 import java.awt.event.AdjustmentListener;
 import java.awt.event.InputEvent;
@@ -118,6 +120,11 @@ public class Canvas extends JPanel implements LocaleListener, CanvasPaneContents
   private CanvasPane canvasPane;
   private Bounds oldPreferredSize;
   private volatile boolean inPaint = false; // only for within paintComponent
+  // Micro view overlay while holding mouse in wiring/edit modes
+  private volatile boolean microViewVisible = false;
+  private volatile Point microViewPoint = new Point(0, 0);
+  private static final int MICRO_VIEW_SIZE = 120; // pixels (square)
+  private static final double MICRO_VIEW_MAG = 3.0; // magnification
 
   public Canvas(Project proj) {
     this.proj = proj;
@@ -504,12 +511,74 @@ public class Canvas extends JPanel implements LocaleListener, CanvasPaneContents
       if (canvasPane == null) {
         viewport.paintContents(g);
       }
+      // draw micro view if active (after main content)
+      if (microViewVisible) {
+        try {
+          drawMicroView(g);
+        } catch (Exception ignored) {
+          // don't break painting on overlay errors
+        }
+      }
     } finally {
       synchronized (repaintLock) {
         inPaint = false;
         repaintLock.notifyAll();
       }
       paintCoordinator.repaintCompleted();
+    }
+  }
+
+  private void drawMicroView(final Graphics g) {
+    final int w = getWidth();
+    final int h = getHeight();
+    if (w <= 0 || h <= 0) return;
+
+    // render current canvas contents into an offscreen image
+    final BufferedImage full = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
+    final Graphics2D gf = full.createGraphics();
+    try {
+      // match antialiasing preferences
+      if (AppPreferences.AntiAliassing.getBoolean()) {
+        gf.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        gf.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+      }
+      // paint scaled contents to the offscreen image
+      painter.paintContents(gf, proj);
+    } finally {
+      gf.dispose();
+    }
+
+    // compute source rect (centered on microViewPoint) and scale it up
+    final int box = MICRO_VIEW_SIZE;
+    final double mag = MICRO_VIEW_MAG;
+    final int srcHalf = Math.max(8, (int) Math.round(box / (2.0 * mag)));
+    final int cx = microViewPoint.x;
+    final int cy = microViewPoint.y;
+    int sx = Math.max(0, Math.min(w - srcHalf * 2, cx - srcHalf));
+    int sy = Math.max(0, Math.min(h - srcHalf * 2, cy - srcHalf));
+
+    final BufferedImage src = full.getSubimage(sx, sy, Math.min(full.getWidth() - sx, srcHalf * 2), Math.min(full.getHeight() - sy, srcHalf * 2));
+
+    // destination position: offset a little from cursor to avoid covering it
+    int dx = cx + 16;
+    int dy = cy + 16;
+    // keep inside canvas
+    if (dx + box > w) dx = cx - 16 - box;
+    if (dy + box > h) dy = cy - 16 - box;
+
+    final Graphics2D g2 = (Graphics2D) g.create();
+    try {
+      g2.setColor(new Color(255, 255, 255, 240));
+      g2.fillRoundRect(dx - 4, dy - 4, box + 8, box + 8, 10, 10);
+      g2.setColor(Color.BLACK);
+      g2.drawRoundRect(dx - 4, dy - 4, box + 8, box + 8, 10, 10);
+      g2.drawImage(src, dx, dy, box, box, null);
+      // crosshair in center
+      g2.setColor(Color.RED);
+      g2.drawLine(dx + box / 2 - 8, dy + box / 2, dx + box / 2 + 8, dy + box / 2);
+      g2.drawLine(dx + box / 2, dy + box / 2 - 8, dx + box / 2, dy + box / 2 + 8);
+    } finally {
+      g2.dispose();
     }
   }
 
@@ -809,6 +878,11 @@ public class Canvas extends JPanel implements LocaleListener, CanvasPaneContents
         double zoomFactor = zoomModel.getZoomFactor();
         scrollRectToVisible(
             new Rectangle((int) (e.getX() * zoomFactor), (int) (e.getY() * zoomFactor), 1, 1));
+        // update micro-view position while dragging
+        if (microViewVisible) {
+          microViewPoint = new Point(e.getX(), e.getY());
+          repaint();
+        }
       }
     }
 
@@ -893,6 +967,13 @@ public class Canvas extends JPanel implements LocaleListener, CanvasPaneContents
           }
           completeAction();
         }
+        // show micro-view when left-button is held in wiring/edit modes
+        if (e.getButton() == MouseEvent.BUTTON1
+            && (dragTool instanceof WiringTool || dragTool instanceof EditTool)) {
+          microViewVisible = true;
+          microViewPoint = new Point(e.getX(), e.getY());
+          repaint();
+        }
       }
     }
 
@@ -912,6 +993,11 @@ public class Canvas extends JPanel implements LocaleListener, CanvasPaneContents
       if (dragTool != null) {
         dragTool.mouseReleased(Canvas.this, getGraphics(), e);
         dragTool = null;
+      }
+      // hide micro-view on release
+      if (microViewVisible) {
+        microViewVisible = false;
+        repaint();
       }
       if (tempTool != null) {
         proj.setTool(tempTool);
