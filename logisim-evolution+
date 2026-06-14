@@ -1,0 +1,24 @@
+#!/bin/bash
+# Logisim-evolution+ launcher
+# Uses Java 21+ to run the pre-built jar
+
+# Resolve symlink to get the real project directory
+SCRIPT_SOURCE="${BASH_SOURCE[0]}"
+while [ -h "$SCRIPT_SOURCE" ]; do
+  SCRIPT_DIR="$(cd "$(dirname "$SCRIPT_SOURCE")" && pwd)"
+  SCRIPT_SOURCE="$(readlink "$SCRIPT_SOURCE")"
+  [[ $SCRIPT_SOURCE != /* ]] && SCRIPT_SOURCE="$SCRIPT_DIR/$SCRIPT_SOURCE"
+done
+SCRIPT_DIR="$(cd "$(dirname "$SCRIPT_SOURCE")" && pwd)"
+JAR="$SCRIPT_DIR/build/libs/logisim-evolution+-4.2.0dev-all.jar"
+
+# Prefer Java 21 if available
+if [ -x /usr/lib/jvm/java-21-openjdk-amd64/bin/java ]; then
+    JAVA=/usr/lib/jvm/java-21-openjdk-amd64/bin/java
+elif [ -x /usr/lib/jvm/java-21-openjdk/bin/java ]; then
+    JAVA=/usr/lib/jvm/java-21-openjdk/bin/java
+else
+    JAVA=java
+fi
+
+exec "$JAVA" -jar "$JAR" "$@"
