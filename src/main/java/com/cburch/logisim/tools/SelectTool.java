@@ -13,8 +13,10 @@ import static com.cburch.logisim.tools.Strings.S;
 
 import com.cburch.logisim.LogisimVersion;
 import com.cburch.logisim.circuit.ReplacementMap;
+import com.cburch.logisim.circuit.Wire;
 import com.cburch.logisim.comp.Component;
 import com.cburch.logisim.comp.ComponentDrawContext;
+import com.cburch.logisim.comp.EndData;
 import com.cburch.logisim.data.AttributeSet;
 import com.cburch.logisim.data.Bounds;
 import com.cburch.logisim.data.Location;
@@ -434,7 +436,17 @@ public class SelectTool extends Tool {
 
     // if the user clicks into the selection,
     // selection is being modified
-    final var inSel = sel.getComponentsContaining(start, g);
+    java.util.Collection<Component> inSel = sel.getComponentsContaining(start, g);
+    if (!inSel.isEmpty()) {
+      final var filteredInSel = new java.util.ArrayList<Component>();
+      for (final var comp : inSel) {
+        if (!isClickOnComponentPin(comp, start)) {
+          filteredInSel.add(comp);
+        }
+      }
+      inSel = filteredInSel;
+    }
+
     if (!inSel.isEmpty()) {
       if ((e.getModifiersEx() & InputEvent.SHIFT_DOWN_MASK) == 0) {
         setState(proj, MOVING);
@@ -450,10 +462,27 @@ public class SelectTool extends Tool {
 
     // if the user clicks into a component outside selection, user wants to add/reset selection
     final var circuit = canvas.getCircuit();
-    final var clicked = circuit.getAllContaining(start, g);
+    java.util.Collection<Component> clicked = circuit.getAllContaining(start, g);
+    if (!clicked.isEmpty()) {
+      final var filteredClicked = new java.util.ArrayList<Component>();
+      for (final var comp : clicked) {
+        if (!isClickOnComponentPin(comp, start)) {
+          filteredClicked.add(comp);
+        }
+      }
+      clicked = filteredClicked;
+    }
+
     if (!clicked.isEmpty()) {
       if ((e.getModifiersEx() & InputEvent.SHIFT_DOWN_MASK) == 0) {
-        if (sel.getComponentsContaining(start).isEmpty()) {
+        var hasNonPinInSel = false;
+        for (final var comp : sel.getComponentsContaining(start)) {
+          if (!isClickOnComponentPin(comp, start)) {
+            hasNonPinInSel = true;
+            break;
+          }
+        }
+        if (!hasNonPinInSel) {
           final var act = SelectionActions.dropAll(sel);
           if (act != null) {
             proj.doAction(act);
@@ -640,5 +669,20 @@ public class SelectTool extends Tool {
     final var shiftReleased = (modsEx & MouseEvent.SHIFT_DOWN_MASK) == 0;
     final var defaultValue = AppPreferences.MOVE_KEEP_CONNECT.getBoolean();
     return shiftReleased ? defaultValue : !defaultValue;
+  }
+
+  private boolean isClickOnComponentPin(Component comp, Location start) {
+    if (comp instanceof Wire) {
+      return false;
+    }
+    int snapX = Canvas.snapXToGrid(start.getX());
+    int snapY = Canvas.snapYToGrid(start.getY());
+    Location snap = Location.create(snapX, snapY, false);
+    for (EndData end : comp.getEnds()) {
+      if (end.getLocation().equals(snap)) {
+        return true;
+      }
+    }
+    return false;
   }
 }

@@ -43,6 +43,7 @@ import com.cburch.logisim.proj.ProjectEvent;
 import com.cburch.logisim.proj.ProjectListener;
 import com.cburch.logisim.tools.AddTool;
 import com.cburch.logisim.tools.EditTool;
+import com.cburch.logisim.tools.SelectTool;
 import com.cburch.logisim.tools.WiringTool;
 import com.cburch.logisim.tools.Library;
 import com.cburch.logisim.tools.MenuTool;
@@ -548,12 +549,14 @@ public class Canvas extends JPanel implements LocaleListener, CanvasPaneContents
       gf.dispose();
     }
 
-    // compute source rect (centered on microViewPoint) and scale it up
+    // compute source rect (centered on microViewPoint scaled to screen coordinates)
+    final double zoom = getZoomFactor();
+    final int cx = (int) Math.round(microViewPoint.x * zoom);
+    final int cy = (int) Math.round(microViewPoint.y * zoom);
+
     final int box = MICRO_VIEW_SIZE;
     final double mag = MICRO_VIEW_MAG;
     final int srcHalf = Math.max(8, (int) Math.round(box / (2.0 * mag)));
-    final int cx = microViewPoint.x;
-    final int cy = microViewPoint.y;
     int sx = Math.max(0, Math.min(w - srcHalf * 2, cx - srcHalf));
     int sy = Math.max(0, Math.min(h - srcHalf * 2, cy - srcHalf));
 
@@ -967,9 +970,9 @@ public class Canvas extends JPanel implements LocaleListener, CanvasPaneContents
           }
           completeAction();
         }
-        // show micro-view when left-button is held in wiring/edit modes
+        // show micro-view when left-button is held in wiring/edit/select modes
         if (e.getButton() == MouseEvent.BUTTON1
-            && (dragTool instanceof WiringTool || dragTool instanceof EditTool)) {
+            && (dragTool instanceof WiringTool || dragTool instanceof EditTool || dragTool instanceof SelectTool)) {
           microViewVisible = true;
           microViewPoint = new Point(e.getX(), e.getY());
           repaint();
