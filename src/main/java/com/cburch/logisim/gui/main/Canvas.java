@@ -1303,14 +1303,6 @@ public class Canvas extends JPanel implements LocaleListener, CanvasPaneContents
         }
       }
 
-      if (!proj.getSimulator().isAutoPropagating()) {
-        g.setColor(SINGLE_STEP_MSG_COLOR);
-        final var old = g.getFont();
-        g.setFont(SINGLE_STEP_MSG_FONT);
-        g.drawString(proj.getSimulator().getSingleStepMessage(), 10, 15);
-        g.setFont(old);
-      }
-
       g.setColor(Color.BLACK);
     }
 

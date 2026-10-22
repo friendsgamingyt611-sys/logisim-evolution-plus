@@ -31,8 +31,13 @@ public class ProjectExplorerLibraryNode extends ProjectExplorerModel.Node<Librar
   private LogisimFile file;
   private JTree guiElement = null;
   private final boolean showMouseTools;
+  private final boolean includeCircuits;
 
   ProjectExplorerLibraryNode(ProjectExplorerModel model, Library lib, JTree gui, boolean showMouseTools) {
+    this(model, lib, gui, showMouseTools, true);
+  }
+
+  ProjectExplorerLibraryNode(ProjectExplorerModel model, Library lib, JTree gui, boolean showMouseTools, boolean includeCircuits) {
     super(model, lib);
     guiElement = gui;
     if (lib instanceof LogisimFile) {
@@ -40,6 +45,7 @@ public class ProjectExplorerLibraryNode extends ProjectExplorerModel.Node<Librar
       file.addLibraryListener(this);
     }
     this.showMouseTools = showMouseTools;
+    this.includeCircuits = includeCircuits;
     buildChildren();
   }
 
@@ -48,11 +54,15 @@ public class ProjectExplorerLibraryNode extends ProjectExplorerModel.Node<Librar
     if (lib != null) {
       final var showLib = (showMouseTools & lib instanceof BaseLibrary) || !lib.isHidden();
       if (showLib) {
-        buildChildren(new ProjectExplorerToolNode(getModel(), null), lib.getTools(), 0);
+        final var addTools = includeCircuits || !(lib instanceof LogisimFile);
+        if (addTools) {
+          buildChildren(new ProjectExplorerToolNode(getModel(), null), lib.getTools(), 0);
+        }
+        final var toolOffset = addTools ? lib.getTools().size() : 0;
         buildChildren(
-            new ProjectExplorerLibraryNode(getModel(), null, guiElement, showMouseTools),
+            new ProjectExplorerLibraryNode(getModel(), null, guiElement, showMouseTools, includeCircuits),
             lib.getLibraries(),
-            lib.getTools().size());
+            toolOffset);
       }
     }
   }
@@ -176,7 +186,7 @@ public class ProjectExplorerLibraryNode extends ProjectExplorerModel.Node<Librar
 
   @Override
   ProjectExplorerLibraryNode create(Library userObject) {
-    return new ProjectExplorerLibraryNode(getModel(), userObject, guiElement, showMouseTools);
+    return new ProjectExplorerLibraryNode(getModel(), userObject, guiElement, showMouseTools, includeCircuits);
   }
 
   @Override

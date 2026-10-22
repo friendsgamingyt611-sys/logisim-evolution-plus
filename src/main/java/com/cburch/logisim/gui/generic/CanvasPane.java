@@ -45,6 +45,8 @@ public class CanvasPane extends JScrollPane {
       addMouseWheelListener(zoomListener);
     }
     contents.setCanvasPane(this);
+    setBorder(javax.swing.BorderFactory.createEmptyBorder());
+    putClientProperty(com.formdev.flatlaf.FlatClientProperties.STYLE, "border: 0,0,0,0;");
   }
 
   public Dimension getViewportSize() {

@@ -131,6 +131,8 @@ public class Frame extends LFrame.MainWindow implements LocaleListener {
   private AppearanceView appearance;
   private Double lastFraction = AppPreferences.WINDOW_RIGHT_SPLIT.get();
   private final RegTabContent regTabContent;
+  private final ModernHeaderBar headerBar;
+  private double savedSidebarFraction = 0.25;
 
   public Frame(Project project) {
     super(project);
@@ -176,7 +178,10 @@ public class Frame extends LFrame.MainWindow implements LocaleListener {
     }
     
     var fontStyle = AppPreferences.getPreferredFontStyle(fontName);
-    bottomTab.setFont(AppPreferences.getScaledFont(new Font(fontName, fontStyle, 9)));
+    bottomTab.setFont(AppPreferences.getScaledFont(new Font(fontName, Font.BOLD, 12)));
+    bottomTab.putClientProperty("JTabbedPane.tabHeight", AppPreferences.getScaled(30));
+    bottomTab.putClientProperty("JTabbedPane.tabType", "underline");
+    bottomTab.putClientProperty("JTabbedPane.showContentSeparators", true);
     bottomTab.add(attrTable = new AttrTable(this));
     regTabContent = new RegTabContent(this);
     bottomTab.add(regTabContent);
@@ -201,17 +206,19 @@ public class Frame extends LFrame.MainWindow implements LocaleListener {
     simPanel.add(simExplorer, BorderLayout.CENTER);
 
     topTab = new JTabbedPane();
-    topTab.setFont(new Font(fontName, fontStyle, 9));
+    topTab.setFont(AppPreferences.getScaledFont(new Font(fontName, Font.BOLD, 12)));
+    topTab.putClientProperty("JTabbedPane.tabHeight", AppPreferences.getScaled(30));
+    topTab.putClientProperty("JTabbedPane.tabType", "underline");
+    topTab.putClientProperty("JTabbedPane.showContentSeparators", true);
     topTab.add(explPanel);
     topTab.add(simPanel);
 
-    final var attrFooter = new JPanel(new BorderLayout());
-    attrFooter.add(zoom);
-
-    final var bottomTabAndZoom = new JPanel(new BorderLayout());
-    bottomTabAndZoom.add(bottomTab, BorderLayout.CENTER);
-    bottomTabAndZoom.add(attrFooter, BorderLayout.SOUTH);
-    leftRegion = new HorizontalSplitPane(topTab, bottomTabAndZoom, AppPreferences.WINDOW_LEFT_SPLIT.get());
+    var leftSplit = AppPreferences.WINDOW_LEFT_SPLIT.get();
+    if (leftSplit <= 0.52) {
+      leftSplit = 0.68;
+      AppPreferences.WINDOW_LEFT_SPLIT.set(0.68);
+    }
+    leftRegion = new HorizontalSplitPane(topTab, bottomTab, leftSplit);
 
     hdlEditor = new HdlContentView(project);
     vhdlSimulatorConsole = new VhdlSimulatorConsole(project);
@@ -227,6 +234,20 @@ public class Frame extends LFrame.MainWindow implements LocaleListener {
 
     mainRegion = new MainRegionVerticalSplitPane(leftRegion, rightPanel);
     getContentPane().add(mainRegion, BorderLayout.CENTER);
+
+    headerBar = new ModernHeaderBar(this, project);
+    if (layoutZoomModel != null) {
+      layoutZoomModel.addPropertyChangeListener(
+          com.cburch.logisim.gui.generic.ZoomModel.ZOOM,
+          e -> headerBar.setZoomText((int) (layoutZoomModel.getZoomFactor() * 100) + "%"));
+      headerBar.setZoomText((int) (layoutZoomModel.getZoomFactor() * 100) + "%");
+    }
+    if (AppPreferences.USE_HEADER_BAR.getBoolean()) {
+      getContentPane().add(headerBar, BorderLayout.NORTH);
+      if (getJMenuBar() != null) {
+        getJMenuBar().setVisible(false);
+      }
+    }
 
     localeChanged();
 
@@ -592,6 +613,9 @@ public class Frame extends LFrame.MainWindow implements LocaleListener {
     }
 
     this.setTitle(title.toString().trim());
+    if (headerBar != null) {
+      headerBar.updateTitle();
+    }
     myProjectListener.enableSave();
   }
 
@@ -683,6 +707,23 @@ public class Frame extends LFrame.MainWindow implements LocaleListener {
     topTab.setTitleAt(1, S.get("simulateTab"));
     bottomTab.setTitleAt(0, S.get("propertiesTab"));
     bottomTab.setTitleAt(1, S.get("stateTab"));
+    if (headerBar != null) {
+      headerBar.localeChanged();
+    }
+  }
+
+  public void toggleSidebar() {
+    double current = mainRegion.getFraction();
+    if (current > 0.05) {
+      savedSidebarFraction = current;
+      mainRegion.setFraction(0.0);
+    } else {
+      mainRegion.setFraction(savedSidebarFraction > 0.05 ? savedSidebarFraction : 0.25);
+    }
+  }
+
+  public ModernHeaderBar getModernHeaderBar() {
+    return headerBar;
   }
 
   private void placeToolbar() {

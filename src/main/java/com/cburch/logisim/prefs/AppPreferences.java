@@ -23,7 +23,11 @@ import com.cburch.logisim.instance.StdAttr;
 import com.cburch.logisim.util.LocaleListener;
 import com.cburch.logisim.util.LocaleManager;
 import com.cburch.logisim.util.PropertyChangeWeakSupport;
+import com.cburch.logisim.gui.theme.ModernDarkLaf;
+import com.cburch.logisim.gui.theme.ModernLightLaf;
 import com.formdev.flatlaf.FlatIntelliJLaf;
+import com.formdev.flatlaf.util.SystemInfo;
+import java.awt.Color;
 import java.awt.Component;
 import java.awt.Container;
 import java.awt.Font;
@@ -472,7 +476,7 @@ public class AppPreferences {
   public static final PrefMonitor<Integer> AUTOSAVE_INTERVAL = create(new PrefMonitorInt(AUTOSAVE_PERIOD, 30));
 
   // Template preferences
-  public static final int IconSize = 16;
+  public static final int IconSize = 20;
   public static final int FONT_SIZE = 14;
   public static final int ICON_BORDER = 2;
   public static final int BOX_SIZE = IconSize + 2 * ICON_BORDER;
@@ -494,6 +498,10 @@ public class AppPreferences {
 
   public static int getIconSize() {
     return getScaled(IconSize);
+  }
+
+  public static float getScaledStroke(float baseStroke) {
+    return (float) (baseStroke * (getIconSize() / 20.0));
   }
 
   public static int getIconBorder() {
@@ -563,11 +571,49 @@ public class AppPreferences {
                   Direction.WEST.toString()},
               Direction.EAST.toString()));
 
+  public static boolean isSystemDark() {
+    if (SystemInfo.isLinux) {
+      try {
+        final var proc =
+            new ProcessBuilder("gsettings", "get", "org.gnome.desktop.interface", "color-scheme")
+                .start();
+        try (var in = proc.getInputStream()) {
+          final var out = new String(in.readAllBytes());
+          if (out.contains("prefer-dark")) {
+            return true;
+          }
+        }
+      } catch (Throwable ignored) {
+        // Fallback
+      }
+    }
+    return false;
+  }
+
+  private static String getDefaultLookAndFeel() {
+    if (SystemInfo.isLinux) {
+      return isSystemDark() ? ModernDarkLaf.class.getName() : ModernLightLaf.class.getName();
+    }
+    return FlatIntelliJLaf.class.getName();
+  }
+
   public static final PrefMonitor<String> LookAndFeel =
-      create(new PrefMonitorString("LookAndFeel", FlatIntelliJLaf.class.getName()));
+      create(new PrefMonitorString("LookAndFeel", getDefaultLookAndFeel()));
 
   public static final PrefMonitor<String> APP_FONT =
       create(new PrefMonitorString("AppFont", ""));
+
+  public static final PrefMonitor<Boolean> USE_HEADER_BAR =
+      create(new PrefMonitorBoolean("useHeaderBar", true));
+
+  public static final String EXPLORER_VIEW_LIST = "list";
+  public static final String EXPLORER_VIEW_TILES = "tiles";
+  public static final PrefMonitor<String> EXPLORER_VIEW =
+      create(
+          new PrefMonitorStringOpts(
+              "explorerView",
+              new String[] {EXPLORER_VIEW_LIST, EXPLORER_VIEW_TILES},
+              EXPLORER_VIEW_LIST));
 
   // default grid colors
   public static final int DEFAULT_CANVAS_BG_COLOR = 0xFFFFFFFF;
@@ -610,6 +656,32 @@ public class AppPreferences {
       create(new PrefMonitorInt("componentIconColor", DEFAULT_COMPONENT_ICON_COLOR));
   public static final PrefMonitor<Integer> TEXT_TOOL_COLOR =
       create(new PrefMonitorInt("textToolColor", DEFAULT_TEXT_TOOL_COLOR));
+
+  public static boolean isDarkTheme() {
+    try {
+      if (com.formdev.flatlaf.FlatLaf.isLafDark()) {
+        return true;
+      }
+    } catch (Throwable ignored) {
+      // Fallback
+    }
+    return isSystemDark();
+  }
+
+  public static Color getComponentIconColor() {
+    int val = COMPONENT_ICON_COLOR.get();
+    if (val != 0 && val != 0xFF000000 && val != -16777216) {
+      return new Color(val);
+    }
+    if (isDarkTheme()) {
+      return new Color(245, 245, 245);
+    }
+    Color fg = javax.swing.UIManager.getColor("Label.foreground");
+    if (fg != null) {
+      return fg;
+    }
+    return new Color(46, 52, 54);
+  }
 
 
   // Layout preferences
@@ -895,7 +967,7 @@ public class AppPreferences {
   public static void resetWindow() {
     CANVAS_PLACEMENT.set(Direction.EAST.toString());
     WINDOW_MAIN_SPLIT.set(0.251);
-    WINDOW_LEFT_SPLIT.set(0.51);
+    WINDOW_LEFT_SPLIT.set(0.68);
     WINDOW_RIGHT_SPLIT.set(0.751);
   }
 
@@ -906,7 +978,7 @@ public class AppPreferences {
       create(new PrefMonitorDouble("windowMainSplit", 0.25));
 
   public static final PrefMonitor<Double> WINDOW_LEFT_SPLIT =
-      create(new PrefMonitorDouble("windowLeftSplit", 0.5));
+      create(new PrefMonitorDouble("windowLeftSplit", 0.68));
 
   public static final PrefMonitor<Double> WINDOW_RIGHT_SPLIT =
       create(new PrefMonitorDouble("windowRightSplit", 0.75));

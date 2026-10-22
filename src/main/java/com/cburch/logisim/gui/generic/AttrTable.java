@@ -77,7 +77,11 @@ public class AttrTable extends JPanel implements LocaleListener {
     table = new JTable(tableModel);
     table.setDefaultEditor(Object.class, editor);
     table.setTableHeader(null);
-    table.setRowHeight(AppPreferences.getScaled(AppPreferences.BOX_SIZE));
+    table.setRowHeight(AppPreferences.getScaled(30));
+    table.putClientProperty(com.formdev.flatlaf.FlatClientProperties.STYLE,
+        "showHorizontalLines: true; showVerticalLines: false; intercellSpacing: 0,1;");
+    table.setShowHorizontalLines(true);
+    table.setShowVerticalLines(false);
 
     final var baseFont = title.getFont();
     final var titleSize = Math.round(baseFont.getSize() * 1.2F);

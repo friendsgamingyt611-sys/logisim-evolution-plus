@@ -30,12 +30,18 @@ class ProjectExplorerModel extends DefaultTreeModel implements ProjectListener {
   private final JTree uiElement;
   private Project proj;
   private final boolean showMouseTools;
+  private final boolean includeCircuits;
 
   ProjectExplorerModel(Project proj, JTree gui, boolean showMouseTools) {
+    this(proj, gui, showMouseTools, true);
+  }
+
+  ProjectExplorerModel(Project proj, JTree gui, boolean showMouseTools, boolean includeCircuits) {
     super(null);
     this.proj = proj;
     this.showMouseTools = showMouseTools;
-    setRoot(new ProjectExplorerLibraryNode(this, proj.getLogisimFile(), gui, showMouseTools));
+    this.includeCircuits = includeCircuits;
+    setRoot(new ProjectExplorerLibraryNode(this, proj.getLogisimFile(), gui, showMouseTools, includeCircuits));
     proj.addProjectListener(this);
     uiElement = gui;
   }
@@ -86,7 +92,7 @@ class ProjectExplorerModel extends DefaultTreeModel implements ProjectListener {
     setRoot(
         (file == null)
             ? null
-            : new ProjectExplorerLibraryNode(this, file, uiElement, showMouseTools));
+            : new ProjectExplorerLibraryNode(this, file, uiElement, showMouseTools, includeCircuits));
     fireStructureChanged();
   }
 

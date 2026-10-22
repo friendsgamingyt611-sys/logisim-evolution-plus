@@ -291,7 +291,7 @@ public class PokeTool extends Tool {
     p.quadTo(scale(12), scale(11), scale(13), scale(15));
     g2.setColor(new Color(240, 184, 160));
     g2.fill(p);
-    g2.setColor(Color.BLACK);
+    g2.setColor(AppPreferences.getComponentIconColor());
     g2.draw(p);
     g2.dispose();
   }

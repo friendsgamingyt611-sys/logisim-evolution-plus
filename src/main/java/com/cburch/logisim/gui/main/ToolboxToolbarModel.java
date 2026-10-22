@@ -13,10 +13,12 @@ import static com.cburch.logisim.gui.Strings.S;
 
 import com.cburch.draw.toolbar.AbstractToolbarModel;
 import com.cburch.draw.toolbar.ToolbarItem;
-import com.cburch.logisim.data.Direction;
-import com.cburch.logisim.gui.icons.AppearEditIcon;
-import com.cburch.logisim.gui.icons.FatArrowIcon;
-import com.cburch.logisim.gui.icons.ProjectAddIcon;
+import com.cburch.logisim.gui.icons.symbolic.AddCircuitIcon;
+import com.cburch.logisim.gui.icons.symbolic.AddVhdlIcon;
+import com.cburch.logisim.gui.icons.symbolic.AppearanceIcon;
+import com.cburch.logisim.gui.icons.symbolic.DeleteIcon;
+import com.cburch.logisim.gui.icons.symbolic.MoveDownIcon;
+import com.cburch.logisim.gui.icons.symbolic.MoveUpIcon;
 import com.cburch.logisim.gui.menu.LogisimMenuBar;
 import com.cburch.logisim.gui.menu.MenuListener;
 import com.cburch.logisim.util.UnmodifiableList;
@@ -37,34 +39,34 @@ class ToolboxToolbarModel extends AbstractToolbarModel implements MenuListener.E
     itemAdd =
         new LogisimToolbarItem(
             menu,
-            new ProjectAddIcon(false),
+            new AddCircuitIcon(),
             LogisimMenuBar.ADD_CIRCUIT,
             S.getter("projectAddCircuitTip"));
     itemAddVhdl =
         new LogisimToolbarItem(
-            menu, new ProjectAddIcon(), LogisimMenuBar.ADD_VHDL, S.getter("projectAddVhdlItem"));
+            menu, new AddVhdlIcon(), LogisimMenuBar.ADD_VHDL, S.getter("projectAddVhdlItem"));
     itemUp =
         new LogisimToolbarItem(
             menu,
-            new FatArrowIcon(Direction.NORTH),
+            new MoveUpIcon(),
             LogisimMenuBar.MOVE_CIRCUIT_UP,
             S.getter("projectMoveCircuitUpTip"));
     itemDown =
         new LogisimToolbarItem(
             menu,
-            new FatArrowIcon(Direction.SOUTH),
+            new MoveDownIcon(),
             LogisimMenuBar.MOVE_CIRCUIT_DOWN,
             S.getter("projectMoveCircuitDownTip"));
     itemAppearance =
         new LogisimToolbarItem(
             menu,
-            new AppearEditIcon(),
+            new AppearanceIcon(),
             LogisimMenuBar.TOGGLE_APPEARANCE,
             S.getter("projectEditAppearanceTip"));
     itemDelete =
         new LogisimToolbarItem(
             menu,
-            new ProjectAddIcon(true),
+            new DeleteIcon(),
             LogisimMenuBar.REMOVE_CIRCUIT,
             S.getter("projectRemoveCircuitTip"));
 

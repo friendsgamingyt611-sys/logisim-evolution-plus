@@ -26,24 +26,58 @@ import com.cburch.logisim.util.LocaleManager;
 import com.cburch.logisim.vhdl.base.VhdlContent;
 import com.cburch.logisim.vhdl.base.VhdlEntity;
 
+import com.cburch.logisim.gui.icons.symbolic.CategoryArithmeticIcon;
+import com.cburch.logisim.gui.icons.symbolic.CategoryBfhIcon;
+import com.cburch.logisim.gui.icons.symbolic.CategoryChipIcon;
+import com.cburch.logisim.gui.icons.symbolic.CategoryFloatingPointIcon;
+import com.cburch.logisim.gui.icons.symbolic.CategoryGatesIcon;
+import com.cburch.logisim.gui.icons.symbolic.CategoryIoExtraIcon;
+import com.cburch.logisim.gui.icons.symbolic.CategoryIoIcon;
+import com.cburch.logisim.gui.icons.symbolic.CategoryMemoryIcon;
+import com.cburch.logisim.gui.icons.symbolic.CategoryPlexersIcon;
+import com.cburch.logisim.gui.icons.symbolic.CategorySocIcon;
+import com.cburch.logisim.gui.icons.symbolic.CategoryTclIcon;
+import com.cburch.logisim.gui.icons.symbolic.CategoryWiringIcon;
+import com.cburch.logisim.gui.icons.symbolic.CircuitGlyphIcon;
+import com.cburch.logisim.gui.icons.symbolic.SymbolicIcon;
+import com.cburch.logisim.gui.icons.symbolic.TreeChevronIcon;
+import com.cburch.logisim.gui.main.ComponentGlyphCache;
+import com.formdev.flatlaf.FlatClientProperties;
+
+import java.awt.BasicStroke;
+import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Component;
+import java.awt.Dimension;
 import java.awt.Font;
+import java.awt.FontMetrics;
 import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.Insets;
+import java.awt.Rectangle;
+import java.awt.RenderingHints;
+import java.awt.geom.Path2D;
+import java.awt.geom.RoundRectangle2D;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
+import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.event.MouseMotionAdapter;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import javax.swing.AbstractAction;
 import javax.swing.ActionMap;
+import javax.swing.BorderFactory;
 import javax.swing.Icon;
 import javax.swing.InputMap;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
+import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JTree;
 import javax.swing.KeyStroke;
 import javax.swing.ToolTipManager;
+import javax.swing.UIManager;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
 import javax.swing.tree.DefaultTreeCellRenderer;
@@ -64,13 +98,20 @@ public class ProjectExplorer extends JTree implements LocaleListener {
   private final DeleteAction deleteAction = new DeleteAction();
   private Listener listener = null;
   private Tool haloedTool = null;
+  private int hoverRow = -1;
 
   public ProjectExplorer(Project proj, boolean showMouseTools) {
+    this(proj, showMouseTools, true);
+  }
+
+  public ProjectExplorer(Project proj, boolean showMouseTools, boolean includeCircuits) {
     super();
     this.proj = proj;
 
-    setModel(new ProjectExplorerModel(proj, this, showMouseTools));
-    setRootVisible(true);
+    setModel(new ProjectExplorerModel(proj, this, showMouseTools, includeCircuits));
+    setRootVisible(false);
+    setShowsRootHandles(true);
+    setOpaque(false);
     addMouseListener(myListener);
     ToolTipManager.sharedInstance().registerComponent(this);
 
@@ -86,12 +127,202 @@ public class ProjectExplorer extends JTree implements LocaleListener {
     ActionMap amap = getActionMap();
     amap.put(deleteAction, deleteAction);
 
+    // Enter key toggles group expansion or activates tool/circuit
+    imap.put(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0), "toggleOrActivate");
+    amap.put("toggleOrActivate", new AbstractAction() {
+      @Override
+      public void actionPerformed(ActionEvent e) {
+        final var path = getSelectionPath();
+        if (path == null) return;
+        final var node = path.getLastPathComponent();
+        if (!getModel().isLeaf(node)) {
+          if (isExpanded(path)) {
+            collapsePath(path);
+          } else {
+            expandPath(path);
+          }
+        } else if (listener != null) {
+          listener.doubleClicked(new Event(path));
+        }
+      }
+    });
+
+    // Arrow keys expand and collapse
+    imap.put(KeyStroke.getKeyStroke(KeyEvent.VK_RIGHT, 0), "expandNode");
+    amap.put("expandNode", new AbstractAction() {
+      @Override
+      public void actionPerformed(ActionEvent e) {
+        final var path = getSelectionPath();
+        if (path != null && !isExpanded(path)) {
+          expandPath(path);
+        }
+      }
+    });
+    imap.put(KeyStroke.getKeyStroke(KeyEvent.VK_LEFT, 0), "collapseNode");
+    amap.put("collapseNode", new AbstractAction() {
+      @Override
+      public void actionPerformed(ActionEvent e) {
+        final var path = getSelectionPath();
+        if (path != null && isExpanded(path)) {
+          collapsePath(path);
+        }
+      }
+    });
+
     proj.addProjectListener(myListener);
     AppPreferences.GATE_SHAPE.addPropertyChangeListener(myListener);
     LocaleManager.addLocaleListener(this);
-    DefaultTreeCellRenderer renderer = (DefaultTreeCellRenderer) getCellRenderer();
-    renderer.setClosedIcon(new TreeIcon(true));
-    renderer.setOpenIcon(new TreeIcon(false));
+
+    setToggleClickCount(0);
+    setRowHeight(AppPreferences.getScaled(28));
+    setBorder(BorderFactory.createEmptyBorder(0, 6, 0, 6));
+    putClientProperty(FlatClientProperties.STYLE, "showCellFocusIndicator: false; rowHeight: 28; wideSelection: true;");
+
+    configureTreeUi();
+
+    addMouseMotionListener(new MouseMotionAdapter() {
+      @Override
+      public void mouseMoved(MouseEvent e) {
+        int row = getRowForLocation(e.getX(), e.getY());
+        if (row != hoverRow) {
+          hoverRow = row;
+          repaint();
+        }
+      }
+    });
+
+    addMouseListener(new MouseAdapter() {
+      @Override
+      public void mouseExited(MouseEvent e) {
+        if (hoverRow != -1) {
+          hoverRow = -1;
+          repaint();
+        }
+      }
+    });
+  }
+
+  private void configureTreeUi() {
+    setUI(new javax.swing.plaf.basic.BasicTreeUI() {
+      @Override
+      protected void installDefaults() {
+        super.installDefaults();
+        setLeftChildIndent(AppPreferences.getScaled(16));
+        setRightChildIndent(0);
+      }
+
+      @Override
+      protected boolean isLocationInExpandControl(TreePath path, int mouseX, int mouseY) {
+        if (path == null || treeModel.isLeaf(path.getLastPathComponent())) {
+          return false;
+        }
+        final var b = getPathBounds(tree, path);
+        if (b == null) return false;
+        final var cx = b.x - AppPreferences.getScaled(10);
+        final var cy = b.y + b.height / 2;
+        final var hitRadius = AppPreferences.getScaled(12);
+        return Math.abs(mouseX - cx) <= hitRadius && Math.abs(mouseY - cy) <= hitRadius;
+      }
+
+      @Override
+      protected void paintExpandControl(
+          Graphics g,
+          Rectangle clip,
+          Insets ins,
+          Rectangle b,
+          TreePath path,
+          int row,
+          boolean expanded,
+          boolean hasBeen,
+          boolean leaf) {
+        if (leaf) return;
+        final var g2 = (Graphics2D) g.create();
+        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        g2.setStroke(new BasicStroke(AppPreferences.getScaledStroke(1.6f), BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+        Color fgMuted = UIManager.getColor("Label.disabledForeground");
+        if (fgMuted == null) fgMuted = new Color(154, 160, 168);
+        g2.setColor(fgMuted);
+
+        int cx = b.x - AppPreferences.getScaled(10);
+        int cy = b.y + b.height / 2;
+        final var p = new Path2D.Float();
+        float arm = AppPreferences.getScaled(3.0f);
+        if (expanded) {
+          p.moveTo(cx - arm, cy - arm * 0.5f);
+          p.lineTo(cx, cy + arm * 0.7f);
+          p.lineTo(cx + arm, cy - arm * 0.5f);
+        } else {
+          p.moveTo(cx - arm * 0.5f, cy - arm);
+          p.lineTo(cx + arm * 0.7f, cy);
+          p.lineTo(cx - arm * 0.5f, cy + arm);
+        }
+        g2.draw(p);
+        g2.dispose();
+      }
+    });
+  }
+
+  @Override
+  public void updateUI() {
+    super.updateUI();
+    configureTreeUi();
+  }
+
+  @Override
+  protected void paintComponent(Graphics g) {
+    final var g2 = (Graphics2D) g.create();
+    g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+    Color accent = UIManager.getColor("Component.accentColor");
+    if (accent == null) accent = new Color(53, 132, 228);
+    Color accent18 = new Color(accent.getRed(), accent.getGreen(), accent.getBlue(), (int) (255 * 0.18f));
+    Color hoverFill = AppPreferences.isDarkTheme()
+        ? new Color(255, 255, 255, 14)
+        : new Color(0, 0, 0, 12);
+    int treeW = getWidth();
+
+    for (int r = 0; r < getRowCount(); r++) {
+      Rectangle b = getRowBounds(r);
+      if (b == null) continue;
+      boolean isArmed = isRowSelected(r);
+      boolean isHover = (r == hoverRow);
+
+      if (isArmed) {
+        g2.setColor(accent18);
+        g2.fill(new RoundRectangle2D.Float(6, b.y + 1, treeW - 12, b.height - 2, 6, 6));
+      } else if (isHover) {
+        g2.setColor(hoverFill);
+        g2.fill(new RoundRectangle2D.Float(6, b.y + 1, treeW - 12, b.height - 2, 6, 6));
+      }
+    }
+    g2.dispose();
+    super.paintComponent(g);
+
+    // Right-aligned category count badges auto-adjusting to splitter width
+    final var g3 = (Graphics2D) g.create();
+    g3.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+    final var badgeFont = AppPreferences.getScaledFont(getFont()).deriveFont(Font.PLAIN, AppPreferences.getScaled(11));
+    g3.setFont(badgeFont);
+    final var fm = g3.getFontMetrics(badgeFont);
+    final var fgMuted = new Color(154, 160, 168);
+
+    for (int r = 0; r < getRowCount(); r++) {
+      final var path = getPathForRow(r);
+      if (path != null && path.getLastPathComponent() instanceof ProjectExplorerLibraryNode libNode) {
+        int count = libNode.getChildCount();
+        if (count > 0) {
+          final var b = getRowBounds(r);
+          if (b == null) continue;
+          final var text = String.valueOf(count);
+          final var strW = fm.stringWidth(text);
+          final var textX = treeW - AppPreferences.getScaled(18) - strW;
+          final var textY = b.y + (b.height - fm.getHeight()) / 2 + fm.getAscent();
+          g3.setColor(isRowSelected(r) ? new Color(255, 255, 255, 180) : fgMuted);
+          g3.drawString(text, textX, textY);
+        }
+      }
+    }
+    g3.dispose();
   }
 
   public Tool getSelectedTool() {
@@ -139,9 +370,21 @@ public class ProjectExplorer extends JTree implements LocaleListener {
     }
   }
 
-  private class MyCellRenderer extends DefaultTreeCellRenderer {
+  private class MyCellRenderer extends JPanel implements javax.swing.tree.TreeCellRenderer {
 
     private static final long serialVersionUID = 1L;
+    private final JLabel label = new JLabel();
+    private boolean isCurrentCircuit = false;
+    private boolean isHovered = false;
+    private boolean isRowSelected = false;
+
+    MyCellRenderer() {
+      super(new BorderLayout());
+      setOpaque(false);
+      setBorder(javax.swing.BorderFactory.createEmptyBorder(0, 4, 0, 10));
+      label.setIconTextGap(AppPreferences.getScaled(8));
+      add(label, BorderLayout.CENTER);
+    }
 
     @Override
     public java.awt.Component getTreeCellRendererComponent(
@@ -152,54 +395,120 @@ public class ProjectExplorer extends JTree implements LocaleListener {
         boolean leaf,
         int row,
         boolean hasFocus) {
-      java.awt.Component ret = super.getTreeCellRendererComponent(tree, value, selected, expanded, leaf, row, hasFocus);
-      final var plainFont = AppPreferences.getScaledFont(ret.getFont());
+
+      final var plainFont = AppPreferences.getScaledFont(tree.getFont()).deriveFont(Font.PLAIN);
       final var boldFont = new Font(plainFont.getFontName(), Font.BOLD, plainFont.getSize());
-      ret.setFont(plainFont);
-      if (ret instanceof JComponent comp) {
-        comp.setToolTipText(null);
-      }
+
+      isRowSelected = selected;
+      isHovered = (row == hoverRow);
+      isCurrentCircuit = false;
+
+      Color fgMuted = new Color(154, 160, 168); // #9aa0a8
+      Color fgMain = AppPreferences.isDarkTheme() ? new Color(230, 232, 235) : new Color(31, 30, 29); // #e6e8eb
+      Color accent = UIManager.getColor("Component.accentColor");
+      if (accent == null) accent = new Color(53, 132, 228);
+
+      label.setFont(plainFont);
+
       if (value instanceof ProjectExplorerToolNode toolNode) {
         final var tool = toolNode.getValue();
-        if (ret instanceof JLabel label) {
-          var viewed = false;
-          if (tool instanceof AddTool && proj != null && proj.getFrame() != null) {
-            Circuit circ = null;
-            VhdlContent vhdl = null;
-            final var fact = ((AddTool) tool).getFactory(false);
-            if (fact instanceof SubcircuitFactory sub) {
-              circ = sub.getSubcircuit();
-            } else if (fact instanceof VhdlEntity vhdlEntity) {
-              vhdl = vhdlEntity.getContent();
-            }
-            viewed =
-                (proj.getFrame().getHdlEditorView() == null)
-                    ? (circ != null && circ == proj.getCurrentCircuit())
-                    : (vhdl != null && vhdl == proj.getFrame().getHdlEditorView());
+        boolean isCircuit = false;
+        boolean viewed = false;
+
+        if (tool instanceof AddTool addTool && proj != null && proj.getFrame() != null) {
+          final var fact = addTool.getFactory(false);
+          if (fact instanceof SubcircuitFactory sub) {
+            isCircuit = true;
+            Circuit circ = sub.getSubcircuit();
+            viewed = (circ != null && circ == proj.getCurrentCircuit());
+          } else if (fact instanceof VhdlEntity vhdlEntity) {
+            isCircuit = true;
+            VhdlContent vhdl = vhdlEntity.getContent();
+            viewed = (vhdl != null && vhdl == proj.getFrame().getHdlEditorView());
           }
-          label.setFont(viewed ? boldFont : plainFont);
-          label.setText(tool.getDisplayName());
-          label.setIcon(new ToolIcon(tool));
-          label.setToolTipText(tool.getDescription());
         }
+
+        if (isCircuit) {
+          isCurrentCircuit = viewed;
+          CircuitGlyphIcon circIcon = new CircuitGlyphIcon(viewed);
+          if (viewed) {
+            circIcon.setColor(accent);
+            label.setForeground(selected ? Color.WHITE : accent);
+            label.setFont(boldFont);
+          } else {
+            circIcon.setColor(selected ? Color.WHITE : fgMuted);
+            label.setForeground(selected ? Color.WHITE : fgMain);
+            label.setFont(plainFont);
+          }
+          label.setIcon(circIcon);
+        } else {
+          final var icon = ComponentGlyphCache.getIcon(tool, AppPreferences.getScaled(20));
+          label.setIcon(icon != null ? icon : new ToolIcon(tool));
+          label.setForeground(selected ? Color.WHITE : fgMain);
+          label.setFont(plainFont);
+        }
+
+        label.setText(tool.getDisplayName());
+        setToolTipText(tool.getDescription());
       } else if (value instanceof ProjectExplorerLibraryNode libNode) {
         final var lib = libNode.getValue();
+        final var baseName = lib.getDisplayName();
+        var text = baseName;
 
-        if (ret instanceof JLabel) {
-          final var baseName = lib.getDisplayName();
-          var text = baseName;
-          if (lib.isDirty()) {
-            // TODO: Would be nice to use DIRTY_MARKER here instead of "*" but it does not render
-            // corectly in project tree, font seem to have the character as frame title is fine.
-            // Needs to figure out what is different (java fonts?). Keep "*" unless bug is resolved.
-            final var DIRTY_MARKER_LOCAL = "*"; // useless var for easy DIRTY_MARKER hunt in future.
-            text = DIRTY_MARKER_LOCAL + baseName;
-          }
-
-          ((JLabel) ret).setText(text);
+        if (lib.isDirty()) {
+          text = baseName + " \u25cf";
         }
+
+        label.setText(text);
+        Icon catIcon = getCategoryIcon(baseName, expanded, selected ? Color.WHITE : fgMuted);
+        label.setIcon(catIcon);
+        label.setForeground(selected ? Color.WHITE : fgMain);
+        label.setFont(plainFont);
+        setToolTipText(null);
+      } else {
+        label.setText(value != null ? value.toString() : "");
+        label.setIcon(null);
       }
-      return ret;
+
+      return this;
+    }
+
+    private Icon getCategoryIcon(String name, boolean expanded, Color color) {
+      String lower = name.toLowerCase();
+      SymbolicIcon icon;
+      if (lower.contains("wiring")) {
+        icon = new CategoryWiringIcon();
+      } else if (lower.contains("gate")) {
+        icon = new CategoryGatesIcon();
+      } else if (lower.contains("plexer")) {
+        icon = new CategoryPlexersIcon();
+      } else if (lower.contains("float")) {
+        icon = new CategoryFloatingPointIcon();
+      } else if (lower.contains("arithmetic")) {
+        icon = new CategoryArithmeticIcon();
+      } else if (lower.contains("memory")) {
+        icon = new CategoryMemoryIcon();
+      } else if (lower.contains("extra")) {
+        icon = new CategoryIoExtraIcon();
+      } else if (lower.contains("input") || lower.contains("i/o") || lower.contains("io")) {
+        icon = new CategoryIoIcon();
+      } else if (lower.contains("tcl")) {
+        icon = new CategoryTclIcon();
+      } else if (lower.contains("bfh")) {
+        icon = new CategoryBfhIcon();
+      } else if (lower.contains("soc") || lower.contains("system on a chip")) {
+        icon = new CategorySocIcon();
+      } else {
+        icon = new CategoryChipIcon();
+      }
+
+      icon.setColor(color);
+      return icon;
+    }
+
+    @Override
+    protected void paintComponent(Graphics g) {
+      super.paintComponent(g);
     }
   }
 
@@ -220,8 +529,17 @@ public class ProjectExplorer extends JTree implements LocaleListener {
     public void mouseClicked(MouseEvent e) {
       if (e.getClickCount() == 2) {
         final var path = getPathForLocation(e.getX(), e.getY());
-        if (path != null && listener != null) {
-          listener.doubleClicked(new Event(path));
+        if (path != null) {
+          final var node = path.getLastPathComponent();
+          if (node instanceof ProjectExplorerToolNode && listener != null) {
+            listener.doubleClicked(new Event(path));
+          } else if (node instanceof ProjectExplorerLibraryNode) {
+            if (isExpanded(path)) {
+              collapsePath(path);
+            } else {
+              expandPath(path);
+            }
+          }
         }
       }
     }
@@ -321,7 +639,7 @@ public class ProjectExplorer extends JTree implements LocaleListener {
     }
 
     private boolean isPathValid(TreePath path) {
-      return path != null && path.getLastPathComponent() instanceof ProjectExplorerToolNode;
+      return isTool(path);
     }
 
     @Override
@@ -340,6 +658,10 @@ public class ProjectExplorer extends JTree implements LocaleListener {
         super.setSelectionPaths(paths);
       }
     }
+  }
+
+  private static boolean isTool(TreePath path) {
+    return path != null && path.getLastPathComponent() instanceof ProjectExplorerToolNode;
   }
 
   private class ToolIcon implements Icon {
@@ -390,7 +712,7 @@ public class ProjectExplorer extends JTree implements LocaleListener {
       }
 
       // draw tool icon
-      g.setColor(new Color(AppPreferences.COMPONENT_ICON_COLOR.get()));
+      g.setColor(AppPreferences.getComponentIconColor());
       final var gfxIcon = g.create();
       final var context = new ComponentDrawContext(ProjectExplorer.this, null, null, g, gfxIcon);
       tool.paintIcon(

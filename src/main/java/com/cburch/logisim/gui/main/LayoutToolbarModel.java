@@ -218,9 +218,10 @@ class LayoutToolbarModel extends AbstractToolbarModel {
             AppPreferences.getIconSize());
       }
 
-      // draw tool icon
-      gfx.setColor(new Color(AppPreferences.COMPONENT_ICON_COLOR.get()));
+      final var iconColor = AppPreferences.getComponentIconColor();
+      gfx.setColor(iconColor);
       final var gfxCopy = gfx.create();
+      gfxCopy.setColor(iconColor);
       final var c = new ComponentDrawContext(destination, null, null, gfx, gfxCopy);
       tool.paintIcon(c, AppPreferences.ICON_BORDER, AppPreferences.ICON_BORDER);
       gfxCopy.dispose();

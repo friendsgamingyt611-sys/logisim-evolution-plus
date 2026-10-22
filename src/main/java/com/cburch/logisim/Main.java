@@ -13,6 +13,8 @@ import com.cburch.logisim.generated.BuildInfo;
 import com.cburch.logisim.gui.generic.OptionPane;
 import com.cburch.logisim.gui.start.Startup;
 import com.cburch.logisim.prefs.AppPreferences;
+import com.cburch.logisim.gui.theme.ModernDarkLaf;
+import com.cburch.logisim.gui.theme.ModernLightLaf;
 import com.formdev.flatlaf.FlatDarculaLaf;
 import com.formdev.flatlaf.FlatDarkLaf;
 import com.formdev.flatlaf.FlatIntelliJLaf;
@@ -48,6 +50,8 @@ public class Main {
         FlatDarculaLaf.installLafInfo();
         FlatMacLightLaf.installLafInfo();
         FlatMacDarkLaf.installLafInfo();
+        ModernLightLaf.installLafInfo();
+        ModernDarkLaf.installLafInfo();
         
         UIManager.setLookAndFeel(AppPreferences.LookAndFeel.get());
         

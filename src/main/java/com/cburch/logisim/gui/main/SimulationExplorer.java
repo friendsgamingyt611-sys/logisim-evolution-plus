@@ -10,7 +10,6 @@
 package com.cburch.logisim.gui.main;
 
 import com.cburch.contracts.BaseMouseListenerContract;
-import com.cburch.draw.toolbar.Toolbar;
 import com.cburch.logisim.gui.menu.MenuListener;
 import com.cburch.logisim.proj.Project;
 import com.cburch.logisim.proj.ProjectEvent;
@@ -33,10 +32,6 @@ class SimulationExplorer extends JPanel implements ProjectListener, BaseMouseLis
   SimulationExplorer(Project proj, MenuListener menu) {
     super(new BorderLayout());
     this.project = proj;
-
-    final var toolbarModel = new SimulationToolbarModel(proj, menu);
-    final var toolbar = new Toolbar(toolbarModel);
-    add(toolbar, BorderLayout.NORTH);
 
     model = new SimulationTreeModel(proj.getRootCircuitStates());
     model.setCurrentView(project.getCircuitState());

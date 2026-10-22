@@ -276,7 +276,7 @@ public abstract class InstanceFactory extends AbstractComponentFactory {
     painter.setFactory(this, attrs);
     final var gfx = painter.getGraphics();
     gfx.translate(x, y);
-    gfx.setColor(new Color(AppPreferences.COMPONENT_ICON_COLOR.get()));
+    gfx.setColor(AppPreferences.getComponentIconColor());
     paintIcon(painter);
     gfx.translate(-x, -y);
 

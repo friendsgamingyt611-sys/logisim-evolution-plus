@@ -24,7 +24,7 @@ public class ToolbarSeparator implements ToolbarItem {
 
   @Override
   public Dimension getDimension(Object orientation) {
-    return new Dimension(size, size);
+    return new Dimension(AppPreferences.getScaled(17), AppPreferences.getScaled(34));
   }
 
   @Override
@@ -40,19 +40,9 @@ public class ToolbarSeparator implements ToolbarItem {
   @Override
   public void paintIcon(Component destination, Graphics gfx) {
     final var dim = destination.getSize();
-    var x = 0;
-    var y = 0;
-    var w = dim.width;
-    var h = dim.height;
-    final var width = AppPreferences.getScaled(2);
-    if (h >= w) { // separator is a vertical line in horizontal toolbar
-      x = (w - width - 2) / 2;
-      w = width;
-    } else { // separator is a horizontal line in vertical toolbar
-      y = (h - width - 2) / 2;
-      h = width;
-    }
-    gfx.setColor(Color.GRAY);
-    gfx.fillRect(x, y, w, h);
+    final var x = dim.width / 2;
+    final var padY = AppPreferences.getScaled(7);
+    gfx.setColor(new Color(128, 128, 128, 75));
+    gfx.drawLine(x, padY, x, Math.max(padY, dim.height - padY));
   }
 }

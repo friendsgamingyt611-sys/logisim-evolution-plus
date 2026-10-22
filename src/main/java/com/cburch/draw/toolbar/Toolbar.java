@@ -27,6 +27,7 @@ public class Toolbar extends JPanel {
   public Toolbar(ToolbarModel model) {
     super(new BorderLayout());
     this.subpanel = new JPanel();
+    this.subpanel.setBorder(javax.swing.BorderFactory.createEmptyBorder(3, 6, 3, 6));
     this.model = model;
     this.orientation = HORIZONTAL;
     this.myListener = new MyListener();
