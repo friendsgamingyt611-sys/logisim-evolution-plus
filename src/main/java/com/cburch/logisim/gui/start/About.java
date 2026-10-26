@@ -90,7 +90,7 @@ public class About {
     dialog.setVisible(true);
   }
 
-  private static class AboutPanel extends JPanel implements AncestorListener {
+  public static class AboutPanel extends JPanel implements AncestorListener {
     private static final long serialVersionUID = 1L;
     private AboutCredits credits = null;
     private PanelThread thread = null;

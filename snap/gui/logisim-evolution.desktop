@@ -7,6 +7,7 @@ Icon=${SNAP}/meta/gui/logisim-icon-128.png
 Type=Application
 StartupNotify=false
 Categories=Electronics
+StartupWMClass=logisim-evolution
 MimeType=application/x-logisim-circuit;
 Actions=new-empty-window;
 Keywords=circuits;simulation;logic;HDL;chronogram;

@@ -44,6 +44,16 @@ public class Main {
 
     System.setProperty("apple.awt.application.name", BuildInfo.name);
     try {
+      final var toolkit = java.awt.Toolkit.getDefaultToolkit();
+      if ("sun.awt.X11.XToolkit".equals(toolkit.getClass().getName())) {
+        final var field = toolkit.getClass().getDeclaredField("awtAppClassName");
+        field.setAccessible(true);
+        field.set(null, "logisim-evolution");
+      }
+    } catch (Throwable ignored) {
+      // Ignore if not running on X11 or reflection restricted
+    }
+    try {
       if (!GraphicsEnvironment.isHeadless()) {
         FlatLightLaf.installLafInfo();
         FlatDarkLaf.installLafInfo();

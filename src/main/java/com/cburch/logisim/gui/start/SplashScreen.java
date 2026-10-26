@@ -12,6 +12,7 @@ package com.cburch.logisim.gui.start;
 import static com.cburch.logisim.gui.Strings.S;
 
 import com.cburch.logisim.generated.BuildInfo;
+import com.cburch.logisim.prefs.AppPreferences;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
@@ -26,6 +27,7 @@ import javax.swing.JProgressBar;
 import javax.swing.JWindow;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
+import javax.swing.UIManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -65,21 +67,23 @@ public class SplashScreen extends JWindow {
   public SplashScreen() {
     setName(BuildInfo.displayName);
 
-    // Use a clean gradient-style panel
-    final var imagePanel = new SplashPanel();
-    imagePanel.setPreferredSize(new Dimension(480, 280));
+    final var imagePanel = About.getImagePanel();
+    imagePanel.setBorder(null);
 
     progress.setStringPainted(true);
-    progress.setForeground(new Color(0x4a, 0x90, 0xd9));
-    progress.setBackground(new Color(0xe0, 0xe0, 0xe0));
+    Color accent = UIManager.getColor("Component.accentColor");
+    if (accent == null) accent = new Color(0x35, 0x84, 0xe4);
+    progress.setForeground(accent);
+    progress.setBackground(AppPreferences.isDarkTheme() ? new Color(0x28, 0x28, 0x28) : new Color(0xe0, 0xe0, 0xe0));
     progress.setBorder(null);
     progress.setFont(new Font("SansSerif", Font.PLAIN, 12));
     progress.setString("");
 
     final var contents = new JPanel(new BorderLayout());
-    contents.add(imagePanel, BorderLayout.CENTER);
-    contents.add(progress, BorderLayout.SOUTH);
-    contents.setBorder(BorderFactory.createLineBorder(new Color(0x4a, 0x90, 0xd9), 2));
+    contents.add(imagePanel, BorderLayout.NORTH);
+    contents.add(progress, BorderLayout.CENTER);
+    contents.setBorder(BorderFactory.createLineBorder(accent, 2));
+    contents.setBackground(imagePanel.getBackground());
 
     setContentPane(contents);
     pack();
