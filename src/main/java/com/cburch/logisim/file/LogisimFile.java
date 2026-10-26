@@ -672,7 +672,7 @@ public class LogisimFile extends Library implements LibraryEventSource, CircuitL
   //
   // other methods
   //
-  void write(OutputStream out, LibraryLoader loader) {
+  public void write(OutputStream out, LibraryLoader loader) {
     write(out, loader, null, null, false);
   }
 

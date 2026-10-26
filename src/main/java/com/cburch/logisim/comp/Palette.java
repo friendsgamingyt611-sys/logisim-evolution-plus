@@ -47,6 +47,10 @@ public interface Palette {
 
   Color switchLabel();
 
+  Color headerFill();
+
+  Color headerText();
+
   Palette DARK = new DarkPalette();
   Palette LIGHT = new LightPalette();
 
@@ -139,6 +143,18 @@ public interface Palette {
     @Override
     public Color switchActuator(boolean on) {
       return on ? SWITCH_ACTUATOR_ON : SWITCH_ACTUATOR_OFF;
+    }
+
+    private static final Color HEADER_FILL = new Color(0x383838);
+
+    @Override
+    public Color headerFill() {
+      return HEADER_FILL;
+    }
+
+    @Override
+    public Color headerText() {
+      return stroke();
     }
 
     @Override
@@ -298,6 +314,16 @@ public interface Palette {
     @Override
     public Color switchActuator(boolean on) {
       return on ? Color.DARK_GRAY : Color.GRAY;
+    }
+
+    @Override
+    public Color headerFill() {
+      return Color.BLACK;
+    }
+
+    @Override
+    public Color headerText() {
+      return Color.WHITE;
     }
 
     @Override

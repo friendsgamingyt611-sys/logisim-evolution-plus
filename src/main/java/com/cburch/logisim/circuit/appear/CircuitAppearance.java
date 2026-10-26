@@ -14,10 +14,17 @@ import com.cburch.draw.model.CanvasModelEvent;
 import com.cburch.draw.model.CanvasModelListener;
 import com.cburch.draw.model.CanvasObject;
 import com.cburch.draw.model.Drawing;
+import com.cburch.draw.shapes.Curve;
+import com.cburch.draw.shapes.DrawAttr;
+import com.cburch.draw.shapes.Poly;
+import com.cburch.draw.shapes.Rectangle;
+import com.cburch.draw.shapes.Text;
+import com.cburch.draw.util.EditableLabel;
 import com.cburch.logisim.circuit.Circuit;
 import com.cburch.logisim.circuit.CircuitAttributes;
 import com.cburch.logisim.circuit.CircuitState;
 import com.cburch.logisim.circuit.ReplacementMap;
+import com.cburch.logisim.comp.Palette;
 import com.cburch.logisim.data.AttributeEvent;
 import com.cburch.logisim.data.AttributeListener;
 import com.cburch.logisim.data.AttributeOption;
@@ -30,6 +37,7 @@ import com.cburch.logisim.instance.InstanceComponent;
 import com.cburch.logisim.instance.InstancePainter;
 import com.cburch.logisim.proj.Project;
 import com.cburch.logisim.util.EventSourceWeakSupport;
+import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.util.ArrayList;
@@ -312,6 +320,9 @@ public class CircuitAppearance extends Drawing implements AttributeListener {
         // Do nothing.
       }
     }
+    final var isDefault = isDefaultAppearance();
+    final var palette = Palette.of(painter);
+    final var isDark = palette.isDark();
     for (final var shape : getObjectsFromBottom()) {
       if (!(shape instanceof AppearanceElement)) {
         final var dup = g.create();
@@ -319,13 +330,53 @@ public class CircuitAppearance extends Drawing implements AttributeListener {
           dynEl.paintDynamic(dup, state);
           if (shape instanceof DynamicElementWithPoker dynElWithPoker)
             dynElWithPoker.setAnchor(offset);
-        } else shape.paint(dup, null);
+        } else if (isDefault && isDark) {
+          paintDefaultShapeDark(dup, shape, palette);
+        } else {
+          shape.paint(dup, null);
+        }
         dup.dispose();
       }
     }
     g.translate(offset.getX(), offset.getY());
     if (rotate != 0.0) {
       ((Graphics2D) g).rotate(-rotate);
+    }
+  }
+
+  private void paintDefaultShapeDark(Graphics g, CanvasObject shape, Palette palette) {
+    if (shape instanceof Rectangle rect) {
+      final var clone = (Rectangle) rect.clone();
+      final var paintType = clone.getValue(DrawAttr.PAINT_TYPE);
+      if (paintType == DrawAttr.PAINT_FILL) {
+        if (clone.getWidth() > 10) {
+          clone.setValue(DrawAttr.FILL_COLOR, palette.headerFill());
+        } else {
+          clone.setValue(DrawAttr.FILL_COLOR, palette.stroke());
+        }
+      } else if (paintType == DrawAttr.PAINT_STROKE || paintType == DrawAttr.PAINT_STROKE_FILL) {
+        clone.setValue(DrawAttr.STROKE_COLOR, palette.stroke());
+      }
+      clone.paint(g, null);
+    } else if (shape instanceof Text text) {
+      final var clone = (Text) text.clone();
+      final var lbl = clone.getLabel();
+      if (lbl.getHorizontalAlignment() == EditableLabel.CENTER && Color.WHITE.equals(lbl.getColor())) {
+        lbl.setColor(palette.headerText());
+      } else {
+        lbl.setColor(palette.stroke());
+      }
+      clone.paint(g, null);
+    } else if (shape instanceof Poly poly) {
+      final var clone = (Poly) poly.clone();
+      clone.setValue(DrawAttr.STROKE_COLOR, palette.stroke());
+      clone.paint(g, null);
+    } else if (shape instanceof Curve curve) {
+      final var clone = (Curve) curve.clone();
+      clone.setValue(DrawAttr.STROKE_COLOR, palette.stroke());
+      clone.paint(g, null);
+    } else {
+      shape.paint(g, null);
     }
   }
 
