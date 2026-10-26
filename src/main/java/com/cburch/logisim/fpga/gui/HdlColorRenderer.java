@@ -77,11 +77,14 @@ public class HdlColorRenderer extends JLabel implements TableCellRenderer {
     }
 
     if (columnIdx == LABEL) {
-      Color muted = UIManager.getColor("Label.disabledForeground");
-      if (muted == null) muted = new Color(154, 153, 150);
+      Color primaryFg = UIManager.getColor("Table.foreground");
+      if (primaryFg == null) {
+        primaryFg = AppPreferences.isDarkTheme() ? new Color(216, 222, 233) : new Color(46, 52, 54);
+      }
       Color fg = isSelected
-          ? (AppPreferences.isDarkTheme() ? Color.WHITE : UIManager.getColor("Table.foreground"))
-          : muted;
+          ? (AppPreferences.isDarkTheme() ? Color.WHITE : UIManager.getColor("Table.selectionForeground"))
+          : primaryFg;
+      if (fg == null) fg = primaryFg;
       setForeground(fg);
       setText(value);
       setHorizontalAlignment(JLabel.LEFT);
@@ -124,11 +127,14 @@ public class HdlColorRenderer extends JLabel implements TableCellRenderer {
 
   protected Component renderFpgaSupportRow(int columnIdx, String value, boolean isSelected) {
     if (columnIdx == LABEL) {
-      Color muted = UIManager.getColor("Label.disabledForeground");
-      if (muted == null) muted = new Color(154, 153, 150);
+      Color primaryFg = UIManager.getColor("Table.foreground");
+      if (primaryFg == null) {
+        primaryFg = AppPreferences.isDarkTheme() ? new Color(216, 222, 233) : new Color(46, 52, 54);
+      }
       Color fg = isSelected
-          ? (AppPreferences.isDarkTheme() ? Color.WHITE : UIManager.getColor("Table.foreground"))
-          : muted;
+          ? (AppPreferences.isDarkTheme() ? Color.WHITE : UIManager.getColor("Table.selectionForeground"))
+          : primaryFg;
+      if (fg == null) fg = primaryFg;
       setForeground(fg);
       setText(value);
       setHorizontalAlignment(JLabel.LEFT);

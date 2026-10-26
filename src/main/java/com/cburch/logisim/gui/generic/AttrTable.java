@@ -91,6 +91,7 @@ public class AttrTable extends JPanel implements LocaleListener {
 
     final var propPanel = new JPanel(new BorderLayout(0, 0));
     final var tableScroll = new JScrollPane(table);
+    tableScroll.putClientProperty(com.formdev.flatlaf.FlatClientProperties.STYLE, "focusWidth: 0; innerFocusWidth: 0;");
 
     propPanel.add(title, BorderLayout.PAGE_START);
     propPanel.add(tableScroll, BorderLayout.CENTER);

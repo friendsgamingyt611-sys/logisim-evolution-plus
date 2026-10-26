@@ -239,9 +239,11 @@ public class ProjectExplorer extends JTree implements LocaleListener {
         final var g2 = (Graphics2D) g.create();
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         g2.setStroke(new BasicStroke(AppPreferences.getScaledStroke(1.6f), BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
-        Color fgMuted = UIManager.getColor("Label.disabledForeground");
-        if (fgMuted == null) fgMuted = new Color(154, 160, 168);
-        g2.setColor(fgMuted);
+        boolean isSel = tree != null && tree.isRowSelected(row);
+        Color chevronColor = isSel
+            ? Color.WHITE
+            : (AppPreferences.isDarkTheme() ? new Color(184, 191, 198) : new Color(74, 74, 74));
+        g2.setColor(chevronColor);
 
         int cx = b.x - AppPreferences.getScaled(10);
         int cy = b.y + b.height / 2;
@@ -397,8 +399,7 @@ public class ProjectExplorer extends JTree implements LocaleListener {
       isHovered = (row == hoverRow);
       isCurrentCircuit = false;
 
-      Color fgMuted = new Color(154, 160, 168); // #9aa0a8
-      Color fgMain = AppPreferences.isDarkTheme() ? new Color(230, 232, 235) : new Color(31, 30, 29); // #e6e8eb
+      Color fgMain = AppPreferences.isDarkTheme() ? new Color(235, 235, 235) : new Color(30, 30, 30); // #EBEBEB in Dark, #1E1E1E in Light
       Color accent = UIManager.getColor("Component.accentColor");
       if (accent == null) accent = new Color(53, 132, 228);
 
@@ -430,7 +431,7 @@ public class ProjectExplorer extends JTree implements LocaleListener {
             label.setForeground(selected ? Color.WHITE : accent);
             label.setFont(boldFont);
           } else {
-            circIcon.setColor(selected ? Color.WHITE : fgMuted);
+            circIcon.setColor(selected ? Color.WHITE : fgMain);
             label.setForeground(selected ? Color.WHITE : fgMain);
             label.setFont(plainFont);
           }
@@ -463,8 +464,14 @@ public class ProjectExplorer extends JTree implements LocaleListener {
           text = baseName + " \u25cf";
         }
 
+        int count = libNode.getChildCount();
+        if (count > 0) {
+          String badgeColor = selected ? "#ffffff" : (AppPreferences.isDarkTheme() ? "#8B949E" : "#6E7781");
+          text = "<html>" + escapeHtml(text) + "&nbsp;&nbsp;<span style='color: " + badgeColor + "; font-size: 9pt;'>(" + count + ")</span></html>";
+        }
+
         label.setText(text);
-        Icon catIcon = getCategoryIcon(baseName, expanded, selected ? Color.WHITE : fgMuted);
+        Icon catIcon = getCategoryIcon(baseName, expanded, selected ? Color.WHITE : fgMain);
         label.setIcon(catIcon);
         label.setForeground(selected ? Color.WHITE : fgMain);
         label.setFont(plainFont);

@@ -32,9 +32,16 @@ public class AddVhdlIcon extends SymbolicIcon {
     g2.drawLine((int) (s - pad), (int) (s * 0.35f), (int) s, (int) (s * 0.35f));
     g2.drawLine((int) (s - pad), (int) (s * 0.65f), (int) s, (int) (s * 0.65f));
 
-    // Text "V" in center
-    Font font = g2.getFont().deriveFont(Font.BOLD, scale(7.5f));
-    g2.setFont(font);
-    g2.drawString("HDL", pad + scale(1.5f), pad + h - scale(2.0f));
+    // Clean vector 'H' (Hardware Entity) in chip center
+    float cx = s * 0.5f;
+    float hw = s * 0.14f;
+    float hh = s * 0.18f;
+    g2.setStroke(createStroke(1.3f));
+    // left leg
+    g2.drawLine((int) (cx - hw), (int) (s * 0.5f - hh), (int) (cx - hw), (int) (s * 0.5f + hh));
+    // right leg
+    g2.drawLine((int) (cx + hw), (int) (s * 0.5f - hh), (int) (cx + hw), (int) (s * 0.5f + hh));
+    // crossbar
+    g2.drawLine((int) (cx - hw), (int) (s * 0.5f), (int) (cx + hw), (int) (s * 0.5f));
   }
 }

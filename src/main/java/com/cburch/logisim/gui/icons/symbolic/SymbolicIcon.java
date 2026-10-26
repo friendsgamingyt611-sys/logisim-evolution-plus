@@ -57,7 +57,8 @@ public abstract class SymbolicIcon implements Icon {
       fg = c.getForeground();
     } else {
       Color defaultFg = UIManager.getColor("Button.foreground");
-      fg = (defaultFg != null) ? defaultFg : Color.BLACK;
+      if (defaultFg == null) defaultFg = UIManager.getColor("Label.foreground");
+      fg = (defaultFg != null) ? defaultFg : (AppPreferences.isDarkTheme() ? new Color(235, 235, 235) : new Color(30, 30, 30));
     }
 
     g2.setColor(fg);
