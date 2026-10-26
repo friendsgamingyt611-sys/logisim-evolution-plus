@@ -80,7 +80,6 @@ public class ModernHeaderBar extends JPanel implements LocaleListener {
   private JButton resetButton;
   private JButton freqButton;
   private JButton zoomButton;
-  private JButton menuButton;
 
   public ModernHeaderBar(Frame frame, Project project) {
     super(new BorderLayout(8, 0));
@@ -217,13 +216,8 @@ public class ModernHeaderBar extends JPanel implements LocaleListener {
     zoomButton.setToolTipText("Zoom Factor");
     zoomButton.addActionListener(e -> showZoomMenu(zoomButton));
 
-    // Primary Hamburger Menu
-    menuButton = createPillButton(new MenuIcon(), "Main Menu");
-    menuButton.addActionListener(e -> showMainMenu(menuButton));
-
     rightPanel.add(simPill);
     rightPanel.add(zoomButton);
-    rightPanel.add(menuButton);
     add(rightPanel, BorderLayout.EAST);
   }
 
@@ -557,39 +551,7 @@ public class ModernHeaderBar extends JPanel implements LocaleListener {
     menu.add(item);
   }
 
-  private void showMainMenu(JButton parent) {
-    JPopupMenu menu = new JPopupMenu();
 
-    JMenuItem newItem = new JMenuItem("New Project");
-    newItem.addActionListener(e -> ProjectActions.doNew(project));
-    menu.add(newItem);
-
-    JMenuItem openItem = new JMenuItem("Open...");
-    openItem.addActionListener(e -> ProjectActions.doOpen(frame, project));
-    menu.add(openItem);
-
-    JMenuItem saveItem = new JMenuItem("Save");
-    saveItem.addActionListener(e -> ProjectActions.doSave(project));
-    menu.add(saveItem);
-
-    JMenuItem saveAsItem = new JMenuItem("Save As...");
-    saveAsItem.addActionListener(e -> ProjectActions.doSaveAs(project));
-    menu.add(saveAsItem);
-
-    menu.add(new JSeparator());
-
-    JMenuItem prefItem = new JMenuItem("Preferences...");
-    prefItem.addActionListener(e -> PreferencesFrame.showPreferences());
-    menu.add(prefItem);
-
-    menu.add(new JSeparator());
-
-    JMenuItem quitItem = new JMenuItem("Quit");
-    quitItem.addActionListener(e -> ProjectActions.doQuit());
-    menu.add(quitItem);
-
-    menu.show(parent, parent.getWidth() - menu.getPreferredSize().width, parent.getHeight() + 2);
-  }
 
   @Override
   public void updateUI() {

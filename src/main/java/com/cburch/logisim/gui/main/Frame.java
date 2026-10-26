@@ -244,9 +244,9 @@ public class Frame extends LFrame.MainWindow implements LocaleListener {
     }
     if (AppPreferences.USE_HEADER_BAR.getBoolean()) {
       getContentPane().add(headerBar, BorderLayout.NORTH);
-      if (getJMenuBar() != null) {
-        getJMenuBar().setVisible(false);
-      }
+    }
+    if (getJMenuBar() != null) {
+      getJMenuBar().setVisible(true);
     }
 
     localeChanged();
