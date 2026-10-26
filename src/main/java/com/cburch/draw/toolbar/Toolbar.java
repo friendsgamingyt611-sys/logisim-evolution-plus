@@ -9,7 +9,9 @@
 
 package com.cburch.draw.toolbar;
 
+import com.cburch.logisim.prefs.AppPreferences;
 import java.awt.BorderLayout;
+import java.awt.Color;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JPanel;
@@ -28,16 +30,35 @@ public class Toolbar extends JPanel {
     super(new BorderLayout());
     this.subpanel = new JPanel();
     this.subpanel.setBorder(javax.swing.BorderFactory.createEmptyBorder(3, 6, 3, 6));
+    Color tbBg = AppPreferences.isDarkTheme() ? new Color(37, 37, 38) : new Color(243, 244, 246);
+    this.setBackground(tbBg);
+    this.subpanel.setBackground(tbBg);
+    Color tbBorder = AppPreferences.isDarkTheme() ? new Color(51, 51, 51) : new Color(208, 213, 221);
+    this.setBorder(javax.swing.BorderFactory.createMatteBorder(0, 0, 1, 0, tbBorder));
     this.model = model;
     this.orientation = HORIZONTAL;
     this.myListener = new MyListener();
     this.curPressed = null;
 
-    this.add(new JPanel(), BorderLayout.CENTER);
+    final var centerPanel = new JPanel();
+    centerPanel.setBackground(tbBg);
+    this.add(centerPanel, BorderLayout.CENTER);
     setOrientation(HORIZONTAL);
 
     computeContents();
     if (model != null) model.addToolbarModelListener(myListener);
+  }
+
+  @Override
+  public void updateUI() {
+    super.updateUI();
+    if (subpanel != null) {
+      Color tbBg = AppPreferences.isDarkTheme() ? new Color(37, 37, 38) : new Color(243, 244, 246);
+      setBackground(tbBg);
+      subpanel.setBackground(tbBg);
+      Color tbBorder = AppPreferences.isDarkTheme() ? new Color(51, 51, 51) : new Color(208, 213, 221);
+      setBorder(javax.swing.BorderFactory.createMatteBorder(0, 0, 1, 0, tbBorder));
+    }
   }
 
   private void computeContents() {

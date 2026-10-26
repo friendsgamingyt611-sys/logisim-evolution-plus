@@ -19,6 +19,7 @@ import com.cburch.logisim.util.JInputDialog;
 import com.cburch.logisim.util.LocaleListener;
 import com.cburch.logisim.util.LocaleManager;
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Font;
@@ -78,10 +79,13 @@ public class AttrTable extends JPanel implements LocaleListener {
     table.setDefaultEditor(Object.class, editor);
     table.setTableHeader(null);
     table.setRowHeight(AppPreferences.getScaled(30));
-    table.putClientProperty(com.formdev.flatlaf.FlatClientProperties.STYLE,
-        "showHorizontalLines: true; showVerticalLines: false; intercellSpacing: 0,1;");
+    final var gridColor = AppPreferences.isDarkTheme() ? new Color(46, 46, 46) : new Color(228, 231, 236);
+    table.setGridColor(gridColor);
     table.setShowHorizontalLines(true);
-    table.setShowVerticalLines(false);
+    table.setShowVerticalLines(true);
+    table.setIntercellSpacing(new Dimension(1, 1));
+    table.putClientProperty(com.formdev.flatlaf.FlatClientProperties.STYLE,
+        "showHorizontalLines: true; showVerticalLines: true; intercellSpacing: 1,1;");
 
     final var baseFont = title.getFont();
     final var titleSize = Math.round(baseFont.getSize() * 1.2F);

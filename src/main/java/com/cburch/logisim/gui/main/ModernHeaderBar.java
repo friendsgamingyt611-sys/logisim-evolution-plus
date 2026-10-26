@@ -101,9 +101,10 @@ public class ModernHeaderBar extends JPanel implements LocaleListener {
   }
 
   private void initStyle() {
-    putClientProperty(FlatClientProperties.STYLE, "background: $TitlePane.background;");
-    Color borderColor = UIManager.getColor("Component.borderColor");
-    if (borderColor == null) borderColor = new Color(0, 0, 0, 30);
+    Color bg = AppPreferences.isDarkTheme() ? new Color(37, 37, 38) : new Color(243, 244, 246);
+    setBackground(bg);
+    putClientProperty(FlatClientProperties.STYLE, "background: " + (AppPreferences.isDarkTheme() ? "#252526" : "#f3f4f6") + ";");
+    Color borderColor = AppPreferences.isDarkTheme() ? new Color(51, 51, 51) : new Color(208, 213, 221);
     setBorder(BorderFactory.createCompoundBorder(
         BorderFactory.createMatteBorder(0, 0, 1, 0, borderColor),
         BorderFactory.createEmptyBorder(4, 10, 4, 10)));

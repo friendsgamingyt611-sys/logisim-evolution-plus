@@ -182,6 +182,8 @@ public class Frame extends LFrame.MainWindow implements LocaleListener {
     bottomTab.putClientProperty("JTabbedPane.tabHeight", AppPreferences.getScaled(30));
     bottomTab.putClientProperty("JTabbedPane.tabType", "underline");
     bottomTab.putClientProperty("JTabbedPane.showContentSeparators", true);
+    bottomTab.putClientProperty(com.formdev.flatlaf.FlatClientProperties.STYLE,
+        "background: " + (AppPreferences.isDarkTheme() ? "#282828" : "#eaecf0") + ";");
     bottomTab.add(attrTable = new AttrTable(this));
     regTabContent = new RegTabContent(this);
     bottomTab.add(regTabContent);
@@ -210,6 +212,8 @@ public class Frame extends LFrame.MainWindow implements LocaleListener {
     topTab.putClientProperty("JTabbedPane.tabHeight", AppPreferences.getScaled(30));
     topTab.putClientProperty("JTabbedPane.tabType", "underline");
     topTab.putClientProperty("JTabbedPane.showContentSeparators", true);
+    topTab.putClientProperty(com.formdev.flatlaf.FlatClientProperties.STYLE,
+        "background: " + (AppPreferences.isDarkTheme() ? "#282828" : "#eaecf0") + ";");
     topTab.add(explPanel);
     topTab.add(simPanel);
 

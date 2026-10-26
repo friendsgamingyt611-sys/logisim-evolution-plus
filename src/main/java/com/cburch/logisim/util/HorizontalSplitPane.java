@@ -73,6 +73,15 @@ public class HorizontalSplitPane extends JPanel {
             RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
       }
+      Color dividerColor = AppPreferences.isDarkTheme() ? new Color(51, 51, 51) : new Color(208, 213, 221);
+      g.setColor(dividerColor);
+      if (getWidth() < getHeight()) {
+        int x = getWidth() / 2;
+        g.drawLine(x, 0, x, getHeight());
+      } else {
+        int y = getHeight() / 2;
+        g.drawLine(0, y, getWidth(), y);
+      }
       if (dragging) {
         g.setColor(DRAG_COLOR);
         g.fillRect(0, 0, getWidth(), getHeight());

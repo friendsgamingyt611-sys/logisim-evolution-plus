@@ -277,7 +277,6 @@ public class ProjectExplorer extends JTree implements LocaleListener {
 
     Color accent = UIManager.getColor("Component.accentColor");
     if (accent == null) accent = new Color(53, 132, 228);
-    Color accent18 = new Color(accent.getRed(), accent.getGreen(), accent.getBlue(), (int) (255 * 0.18f));
     Color hoverFill = AppPreferences.isDarkTheme()
         ? new Color(255, 255, 255, 14)
         : new Color(0, 0, 0, 12);
@@ -290,7 +289,7 @@ public class ProjectExplorer extends JTree implements LocaleListener {
       boolean isHover = (r == hoverRow);
 
       if (isArmed) {
-        g2.setColor(accent18);
+        g2.setColor(accent);
         g2.fill(new RoundRectangle2D.Float(6, b.y + 1, treeW - 12, b.height - 2, 6, 6));
       } else if (isHover) {
         g2.setColor(hoverFill);
