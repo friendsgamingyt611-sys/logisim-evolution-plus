@@ -15,6 +15,7 @@ import com.cburch.logisim.circuit.CircuitMutation;
 import com.cburch.logisim.circuit.Wire;
 import com.cburch.logisim.comp.Component;
 import com.cburch.logisim.comp.ComponentDrawContext;
+import com.cburch.logisim.comp.Palette;
 import com.cburch.logisim.data.Location;
 import com.cburch.logisim.data.Value;
 import com.cburch.logisim.gui.main.Canvas;
@@ -125,7 +126,7 @@ public class WiringTool extends Tool {
       final var x1 = e1.getX();
       final var y1 = e1.getY();
 
-      g.setColor(Color.BLACK);
+      g.setColor(Palette.current().stroke());
       GraphicsUtil.switchToWidth(g, 3);
       if (direction == HORIZONTAL) {
         if (x0 != x1) g.drawLine(x0, y0, x1, y0);
@@ -135,7 +136,7 @@ public class WiringTool extends Tool {
         if (x0 != x1) g.drawLine(x0, y1, x1, y1);
       }
     } else if (AppPreferences.ADD_SHOW_GHOSTS.getBoolean() && inCanvas) {
-      g.setColor(Color.GRAY);
+      g.setColor(Palette.current().stroke());
       g.fillOval(cur.getX() - 2, cur.getY() - 2, 5, 5);
     }
   }

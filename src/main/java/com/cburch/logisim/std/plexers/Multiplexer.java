@@ -30,8 +30,10 @@ import com.cburch.logisim.instance.StdAttr;
 import com.cburch.logisim.prefs.AppPreferences;
 import com.cburch.logisim.tools.key.BitWidthConfigurator;
 import com.cburch.logisim.tools.key.JoinedConfigurator;
+import com.cburch.logisim.comp.Palette;
 import com.cburch.logisim.util.GraphicsUtil;
 import java.awt.Color;
+import java.awt.Font;
 import java.awt.Graphics;
 
 public class Multiplexer extends InstanceFactory {
@@ -244,7 +246,10 @@ public class Multiplexer extends InstanceFactory {
       y0 = bds.getY() + 15;
       halign = GraphicsUtil.H_LEFT;
     }
-    g.setColor(Color.GRAY);
+    final var oldFont = g.getFont();
+    g.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 9));
+    final var strokeCol = Palette.current().stroke();
+    g.setColor(strokeCol.equals(Color.BLACK) ? new Color(120, 120, 120) : new Color(170, 170, 170));
     GraphicsUtil.drawText(g, "0", x0, y0, halign, GraphicsUtil.V_BASELINE);
 
     // draw the trapezoid, "MUX" string, the individual ports
@@ -254,9 +259,12 @@ public class Multiplexer extends InstanceFactory {
             ? (size == PlexersLibrary.SIZE_NARROW ? 7 : 10)
             : (size == PlexersLibrary.SIZE_NARROW ? 10 : 20);
     PlexersLibrary.drawTrapezoid(g, bds, facing, lean);
-    if (size == PlexersLibrary.SIZE_WIDE)
+    if (inputs > 2 && size == PlexersLibrary.SIZE_WIDE) {
+      g.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 9));
       GraphicsUtil.drawCenteredText(
           g, "MUX", bds.getX() + bds.getWidth() / 2, bds.getY() + bds.getHeight() / 2);
+    }
+    g.setFont(oldFont);
     painter.drawPorts();
   }
 

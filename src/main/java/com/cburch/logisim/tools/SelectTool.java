@@ -233,14 +233,16 @@ public class SelectTool extends Tool {
         gDup.dispose();
       }
 
-      gBase.setColor(palette.selectionMarqueeBorder());
-      GraphicsUtil.switchToWidth(gBase, 2);
       if (w < 0) {
         w = 0;
       }
       if (h < 0) {
         h = 0;
       }
+      gBase.setColor(palette.selectionMarqueeFill());
+      gBase.fillRect(left, top, w, h);
+      gBase.setColor(palette.selectionMarqueeBorder());
+      GraphicsUtil.switchToWidth(gBase, 1);
       gBase.drawRect(left, top, w, h);
     }
   }
