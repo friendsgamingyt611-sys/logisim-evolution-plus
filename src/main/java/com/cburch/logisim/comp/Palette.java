@@ -32,6 +32,8 @@ public interface Palette {
 
   Color widthError();
 
+  Color bus();
+
   Palette DARK = new DarkPalette();
   Palette LIGHT = new LightPalette();
 
@@ -94,6 +96,12 @@ public interface Palette {
         return new Color(AppPreferences.COMPONENT_COLOR.get());
       }
       return STROKE;
+    }
+
+    @Override
+    public Color bus() {
+      final var custom = AppPreferences.BUS_COLOR.get();
+      return (custom != 0) ? new Color(custom) : stroke();
     }
 
     @Override
@@ -176,6 +184,12 @@ public interface Palette {
         return new Color(AppPreferences.COMPONENT_COLOR.get());
       }
       return STROKE;
+    }
+
+    @Override
+    public Color bus() {
+      final var custom = AppPreferences.BUS_COLOR.get();
+      return (custom != 0) ? new Color(custom) : stroke();
     }
 
     @Override
