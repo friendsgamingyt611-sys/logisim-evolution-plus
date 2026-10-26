@@ -10,6 +10,7 @@
 package com.cburch.logisim.comp;
 
 import com.cburch.logisim.data.Value;
+import com.cburch.logisim.instance.InstancePainter;
 import com.cburch.logisim.prefs.AppPreferences;
 import java.awt.Color;
 
@@ -33,6 +34,18 @@ public interface Palette {
   Color widthError();
 
   Color bus();
+
+  boolean isDark();
+
+  Color switchBody();
+
+  Color switchOutline();
+
+  Color switchChannel(boolean on);
+
+  Color switchActuator(boolean on);
+
+  Color switchLabel();
 
   Palette DARK = new DarkPalette();
   Palette LIGHT = new LightPalette();
@@ -78,6 +91,16 @@ public interface Palette {
     return current();
   }
 
+  static Palette of(InstancePainter painter) {
+    if (isForceLight() || (painter != null && painter.isPrintView())) {
+      return LIGHT;
+    }
+    if (painter != null) {
+      return painter.getPalette();
+    }
+    return current();
+  }
+
   class DarkPalette implements Palette {
     private static final Color STROKE = new Color(0xE6E6E6);
     private static final Color WIRE_0 = new Color(0x2E9D62);
@@ -89,6 +112,39 @@ public interface Palette {
     private static final Color FILL = new Color(0x262626);
     private static final Color BG = new Color(0x1F1F1F);
     private static final Color NIL = new Color(0x888888);
+    private static final Color SWITCH_RECESSED = new Color(0x141414);
+    private static final Color SWITCH_ACTUATOR_ON = new Color(0xF0F0F0);
+    private static final Color SWITCH_ACTUATOR_OFF = new Color(0x9E9E9E);
+
+    @Override
+    public boolean isDark() {
+      return true;
+    }
+
+    @Override
+    public Color switchBody() {
+      return FILL;
+    }
+
+    @Override
+    public Color switchOutline() {
+      return stroke();
+    }
+
+    @Override
+    public Color switchChannel(boolean on) {
+      return SWITCH_RECESSED;
+    }
+
+    @Override
+    public Color switchActuator(boolean on) {
+      return on ? SWITCH_ACTUATOR_ON : SWITCH_ACTUATOR_OFF;
+    }
+
+    @Override
+    public Color switchLabel() {
+      return stroke();
+    }
 
     @Override
     public Color stroke() {
@@ -217,6 +273,36 @@ public interface Palette {
     @Override
     public Color pinOutline() {
       return stroke();
+    }
+
+    @Override
+    public boolean isDark() {
+      return false;
+    }
+
+    @Override
+    public Color switchBody() {
+      return Color.DARK_GRAY;
+    }
+
+    @Override
+    public Color switchOutline() {
+      return null;
+    }
+
+    @Override
+    public Color switchChannel(boolean on) {
+      return on ? Value.trueColor : Color.white;
+    }
+
+    @Override
+    public Color switchActuator(boolean on) {
+      return on ? Color.DARK_GRAY : Color.GRAY;
+    }
+
+    @Override
+    public Color switchLabel() {
+      return Color.white;
     }
 
     @Override

@@ -12,6 +12,7 @@ package com.cburch.logisim.std.io;
 import static com.cburch.logisim.std.Strings.S;
 
 import com.cburch.draw.shapes.DrawAttr;
+import com.cburch.logisim.comp.Palette;
 import com.cburch.logisim.data.Attribute;
 import com.cburch.logisim.data.AttributeSet;
 import com.cburch.logisim.data.Attributes;
@@ -252,9 +253,16 @@ public class DipSwitch extends InstanceFactory {
       ((Graphics2D) g).rotate(rotate);
     }
 
+    final var palette = Palette.of(painter);
+
     // draw switch background
-    g.setColor(Color.DARK_GRAY);
+    g.setColor(palette.switchBody());
     g.fillRect(1, 1, (n + 1) * segmentWidth - 2, 40 - 2);
+    final var outline = palette.switchOutline();
+    if (outline != null) {
+      g.setColor(outline);
+      g.drawRect(1, 1, (n + 1) * segmentWidth - 2, 40 - 2);
+    }
 
     // switch bg and labels
     g.setFont(DrawAttr.DEFAULT_FONT);
@@ -262,17 +270,17 @@ public class DipSwitch extends InstanceFactory {
       g.setFont(g.getFont().deriveFont(g.getFont().getSize2D() * 0.6f));
     }
     for (var i = 0; i < n; i++) {
-      g.setColor(state.isBitSet(i) ? Value.trueColor : Color.white);
+      g.setColor(palette.switchChannel(state.isBitSet(i)));
       g.fillRect(7 + (i * segmentWidth), 16, 6, 20);
 
-      g.setColor(Color.white);
+      g.setColor(palette.switchLabel());
       final var s = Integer.toString(i + 1);
       GraphicsUtil.drawCenteredText(g, s, 9 + (i * segmentWidth), 8);
     }
 
     // draw each switch state
     for (var i = 0; i < n; i++) {
-      g.setColor(state.isBitSet(i) ? Color.DARK_GRAY : Color.GRAY);
+      g.setColor(palette.switchActuator(state.isBitSet(i)));
       int ypos = state.isBitSet(i) ? 17 : 26;
       g.fillRect(8 + (i * segmentWidth), ypos, 4, 9);
     }
