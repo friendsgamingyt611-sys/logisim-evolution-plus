@@ -259,8 +259,8 @@ public class Multiplexer extends InstanceFactory {
             ? (size == PlexersLibrary.SIZE_NARROW ? 7 : 10)
             : (size == PlexersLibrary.SIZE_NARROW ? 10 : 20);
     PlexersLibrary.drawTrapezoid(g, bds, facing, lean);
-    if (inputs > 2 && size == PlexersLibrary.SIZE_WIDE) {
-      g.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 9));
+    if (size == PlexersLibrary.SIZE_WIDE) {
+      g.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 10));
       GraphicsUtil.drawCenteredText(
           g, "MUX", bds.getX() + bds.getWidth() / 2, bds.getY() + bds.getHeight() / 2);
     }

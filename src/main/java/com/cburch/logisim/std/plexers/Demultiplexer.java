@@ -245,11 +245,9 @@ public class Demultiplexer extends InstanceFactory {
     } else {
       PlexersLibrary.drawTrapezoid(g, bds, facing.reverse(), 20);
     }
-    if (outputs > 2) {
-      g.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 9));
-      GraphicsUtil.drawCenteredText(
-          g, "DMX", bds.getX() + bds.getWidth() / 2, bds.getY() + bds.getHeight() / 2);
-    }
+    g.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 10));
+    GraphicsUtil.drawCenteredText(
+        g, "DMX", bds.getX() + bds.getWidth() / 2, bds.getY() + bds.getHeight() / 2);
     g.setFont(oldFont);
     painter.drawPorts();
   }

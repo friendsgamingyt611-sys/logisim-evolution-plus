@@ -21,8 +21,10 @@ import com.cburch.logisim.proj.Project;
 import com.cburch.logisim.util.CollectionUtil;
 import com.cburch.logisim.util.GraphicsUtil;
 import java.awt.Color;
+import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.RenderingHints;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.Collections;
@@ -192,8 +194,13 @@ class CanvasPainter implements PropertyChangeListener {
     g.setColor(Palette.current().stroke());
 
     final var gfxScaled = g.create();
-    if (zoomFactor != 1.0 && gfxScaled instanceof Graphics2D g2d) {
-      g2d.scale(zoomFactor, zoomFactor);
+    if (gfxScaled instanceof Graphics2D g2d) {
+      g2d.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 10));
+      g2d.setRenderingHint(RenderingHints.KEY_FRACTIONALMETRICS, RenderingHints.VALUE_FRACTIONALMETRICS_ON);
+      g2d.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+      if (zoomFactor != 1.0) {
+        g2d.scale(zoomFactor, zoomFactor);
+      }
     }
     final var circ = proj.getCurrentCircuit();
     if (circ == null) {
