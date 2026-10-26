@@ -114,7 +114,7 @@ public class Exponentiator extends InstanceFactory {
   @Override
   public void paintInstance(InstancePainter painter) {
     final var g = painter.getGraphics();
-    g.setColor(new Color(AppPreferences.COMPONENT_COLOR.get()));
+    g.setColor(AppPreferences.getComponentColor());
     painter.drawBounds();
     painter.drawPort(LOW_OUT, "y\u02E3", Direction.WEST);
     g.setColor(new Color(AppPreferences.COMPONENT_SECONDARY_COLOR.get()));

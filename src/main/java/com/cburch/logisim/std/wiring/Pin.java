@@ -18,6 +18,7 @@ import com.cburch.logisim.LogisimVersion;
 import com.cburch.logisim.circuit.CircuitState;
 import com.cburch.logisim.circuit.RadixOption;
 import com.cburch.logisim.circuit.Wire;
+import com.cburch.logisim.comp.Palette;
 import com.cburch.logisim.data.Attribute;
 import com.cburch.logisim.data.AttributeOption;
 import com.cburch.logisim.data.AttributeSet;
@@ -670,7 +671,7 @@ public class Pin extends InstanceFactory {
         GraphicsUtil.switchToWidth(g, 2);
         g.drawLine(x - 6, y, x, y);
       }
-      g.setColor(new Color(AppPreferences.COMPONENT_COLOR.get()));
+      g.setColor(AppPreferences.getComponentColor());
     }
   }
 
@@ -857,7 +858,7 @@ public class Pin extends InstanceFactory {
     RadixOption radix = painter.getAttributeValue(RadixOption.ATTRIBUTE);
     Direction dir = painter.getAttributeSet().getValue(StdAttr.FACING);
     int westTranslate = (isOutput) ? width : width + 10;
-    final var baseColor = new Color(AppPreferences.COMPONENT_COLOR.get());
+    final var baseColor = AppPreferences.getComponentColor();
     if (dir == Direction.WEST) {
       g2.rotate(-Math.PI);
       g2.translate(westTranslate, 0);
@@ -872,7 +873,7 @@ public class Pin extends InstanceFactory {
     } else {
       int labelYPos = height / 2 - 2;
       int LabelValueXOffset = (isOutput) ? -15 : -20;
-      g.setColor(Color.BLUE);
+      g.setColor(painter.getPalette().blueIndex());
       g2.scale(0.7, 0.7);
       g2.drawString(
           radix.getIndexChar(),
@@ -946,7 +947,7 @@ public class Pin extends InstanceFactory {
       g.drawRect(x + 1, y + 1, width - 1, height - 1);
       if (!isGhost) {
         if (!painter.getShowState()) {
-          g.setColor(new Color(AppPreferences.COMPONENT_COLOR.get()));
+          g.setColor(AppPreferences.getComponentColor());
           GraphicsUtil.drawCenteredText(
               g, "x" + attrs.width.getWidth(), x + width / 2, y + height / 2);
         } else {
@@ -1073,7 +1074,7 @@ public class Pin extends InstanceFactory {
       }
       if (!isGhost) {
         if (!painter.getShowState()) {
-          g.setColor(new Color(AppPreferences.COMPONENT_COLOR.get()));
+          g.setColor(AppPreferences.getComponentColor());
           GraphicsUtil.drawCenteredText(
               g, "x" + attrs.width.getWidth(), x + width / 2, y + height / 2);
         } else {
@@ -1198,7 +1199,7 @@ public class Pin extends InstanceFactory {
     int x = bds.getX();
     int y = bds.getY();
     GraphicsUtil.switchToWidth(g, 2);
-    g.setColor(new Color(AppPreferences.COMPONENT_COLOR.get()));
+    g.setColor(AppPreferences.getComponentColor());
     if (IsOutput) {
       drawOutputShape(
           painter, x + 1, y + 1, bds.getWidth() - 1, bds.getHeight() - 1, found.getColor(), false);

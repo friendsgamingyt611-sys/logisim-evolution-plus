@@ -13,6 +13,7 @@ import com.cburch.logisim.circuit.Circuit;
 import com.cburch.logisim.circuit.CircuitState;
 import com.cburch.logisim.circuit.WireSet;
 import com.cburch.logisim.comp.ComponentDrawContext;
+import com.cburch.logisim.comp.Palette;
 import com.cburch.logisim.data.Attribute;
 import com.cburch.logisim.data.AttributeSet;
 import com.cburch.logisim.data.Bounds;
@@ -156,6 +157,10 @@ public class InstancePainter implements InstanceState {
   //
   public WireSet getHighlightedWires() {
     return context.getHighlightedWires();
+  }
+
+  public Palette getPalette() {
+    return context.getPalette();
   }
 
   //

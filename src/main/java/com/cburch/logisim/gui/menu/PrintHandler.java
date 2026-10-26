@@ -11,6 +11,7 @@ package com.cburch.logisim.gui.menu;
 
 import static com.cburch.logisim.gui.Strings.S;
 
+import com.cburch.logisim.comp.Palette;
 import com.cburch.logisim.gui.generic.OptionPane;
 import com.cburch.logisim.gui.generic.TikZWriter;
 import com.cburch.logisim.gui.main.ExportImage;
@@ -69,11 +70,13 @@ public abstract class PrintHandler implements Printable {
 
   @Override
   public int print(Graphics pg, PageFormat pf, int pageNum) {
-    final var imWidth = pf.getImageableWidth();
-    final var imHeight = pf.getImageableHeight();
-    final var g = (Graphics2D) pg;
-    g.translate(pf.getImageableX(), pf.getImageableY());
-    return print(g, pf, pageNum, imWidth, imHeight);
+    try (var ignored = Palette.enterLightScope()) {
+      final var imWidth = pf.getImageableWidth();
+      final var imHeight = pf.getImageableHeight();
+      final var g = (Graphics2D) pg;
+      g.translate(pf.getImageableX(), pf.getImageableY());
+      return print(g, pf, pageNum, imWidth, imHeight);
+    }
   }
 
   public abstract int print(Graphics2D g, PageFormat pf, int pageNum, double w, double h);
@@ -148,7 +151,7 @@ public abstract class PrintHandler implements Printable {
     final var base = (fmt == ExportImage.FORMAT_TIKZ || fmt == ExportImage.FORMAT_SVG) ? new TikZWriter() : img.getGraphics();
     final var gr = base.create();
 
-    try {
+    try (var ignored = Palette.enterLightScope()) {
       if (!(gr instanceof Graphics2D g2d)) {
         showErr("couldNotCreateImage");
         return;

@@ -79,7 +79,7 @@ public class MinMax extends InstanceFactory {
   @Override
   public void paintInstance(InstancePainter painter) {
     final var g = painter.getGraphics();
-    g.setColor(new Color(AppPreferences.COMPONENT_COLOR.get()));
+    g.setColor(AppPreferences.getComponentColor());
     painter.drawBounds();
     painter.drawPort(IN0);
     painter.drawPort(IN1);

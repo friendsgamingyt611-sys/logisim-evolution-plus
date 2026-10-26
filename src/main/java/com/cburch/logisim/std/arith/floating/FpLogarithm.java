@@ -112,7 +112,7 @@ public class FpLogarithm extends InstanceFactory {
   @Override
   public void paintInstance(InstancePainter painter) {
     final var g = painter.getGraphics();
-    g.setColor(new Color(AppPreferences.COMPONENT_COLOR.get()));
+    g.setColor(AppPreferences.getComponentColor());
     painter.drawBounds();
 
     final var mode = painter.getAttributeValue(LOG_MODE);
@@ -140,7 +140,7 @@ public class FpLogarithm extends InstanceFactory {
     final var x = loc.getX();
     final var y = loc.getY();
     GraphicsUtil.switchToWidth(g, 2);
-    g.setColor(new Color(AppPreferences.COMPONENT_COLOR.get()));
+    g.setColor(AppPreferences.getComponentColor());
     g.drawLine(x - 35, y - 15, x - 35, y + 5);
     g.drawLine(x - 35, y - 15, x - 25, y - 15);
     g.drawLine(x - 35, y - 5, x - 25, y - 5);

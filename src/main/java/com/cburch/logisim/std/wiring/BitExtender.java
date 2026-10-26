@@ -115,7 +115,7 @@ public class BitExtender extends InstanceFactory {
     FontMetrics fm = g.getFontMetrics();
     int asc = fm.getAscent();
 
-    g.setColor(new Color(AppPreferences.COMPONENT_COLOR.get()));
+    g.setColor(AppPreferences.getComponentColor());
     painter.drawBounds();
 
     String s0;

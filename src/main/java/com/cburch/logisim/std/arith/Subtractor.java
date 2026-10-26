@@ -77,7 +77,7 @@ public class Subtractor extends InstanceFactory {
   @Override
   public void paintInstance(InstancePainter painter) {
     final var gfx = painter.getGraphics();
-    painter.getGraphics().setColor(new Color(AppPreferences.COMPONENT_COLOR.get()));
+    painter.getGraphics().setColor(AppPreferences.getComponentColor());
     painter.drawBounds();
     painter.getGraphics().setColor(new Color(AppPreferences.COMPONENT_SECONDARY_COLOR.get()));
     painter.drawPort(IN0);
@@ -90,7 +90,7 @@ public class Subtractor extends InstanceFactory {
     final var x = loc.getX();
     final var y = loc.getY();
     GraphicsUtil.switchToWidth(gfx, 2);
-    gfx.setColor(new Color(AppPreferences.COMPONENT_COLOR.get()));
+    gfx.setColor(AppPreferences.getComponentColor());
     gfx.drawLine(x - 15, y, x - 5, y);
     GraphicsUtil.switchToWidth(gfx, 1);
   }

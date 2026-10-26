@@ -13,6 +13,7 @@ import static com.cburch.logisim.gui.Strings.S;
 
 import com.cburch.logisim.Main;
 import com.cburch.logisim.circuit.RadixOption;
+import com.cburch.logisim.comp.Palette;
 import com.cburch.logisim.data.AttributeOption;
 import com.cburch.logisim.data.Direction;
 import com.cburch.logisim.fpga.hdlgenerator.HdlGeneratorFactory;
@@ -25,6 +26,7 @@ import com.cburch.logisim.util.LocaleManager;
 import com.cburch.logisim.util.PropertyChangeWeakSupport;
 import com.cburch.logisim.gui.theme.ModernDarkLaf;
 import com.cburch.logisim.gui.theme.ModernLightLaf;
+import com.cburch.logisim.gui.theme.ThemeManager;
 import com.formdev.flatlaf.FlatIntelliJLaf;
 import com.formdev.flatlaf.util.SystemInfo;
 import java.awt.Color;
@@ -247,10 +249,22 @@ public class AppPreferences {
 
           setTemplateFile(convertFile(p.get(TEMPLATE_FILE, null)));
           setTemplateType(p.getInt(TEMPLATE_TYPE, TEMPLATE_PLAIN));
+          migrateComponentColor(p);
         }
       }
     }
     return prefs;
+  }
+
+  private static void migrateComponentColor(Preferences p) {
+    if (p.get("adaptComponentColor", null) == null) {
+      final var stored = p.getInt("componentColor", DEFAULT_COMPONENT_COLOR);
+      if (stored != DEFAULT_COMPONENT_COLOR && stored != 0 && stored != 0xFF000000 && stored != -16777216) {
+        p.putBoolean("adaptComponentColor", false);
+      } else {
+        p.putBoolean("adaptComponentColor", true);
+      }
+    }
   }
 
   //
@@ -572,30 +586,15 @@ public class AppPreferences {
               Direction.EAST.toString()));
 
   public static boolean isSystemDark() {
-    if (SystemInfo.isLinux) {
-      try {
-        final var proc =
-            new ProcessBuilder("gsettings", "get", "org.gnome.desktop.interface", "color-scheme")
-                .start();
-        try (var in = proc.getInputStream()) {
-          final var out = new String(in.readAllBytes());
-          if (out.contains("prefer-dark")) {
-            return true;
-          }
-        }
-      } catch (Throwable ignored) {
-        // Fallback
-      }
-    }
-    return false;
+    return ThemeManager.isSystemDark();
   }
 
   private static String getDefaultLookAndFeel() {
-    if (SystemInfo.isLinux) {
-      return isSystemDark() ? ModernDarkLaf.class.getName() : ModernLightLaf.class.getName();
-    }
-    return FlatIntelliJLaf.class.getName();
+    return isSystemDark() ? ModernDarkLaf.class.getName() : ModernLightLaf.class.getName();
   }
+
+  public static final PrefMonitor<Boolean> AUTO_SYNC_THEME =
+      create(new PrefMonitorBoolean("autoSyncTheme", true));
 
   public static final PrefMonitor<String> LookAndFeel =
       create(new PrefMonitorString("LookAndFeel", getDefaultLookAndFeel()));
@@ -620,11 +619,86 @@ public class AppPreferences {
   public static final int DEFAULT_GRID_BG_COLOR = 0xFFFFFFFF;
   public static final int DEFAULT_GRID_DOT_COLOR = 0xFF777777;
   public static final int DEFAULT_ZOOMED_DOT_COLOR = 0xFFCCCCCC;
+
+  public static final int DARK_CANVAS_BG_COLOR = 0xFF1F1F1F;
+  public static final int DARK_GRID_MINOR_DOT_COLOR = 0xFF444444;
+  public static final int DARK_GRID_MAJOR_DOT_COLOR = 0xFF606060;
+
+  public static final int LIGHT_CANVAS_BG_COLOR = 0xFFFCFCFB;
+  public static final int LIGHT_GRID_MINOR_DOT_COLOR = 0xFFD8D8D8;
+  public static final int LIGHT_GRID_MAJOR_DOT_COLOR = 0xFF808080;
+
+  public static Color getCanvasBgColor() {
+    final var val = CANVAS_BG_COLOR.get();
+    if (isDarkTheme()) {
+      if (val == DEFAULT_CANVAS_BG_COLOR || val == 0xFFFFFFFF || val == -1) {
+        return new Color(DARK_CANVAS_BG_COLOR);
+      }
+      return new Color(val);
+    } else {
+      if (val == DEFAULT_CANVAS_BG_COLOR || val == 0xFFFFFFFF || val == -1) {
+        return new Color(LIGHT_CANVAS_BG_COLOR);
+      }
+      return new Color(val);
+    }
+  }
+
+  public static Color getGridBgColor() {
+    final var val = GRID_BG_COLOR.get();
+    if (isDarkTheme()) {
+      if (val == DEFAULT_GRID_BG_COLOR || val == 0xFFFFFFFF || val == -1) {
+        return new Color(DARK_CANVAS_BG_COLOR);
+      }
+      return new Color(val);
+    } else {
+      if (val == DEFAULT_GRID_BG_COLOR || val == 0xFFFFFFFF || val == -1) {
+        return new Color(LIGHT_CANVAS_BG_COLOR);
+      }
+      return new Color(val);
+    }
+  }
+
+  public static Color getGridMinorDotColor() {
+    final var val = GRID_DOT_COLOR.get();
+    if (isDarkTheme()) {
+      if (val == DEFAULT_GRID_DOT_COLOR || val == 0xFF777777) {
+        return new Color(DARK_GRID_MINOR_DOT_COLOR);
+      }
+      return new Color(val);
+    } else {
+      if (val == DEFAULT_GRID_DOT_COLOR || val == 0xFF777777) {
+        return new Color(LIGHT_GRID_MINOR_DOT_COLOR);
+      }
+      return new Color(val);
+    }
+  }
+
+  public static Color getGridMajorDotColor() {
+    final var val = GRID_ZOOMED_DOT_COLOR.get();
+    if (isDarkTheme()) {
+      if (val == DEFAULT_ZOOMED_DOT_COLOR || val == 0xFFCCCCCC) {
+        return new Color(DARK_GRID_MAJOR_DOT_COLOR);
+      }
+      return new Color(val);
+    } else {
+      if (val == DEFAULT_ZOOMED_DOT_COLOR || val == 0xFFCCCCCC) {
+        return new Color(LIGHT_GRID_MAJOR_DOT_COLOR);
+      }
+      return new Color(val);
+    }
+  }
   public static final int DEFAULT_COMPONENT_COLOR = 0x00000000;
   public static final int DEFAULT_COMPONENT_SECONDARY_COLOR = 0x99999999;
   public static final int DEFAULT_COMPONENT_GHOST_COLOR = 0x99999999;
   public static final int DEFAULT_COMPONENT_ICON_COLOR = 0x00000000;
   public static final int DEFAULT_TEXT_TOOL_COLOR = 0x00000000;
+
+  public static Color getComponentColor() {
+    if (!ADAPT_COMPONENT_COLOR.getBoolean()) {
+      return new Color(COMPONENT_COLOR.get());
+    }
+    return Palette.current().stroke();
+  }
 
   // restores default grid colors
   public static void setDefaultGridColors() {
@@ -636,6 +710,7 @@ public class AppPreferences {
     COMPONENT_SECONDARY_COLOR.set(DEFAULT_COMPONENT_SECONDARY_COLOR);
     COMPONENT_GHOST_COLOR.set(DEFAULT_COMPONENT_GHOST_COLOR);
     COMPONENT_ICON_COLOR.set(DEFAULT_COMPONENT_ICON_COLOR);
+    ADAPT_COMPONENT_COLOR.set(true);
   }
 
   public static final PrefMonitor<Integer> CANVAS_BG_COLOR =
@@ -648,6 +723,12 @@ public class AppPreferences {
       create(new PrefMonitorInt("gridZoomedDotColor", DEFAULT_ZOOMED_DOT_COLOR));
   public static final PrefMonitor<Integer> COMPONENT_COLOR =
       create(new PrefMonitorInt("componentColor", DEFAULT_COMPONENT_COLOR));
+  public static final PrefMonitor<Boolean> ADAPT_COMPONENT_COLOR =
+      create(new PrefMonitorBoolean("adaptComponentColor", true));
+
+  public static boolean isAdaptComponentColor() {
+    return ADAPT_COMPONENT_COLOR.getBoolean();
+  }
   public static final PrefMonitor<Integer> COMPONENT_SECONDARY_COLOR =
       create(new PrefMonitorInt("componentSecondaryColor", DEFAULT_COMPONENT_SECONDARY_COLOR));
   public static final PrefMonitor<Integer> COMPONENT_GHOST_COLOR =
@@ -658,6 +739,9 @@ public class AppPreferences {
       create(new PrefMonitorInt("textToolColor", DEFAULT_TEXT_TOOL_COLOR));
 
   public static boolean isDarkTheme() {
+    if (Palette.isForceLight()) {
+      return false;
+    }
     try {
       if (com.formdev.flatlaf.FlatLaf.isLafDark()) {
         return true;

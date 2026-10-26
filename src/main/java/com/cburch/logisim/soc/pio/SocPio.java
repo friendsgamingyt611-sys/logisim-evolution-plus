@@ -183,7 +183,7 @@ public class SocPio extends SocInstanceFactory {
   public void paintInstance(InstancePainter painter) {
     final var g2 = (Graphics2D) painter.getGraphics();
     final var loc = painter.getLocation();
-    g2.setColor(new Color(AppPreferences.COMPONENT_COLOR.get()));
+    g2.setColor(AppPreferences.getComponentColor());
     painter.drawBounds();
     painter.drawLabel();
     paintPins(painter, g2, loc);

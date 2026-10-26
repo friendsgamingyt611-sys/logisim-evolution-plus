@@ -104,7 +104,7 @@ public class Shifter extends InstanceFactory {
   private void drawArrow(Graphics g, int x, int y, int d) {
     int[] px = {x + d, x, x + d};
     int[] py = {y + d, y, y - d};
-    g.setColor(new Color(AppPreferences.COMPONENT_COLOR.get()));
+    g.setColor(AppPreferences.getComponentColor());
     g.fillPolygon(px, py, 3);
   }
 
@@ -125,14 +125,14 @@ public class Shifter extends InstanceFactory {
   @Override
   public void paintInstance(InstancePainter painter) {
     Graphics g = painter.getGraphics();
-    g.setColor(new Color(AppPreferences.COMPONENT_COLOR.get()));
+    g.setColor(AppPreferences.getComponentColor());
     painter.drawBounds();
     painter.drawPorts();
     Location loc = painter.getLocation();
     int x = loc.getX() - 15;
     int y = loc.getY();
     Object shift = painter.getAttributeValue(ATTR_SHIFT);
-    g.setColor(new Color(AppPreferences.COMPONENT_COLOR.get()));
+    g.setColor(AppPreferences.getComponentColor());
     if (shift == SHIFT_LOGICAL_RIGHT) {
       g.fillRect(x, y - 1, 8, 3);
       drawArrow(g, x + 10, y, -4);

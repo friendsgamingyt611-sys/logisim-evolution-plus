@@ -36,6 +36,7 @@ public class ComponentDrawContext {
   private final boolean printView;
   private WireSet highlightedWires;
   private final InstancePainter instancePainter;
+  private final Palette palette;
 
   public ComponentDrawContext(
       java.awt.Component dest,
@@ -63,6 +64,7 @@ public class ComponentDrawContext {
     this.printView = printView;
     this.highlightedWires = WireSet.EMPTY;
     this.instancePainter = new InstancePainter(this, null);
+    this.palette = Palette.of(this);
   }
 
   //
@@ -115,9 +117,9 @@ public class ComponentDrawContext {
   }
 
   public void drawHandle(int x, int y) {
-    g.setColor(Color.white);
+    g.setColor(palette.fill());
     g.fillRect(x - 3, y - 3, 7, 7);
-    g.setColor(Color.black);
+    g.setColor(palette.stroke());
     g.drawRect(x - 3, y - 3, 7, 7);
   }
 
@@ -165,7 +167,7 @@ public class ComponentDrawContext {
     final var curColor = g.getColor();
     g.setColor(getShowState()
             ? getCircuitState().getValue(pt).getColor()
-            : new Color(AppPreferences.COMPONENT_COLOR.get()));
+            : palette.pinOutline());
     drawPinMarker(pt.getX(), pt.getY());
     g.setColor(curColor);
   }
@@ -180,7 +182,7 @@ public class ComponentDrawContext {
     if (getShowState()) {
       g.setColor(getCircuitState().getValue(pt).getColor());
     } else {
-      g.setColor(Color.BLACK);
+      g.setColor(palette.pinOutline());
     }
     drawPinMarker(x, y);
     g.setColor(curColor);
@@ -202,7 +204,7 @@ public class ComponentDrawContext {
       if (getShowState()) {
         g.setColor(getCircuitState().getValue(pt).getColor());
       } else {
-        g.setColor(Color.BLACK);
+        g.setColor(palette.pinOutline());
       }
       drawPinMarker(pt.getX(), pt.getY());
     }
@@ -275,6 +277,10 @@ public class ComponentDrawContext {
     return highlightedWires;
   }
 
+  public Palette getPalette() {
+    return palette;
+  }
+
   public InstancePainter getInstancePainter() {
     return instancePainter;
   }
@@ -313,7 +319,7 @@ public class ComponentDrawContext {
       g.setColor(color);
       g.fillRoundRect(bds.getX(), bds.getY(), bds.getWidth(), bds.getHeight(), 10, 10);
     }
-    g.setColor(new Color(AppPreferences.COMPONENT_COLOR.get()));
+    g.setColor(palette.stroke());
     g.drawRoundRect(bds.getX(), bds.getY(), bds.getWidth(), bds.getHeight(), 10, 10);
     GraphicsUtil.switchToWidth(g, 1);
   }

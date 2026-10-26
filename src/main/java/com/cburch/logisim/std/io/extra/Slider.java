@@ -229,7 +229,7 @@ public class Slider extends InstanceFactory {
     painter.drawRoundBounds(painter.getAttributeValue(IoLibrary.ATTR_COLOR));
     GraphicsUtil.switchToWidth(gfx, 2);
     // slider line
-    gfx.setColor(new Color(AppPreferences.COMPONENT_COLOR.get()));
+    gfx.setColor(AppPreferences.getComponentColor());
     gfx.drawLine(
         posX + 10,
         posY + bounds.getHeight() - 10,
@@ -238,7 +238,7 @@ public class Slider extends InstanceFactory {
     gfx.setColor(Color.DARK_GRAY);
     // slider
     gfx.fillRoundRect(posX + sliderPosition + 5, posY + bounds.getHeight() - 15, 10, 10, 4, 4);
-    gfx.setColor(new Color(AppPreferences.COMPONENT_COLOR.get()));
+    gfx.setColor(AppPreferences.getComponentColor());
     gfx.drawRoundRect(posX + sliderPosition + 5, posY + bounds.getHeight() - 15, 10, 10, 4, 4);
     painter.drawPorts();
     painter.drawLabel();

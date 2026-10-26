@@ -45,6 +45,8 @@ public class ComponentGlyphCache {
   static {
     final PropertyChangeListener themeListener = (PropertyChangeEvent evt) -> clearCache();
     AppPreferences.COMPONENT_ICON_COLOR.addPropertyChangeListener(themeListener);
+    AppPreferences.COMPONENT_COLOR.addPropertyChangeListener(themeListener);
+    AppPreferences.ADAPT_COMPONENT_COLOR.addPropertyChangeListener(themeListener);
     AppPreferences.GATE_SHAPE.addPropertyChangeListener(themeListener);
   }
 
@@ -62,8 +64,10 @@ public class ComponentGlyphCache {
 
     final var name = tool.getDisplayName();
     final var isDark = AppPreferences.isDarkTheme();
+    final var adapt = AppPreferences.isAdaptComponentColor();
+    final var forceLight = com.cburch.logisim.comp.Palette.isForceLight();
     final var scale = AppPreferences.getScaled(1.0f);
-    final var cacheKey = name + "@" + targetSize + "@" + (int) (scale * 100) + "@" + isDark;
+    final var cacheKey = name + "@" + targetSize + "@" + (int) (scale * 100) + "@" + isDark + "@" + adapt + "@" + forceLight;
 
     var cached = cache.get(cacheKey);
     if (cached != null) {

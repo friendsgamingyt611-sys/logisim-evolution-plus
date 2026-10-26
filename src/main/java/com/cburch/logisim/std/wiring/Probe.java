@@ -219,14 +219,14 @@ public class Probe extends InstanceFactory implements DynamicElementProvider {
     RadixOption radix = painter.getAttributeValue(RadixOption.ATTRIBUTE);
     int LabelValueXOffset = 15;
     if (radix != null && radix != RadixOption.RADIX_2) LabelValueXOffset += 3;
-    g.setColor(Color.BLUE);
+    g.setColor(painter.getPalette().blueIndex());
     g2.scale(0.7, 0.7);
     g2.drawString(
         radix.getIndexChar(),
         (int) ((bds.getX() + bds.getWidth() - LabelValueXOffset) / 0.7),
         (int) ((bds.getY() + bds.getHeight() - 2) / 0.7));
     g2.scale(1.0 / 0.7, 1.0 / 0.7);
-    g.setColor(Color.BLACK);
+    g.setColor(painter.getPalette().stroke());
     if (radix == null || radix == RadixOption.RADIX_2) {
       int x = bds.getX();
       int y = bds.getY();
@@ -362,7 +362,7 @@ public class Probe extends InstanceFactory implements DynamicElementProvider {
 
     g.setColor(Color.GRAY);
     painter.drawLabel();
-    g.setColor(Color.DARK_GRAY);
+    g.setColor(painter.getPalette().stroke());
 
     if (!painter.getShowState()) {
       if (value.getWidth() > 0) {

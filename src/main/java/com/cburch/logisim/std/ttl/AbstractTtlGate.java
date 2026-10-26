@@ -218,7 +218,7 @@ public abstract class AbstractTtlGate extends InstanceFactory {
     var width = bds.getWidth();
     var height = bds.getHeight();
     if (!ghost) {
-      g.setColor(new Color(AppPreferences.COMPONENT_COLOR.get()));
+      g.setColor(AppPreferences.getComponentColor());
     }
     for (byte i = 0; i < this.pinNumber; i++) {
       if (i < this.pinNumber / 2) {

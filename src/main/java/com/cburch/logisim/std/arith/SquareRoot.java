@@ -110,7 +110,7 @@ public class SquareRoot extends InstanceFactory {
   @Override
   public void paintInstance(InstancePainter painter) {
     Graphics g = painter.getGraphics();
-    g.setColor(new Color(AppPreferences.COMPONENT_COLOR.get()));
+    g.setColor(AppPreferences.getComponentColor());
     painter.drawBounds();
     g.setColor(new Color(AppPreferences.COMPONENT_SECONDARY_COLOR.get()));
     painter.drawPort(IN);
@@ -122,7 +122,7 @@ public class SquareRoot extends InstanceFactory {
     int x = loc.getX();
     int y = loc.getY();
     GraphicsUtil.switchToWidth(g, 2);
-    g.setColor(new Color(AppPreferences.COMPONENT_COLOR.get()));
+    g.setColor(AppPreferences.getComponentColor());
     int[] xPoints = {x - 15, x - 12, x - 9, x - 5};
     int[] yPoints = {y, y + 5, y - 5, y - 5};
     g.drawPolyline(xPoints, yPoints, xPoints.length);

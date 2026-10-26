@@ -111,7 +111,7 @@ public class JtagUart extends SocInstanceFactory {
   public void paintInstance(InstancePainter painter) {
     Graphics2D g2 = (Graphics2D) painter.getGraphics();
     Location loc = painter.getLocation();
-    g2.setColor(new Color(AppPreferences.COMPONENT_COLOR.get()));
+    g2.setColor(AppPreferences.getComponentColor());
     painter.drawBounds();
     painter.drawLabel();
     g2.drawLine(loc.getX(), loc.getY() + 20, loc.getX() + 200, loc.getY() + 20);

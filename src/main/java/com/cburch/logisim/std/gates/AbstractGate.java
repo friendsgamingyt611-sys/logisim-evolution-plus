@@ -380,7 +380,7 @@ abstract class AbstractGate extends InstanceFactory {
     }
 
     final var g = painter.getGraphics();
-    final var baseColor = new Color(AppPreferences.COMPONENT_COLOR.get());
+    final var baseColor = AppPreferences.getComponentColor();
     if (shape == AppPreferences.SHAPE_SHAPED && paintInputLines) {
       PainterShaped.paintInputLines(painter, this);
     } else if (negated != 0) {

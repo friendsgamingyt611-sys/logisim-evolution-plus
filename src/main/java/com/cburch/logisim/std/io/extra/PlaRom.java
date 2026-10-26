@@ -291,7 +291,7 @@ public class PlaRom extends InstanceFactory {
   public void paintInstance(InstancePainter painter) {
     PlaRomData data = getPlaRomData(painter);
     Graphics g = painter.getGraphics();
-    g.setColor(new Color(AppPreferences.COMPONENT_COLOR.get()));
+    g.setColor(AppPreferences.getComponentColor());
     painter.drawRoundBounds(Color.WHITE);
     Bounds bds = painter.getBounds();
     g.setFont(new Font("sans serif", Font.BOLD, 11));

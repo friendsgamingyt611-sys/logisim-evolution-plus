@@ -851,7 +851,7 @@ public class CircuitWires {
     final var showState = context.getShowState();
     final var state = context.getCircuitState();
     final var g = (Graphics2D) context.getGraphics();
-    g.setColor(Color.BLACK);
+    g.setColor(context.getPalette().stroke());
     GraphicsUtil.switchToWidth(g, Wire.WIDTH);
     final var highlighted = context.getHighlightedWires();
 
@@ -864,11 +864,11 @@ public class CircuitWires {
         final var wb = cmap.getBundleAt(s);
         var width = 5;
         if (!wb.isValid()) {
-          g.setColor(Value.widthErrorColor);
+          g.setColor(context.getPalette().widthError());
         } else if (!showState) {
-          g.setColor(Color.BLACK);
+          g.setColor(context.getPalette().stroke());
         } else if (!isValid) {
-          g.setColor(Value.nilColor);
+          g.setColor(context.getPalette().nil());
         } else {
           g.setColor(getBusValue(state, s).getColor());
         }
@@ -908,11 +908,11 @@ public class CircuitWires {
         if (points.getComponentCount(loc) > 2) {
           final var wb = cmap.getBundleAt(loc);
           if (wb != null) {
-            var color = Color.BLACK;
+            var color = context.getPalette().stroke();
             if (!wb.isValid()) {
-              color = Value.widthErrorColor;
+              color = context.getPalette().widthError();
             } else if (showState) {
-              color = !isValid ? Value.nilColor : state.getValue(loc).getColor();
+              color = !isValid ? context.getPalette().nil() : state.getValue(loc).getColor();
             }
             g.setColor(color);
 
@@ -936,11 +936,11 @@ public class CircuitWires {
           final var t = wire.e1;
           final var wb = cmap.getBundleAt(s);
           if (!wb.isValid()) {
-            g.setColor(Value.widthErrorColor);
+            g.setColor(context.getPalette().widthError());
           } else if (showState) {
-            g.setColor(!isValid ? Value.nilColor : getBusValue(state, s).getColor());
+            g.setColor(!isValid ? context.getPalette().nil() : getBusValue(state, s).getColor());
           } else {
-            g.setColor(Color.BLACK);
+            g.setColor(context.getPalette().stroke());
           }
           if (highlighted.containsWire(wire)) {
             GraphicsUtil.switchToWidth(g, Wire.WIDTH + 2);
@@ -966,11 +966,11 @@ public class CircuitWires {
             final var wireBundle = cmap.getBundleAt(loc);
             if (wireBundle != null) {
               if (!wireBundle.isValid()) {
-                g.setColor(Value.widthErrorColor);
+                g.setColor(context.getPalette().widthError());
               } else if (showState) {
-                g.setColor(!isValid ? Value.nilColor : getBusValue(state, loc).getColor());
+                g.setColor(!isValid ? context.getPalette().nil() : getBusValue(state, loc).getColor());
               } else {
-                g.setColor(Color.BLACK);
+                g.setColor(context.getPalette().stroke());
               }
               var radius = highlighted.containsLocation(loc)
                       ? (wireBundle.isBus() ? Wire.HIGHLIGHTED_WIDTH_BUS : Wire.HIGHLIGHTED_WIDTH)

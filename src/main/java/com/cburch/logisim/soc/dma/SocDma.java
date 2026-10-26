@@ -146,7 +146,7 @@ public class SocDma extends SocInstanceFactory {
   public void paintInstance(InstancePainter painter) {
     Graphics2D g2 = (Graphics2D) painter.getGraphics();
     Location loc = painter.getLocation();
-    g2.setColor(new Color(AppPreferences.COMPONENT_COLOR.get()));
+    g2.setColor(AppPreferences.getComponentColor());
     painter.drawBounds();
     painter.drawLabel();
     painter.drawClock(CLOCK_INDEX, Direction.EAST);

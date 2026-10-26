@@ -162,7 +162,7 @@ public class Multiplier extends InstanceFactory {
   @Override
   public void paintInstance(InstancePainter painter) {
     Graphics g = painter.getGraphics();
-    g.setColor(new Color(AppPreferences.COMPONENT_COLOR.get()));
+    g.setColor(AppPreferences.getComponentColor());
     painter.drawBounds();
     g.setColor(new Color(AppPreferences.COMPONENT_SECONDARY_COLOR.get()));
     painter.drawPort(IN0);
@@ -175,7 +175,7 @@ public class Multiplier extends InstanceFactory {
     int x = loc.getX();
     int y = loc.getY();
     GraphicsUtil.switchToWidth(g, 2);
-    g.setColor(new Color(AppPreferences.COMPONENT_COLOR.get()));
+    g.setColor(AppPreferences.getComponentColor());
     g.drawLine(x - 15, y - 5, x - 5, y + 5);
     g.drawLine(x - 15, y + 5, x - 5, y - 5);
     GraphicsUtil.switchToWidth(g, 1);

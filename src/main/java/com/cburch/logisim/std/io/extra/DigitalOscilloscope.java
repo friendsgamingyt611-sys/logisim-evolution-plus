@@ -149,7 +149,7 @@ public class DigitalOscilloscope extends InstanceFactory {
 
   @Override
   public void paintInstance(InstancePainter painter) {
-    final var baseColor = new Color(AppPreferences.COMPONENT_COLOR.get());
+    final var baseColor = AppPreferences.getComponentColor();
     final var bds = painter.getBounds();
     // if showclock = true all diagram lines are moved down
     final var showclock = (byte) (painter.getAttributeValue(SHOW_CLOCK) ? 1 : 0);
@@ -280,7 +280,7 @@ public class DigitalOscilloscope extends InstanceFactory {
               y + border + 30 * (i + 1) + showclock * 2);
       }
     }
-    g.setColor(new Color(AppPreferences.COMPONENT_COLOR.get()));
+    g.setColor(AppPreferences.getComponentColor());
     g.drawRoundRect(
         x + border, y + border, width - 2 * border, height - 2 * border, border / 2, border / 2);
 

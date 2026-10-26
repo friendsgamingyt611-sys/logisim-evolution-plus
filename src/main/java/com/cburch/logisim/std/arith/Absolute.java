@@ -59,7 +59,7 @@ public class Absolute extends InstanceFactory {
   @Override
   public void paintInstance(InstancePainter painter) {
     final var g = painter.getGraphics();
-    g.setColor(new Color(AppPreferences.COMPONENT_COLOR.get()));
+    g.setColor(AppPreferences.getComponentColor());
     painter.drawBounds();
     painter.drawPort(OUT, "Abs", Direction.WEST);
     g.setColor(new Color(AppPreferences.COMPONENT_SECONDARY_COLOR.get()));

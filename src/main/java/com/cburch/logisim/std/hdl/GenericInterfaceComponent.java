@@ -63,7 +63,7 @@ public abstract class GenericInterfaceComponent extends InstanceFactory {
     final var bds = painter.getBounds();
     final var x0 = bds.getX() + (bds.getWidth() / 2);
     final var y0 = bds.getY() + metric.getHeight() + 12;
-    g.setColor(new Color(AppPreferences.COMPONENT_COLOR.get()));
+    g.setColor(AppPreferences.getComponentColor());
     GraphicsUtil.drawText(
         g,
         StringUtil.resizeString(getGiAttributesName(attrs), metric, WIDTH),
@@ -110,7 +110,7 @@ public abstract class GenericInterfaceComponent extends InstanceFactory {
           GraphicsUtil.V_CENTER);
     }
 
-    g.setColor(new Color(AppPreferences.COMPONENT_COLOR.get()));
+    g.setColor(AppPreferences.getComponentColor());
     painter.drawBounds();
     painter.drawPorts();
   }

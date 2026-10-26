@@ -93,6 +93,14 @@ public class SearchResultsList extends JPanel implements ExplorerModel.Listener 
     refresh();
   }
 
+  @Override
+  public void updateUI() {
+    super.updateUI();
+    if (model != null) {
+      refresh();
+    }
+  }
+
   public void refresh() {
     itemsContainer.removeAll();
     rows.clear();

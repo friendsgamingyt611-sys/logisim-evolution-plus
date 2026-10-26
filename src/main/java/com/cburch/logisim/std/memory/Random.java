@@ -209,7 +209,7 @@ public class Random extends InstanceFactory {
   private void drawControl(InstancePainter painter, int xpos, int ypos, int nrOfBits) {
     final var g = painter.getGraphics();
     GraphicsUtil.switchToWidth(g, 2);
-    g.setColor(new Color(AppPreferences.COMPONENT_COLOR.get()));
+    g.setColor(AppPreferences.getComponentColor());
     g.drawLine(xpos + 10, ypos, xpos + 70, ypos);
     g.drawLine(xpos + 10, ypos, xpos + 10, ypos + 60);
     g.drawLine(xpos + 70, ypos, xpos + 70, ypos + 60);
@@ -276,7 +276,7 @@ public class Random extends InstanceFactory {
     }
 
     // draw boundary, label
-    g.setColor(new Color(AppPreferences.COMPONENT_COLOR.get()));
+    g.setColor(AppPreferences.getComponentColor());
     painter.drawBounds();
     g.setColor(painter.getAttributeValue(StdAttr.LABEL_COLOR));
     painter.drawLabel();
@@ -287,7 +287,7 @@ public class Random extends InstanceFactory {
     g.setColor(new Color(AppPreferences.COMPONENT_SECONDARY_COLOR.get()));
     painter.drawPort(RST, "0", Direction.SOUTH);
     painter.drawPort(NXT, S.get("memEnableLabel"), Direction.EAST);
-    g.setColor(new Color(AppPreferences.COMPONENT_COLOR.get()));
+    g.setColor(AppPreferences.getComponentColor());
     painter.drawClock(CK, Direction.NORTH);
 
     // draw contents

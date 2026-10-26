@@ -149,7 +149,7 @@ public class TclGeneric extends TclComponent {
     final var g = painter.getGraphics();
     final var content = painter.getAttributeValue(CONTENT_ATTR);
     var metric = g.getFontMetrics();
-    g.setColor(new Color(AppPreferences.COMPONENT_COLOR.get()));
+    g.setColor(AppPreferences.getComponentColor());
 
     final var bds = painter.getBounds();
     final var x0 = bds.getX() + (bds.getWidth() / 2);

@@ -96,7 +96,7 @@ public class FpClassificator extends InstanceFactory {
   @Override
   public void paintInstance(InstancePainter painter) {
     final var g = painter.getGraphics();
-    g.setColor(new Color(AppPreferences.COMPONENT_COLOR.get()));
+    g.setColor(AppPreferences.getComponentColor());
     painter.drawBounds();
     painter.drawPort(IN);
     painter.drawPort(NEGATIVE, "-", Direction.WEST);

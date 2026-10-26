@@ -61,6 +61,16 @@ public class TileGrid extends JPanel implements ExplorerModel.Listener {
     setCategory("Gates", findLibrary("Gates"));
   }
 
+  @Override
+  public void updateUI() {
+    super.updateUI();
+    Color bg = UIManager.getColor("Panel.background");
+    setBackground(bg != null ? bg : (AppPreferences.isDarkTheme() ? new Color(31, 33, 37) : new Color(248, 248, 250)));
+    if (model != null) {
+      refresh();
+    }
+  }
+
   private Library findLibrary(String name) {
     for (final var lib : model.getLibraries()) {
       if (lib.getDisplayName().equalsIgnoreCase(name)) {

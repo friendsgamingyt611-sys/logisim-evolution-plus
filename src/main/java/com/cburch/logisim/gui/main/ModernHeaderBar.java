@@ -87,8 +87,8 @@ public class ModernHeaderBar extends JPanel implements LocaleListener {
     this.frame = frame;
     this.project = project;
 
-    initStyle();
     initComponents();
+    initStyle();
     attachListeners();
     updateState();
     LocaleManager.addLocaleListener(this);
@@ -310,6 +310,7 @@ public class ModernHeaderBar extends JPanel implements LocaleListener {
   }
 
   public void updateTitle() {
+    if (circuitPickerButton == null || project == null) return;
     Circuit current = project.getCurrentCircuit();
     String name = (current != null) ? current.getName() : "main";
     boolean dirty = project.isFileDirty();
@@ -317,6 +318,7 @@ public class ModernHeaderBar extends JPanel implements LocaleListener {
   }
 
   public void updateSimControls() {
+    if (playPauseButton == null || project == null) return;
     Simulator sim = project.getSimulator();
     if (sim != null) {
       boolean ticking = sim.isAutoTicking();
@@ -360,6 +362,7 @@ public class ModernHeaderBar extends JPanel implements LocaleListener {
   }
 
   public void updateUndoRedo() {
+    if (undoButton == null || redoButton == null || project == null) return;
     boolean canUndo = !project.getUndoActions().isEmpty();
     boolean canRedo = !project.getRedoActions().isEmpty();
     undoButton.setEnabled(canUndo);
@@ -458,7 +461,7 @@ public class ModernHeaderBar extends JPanel implements LocaleListener {
 
     // Continuous Slider: 20% to 500%
     JSlider slider = new JSlider(20, 500, Math.min(500, Math.max(20, curPercent)));
-    slider.putClientProperty(FlatClientProperties.STYLE, "trackHeight: 4; thumbSize: 14;");
+    slider.putClientProperty(FlatClientProperties.STYLE, "trackHeight: 4; thumbSize: 14,14;");
     panel.add(slider);
     panel.add(Box.createVerticalStrut(8));
 
@@ -586,6 +589,15 @@ public class ModernHeaderBar extends JPanel implements LocaleListener {
     menu.add(quitItem);
 
     menu.show(parent, parent.getWidth() - menu.getPreferredSize().width, parent.getHeight() + 2);
+  }
+
+  @Override
+  public void updateUI() {
+    super.updateUI();
+    if (circuitPickerButton != null) {
+      initStyle();
+      updateState();
+    }
   }
 
   @Override

@@ -14,6 +14,7 @@ import static com.cburch.logisim.gui.Strings.S;
 import com.cburch.logisim.circuit.Circuit;
 import com.cburch.logisim.comp.Component;
 import com.cburch.logisim.comp.ComponentDrawContext;
+import com.cburch.logisim.comp.Palette;
 import com.cburch.logisim.gui.generic.OptionPane;
 import com.cburch.logisim.proj.Project;
 
@@ -131,81 +132,83 @@ public class Print {
     public int print(Graphics base, PageFormat format, int pageIndex) {
       if (pageIndex >= circuits.size()) return Printable.NO_SUCH_PAGE;
 
-      var circ = circuits.get(pageIndex);
-      final var circState = proj.getCircuitState(circ);
-      final var g = base.create();
-      final var g2 = g instanceof Graphics2D ? (Graphics2D) g : null;
-      final var fm = g.getFontMetrics();
-      final var head =
-          (header != null && !header.isEmpty())
-              ? format(header, pageIndex + 1, circuits.size(), circ.getName())
-              : null;
-      final var headHeight = (head == null ? 0 : fm.getHeight());
+      try (var ignored = Palette.enterLightScope()) {
+        var circ = circuits.get(pageIndex);
+        final var circState = proj.getCircuitState(circ);
+        final var g = base.create();
+        final var g2 = g instanceof Graphics2D ? (Graphics2D) g : null;
+        final var fm = g.getFontMetrics();
+        final var head =
+            (header != null && !header.isEmpty())
+                ? format(header, pageIndex + 1, circuits.size(), circ.getName())
+                : null;
+        final var headHeight = (head == null ? 0 : fm.getHeight());
 
-      // Compute image size
-      var imWidth = format.getImageableWidth();
-      var imHeight = format.getImageableHeight();
+        // Compute image size
+        var imWidth = format.getImageableWidth();
+        var imHeight = format.getImageableHeight();
 
-      // Correct coordinate system for page, including
-      // translation and possible rotation.
-      final var bds = circ.getBounds(g).expand(4);
-      var scale = Math.min(imWidth / bds.getWidth(), (imHeight - headHeight) / bds.getHeight());
-      if (g2 != null) {
-        g2.translate(format.getImageableX(), format.getImageableY());
-        if (rotateToFit && scale < 1.0 / 1.1) {
-          double scale2 =
-              Math.min(imHeight / bds.getWidth(), (imWidth - headHeight) / bds.getHeight());
-          if (scale2 >= scale * 1.1) { // will rotate
-            scale = scale2;
-            if (imHeight > imWidth) { // portrait -> landscape
-              g2.translate(0, imHeight);
-              g2.rotate(-Math.PI / 2);
-            } else { // landscape -> portrait
-              g2.translate(imWidth, 0);
-              g2.rotate(Math.PI / 2);
+        // Correct coordinate system for page, including
+        // translation and possible rotation.
+        final var bds = circ.getBounds(g).expand(4);
+        var scale = Math.min(imWidth / bds.getWidth(), (imHeight - headHeight) / bds.getHeight());
+        if (g2 != null) {
+          g2.translate(format.getImageableX(), format.getImageableY());
+          if (rotateToFit && scale < 1.0 / 1.1) {
+            double scale2 =
+                Math.min(imHeight / bds.getWidth(), (imWidth - headHeight) / bds.getHeight());
+            if (scale2 >= scale * 1.1) { // will rotate
+              scale = scale2;
+              if (imHeight > imWidth) { // portrait -> landscape
+                g2.translate(0, imHeight);
+                g2.rotate(-Math.PI / 2);
+              } else { // landscape -> portrait
+                g2.translate(imWidth, 0);
+                g2.rotate(Math.PI / 2);
+              }
+              var t = imHeight;
+              imHeight = imWidth;
+              imWidth = t;
             }
-            var t = imHeight;
-            imHeight = imWidth;
-            imWidth = t;
           }
         }
-      }
 
-      // Draw the header line if appropriate
-      if (head != null) {
-        g.drawString(head, (int) Math.round((imWidth - fm.stringWidth(head)) / 2), fm.getAscent());
+        // Draw the header line if appropriate
+        if (head != null) {
+          g.drawString(head, (int) Math.round((imWidth - fm.stringWidth(head)) / 2), fm.getAscent());
+          if (g2 != null) {
+            imHeight -= headHeight;
+            g2.translate(0, headHeight);
+          }
+        }
+
+        // Now change coordinate system for circuit, including
+        // translation and possible scaling
         if (g2 != null) {
-          imHeight -= headHeight;
-          g2.translate(0, headHeight);
+          if (scale < 1.0) {
+            g2.scale(scale, scale);
+            imWidth /= scale;
+            imHeight /= scale;
+          }
+          double dx = Math.max(0.0, (imWidth - bds.getWidth()) / 2);
+          g2.translate(-bds.getX() + dx, -bds.getY());
         }
+
+        // Ensure that the circuit is eligible to be drawn
+        final var clip = g.getClipBounds();
+        clip.add(bds.getX(), bds.getY());
+        clip.add(bds.getX() + bds.getWidth(), bds.getY() + bds.getHeight());
+        g.setClip(clip);
+
+        // And finally draw the circuit onto the page
+        final var context =
+            new ComponentDrawContext(
+                proj.getFrame().getCanvas(), circ, circState, base, g, printerView);
+        Collection<Component> noComps = Collections.emptySet();
+        circ.draw(context, noComps);
+        g.dispose();
+        return Printable.PAGE_EXISTS;
       }
-
-      // Now change coordinate system for circuit, including
-      // translation and possible scaling
-      if (g2 != null) {
-        if (scale < 1.0) {
-          g2.scale(scale, scale);
-          imWidth /= scale;
-          imHeight /= scale;
-        }
-        double dx = Math.max(0.0, (imWidth - bds.getWidth()) / 2);
-        g2.translate(-bds.getX() + dx, -bds.getY());
-      }
-
-      // Ensure that the circuit is eligible to be drawn
-      final var clip = g.getClipBounds();
-      clip.add(bds.getX(), bds.getY());
-      clip.add(bds.getX() + bds.getWidth(), bds.getY() + bds.getHeight());
-      g.setClip(clip);
-
-      // And finally draw the circuit onto the page
-      final var context =
-          new ComponentDrawContext(
-              proj.getFrame().getCanvas(), circ, circState, base, g, printerView);
-      Collection<Component> noComps = Collections.emptySet();
-      circ.draw(context, noComps);
-      g.dispose();
-      return Printable.PAGE_EXISTS;
     }
   }
 

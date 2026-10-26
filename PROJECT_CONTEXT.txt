@@ -1,0 +1,207 @@
+================================================================================
+LOGISIM-EVOLUTION+ : COMPLETE PROJECT CONTEXT, INSTRUCTIONS & ARCHITECTURE
+================================================================================
+
+Date: October 26, 2026
+Repository: friendsgamingyt611-sys/logisim-evolution-plus
+Working Directory: /home/devansh/logisim-evolution-plus
+
+--------------------------------------------------------------------------------
+1. PROJECT OVERVIEW & CORE VISION
+--------------------------------------------------------------------------------
+Logisim-evolution+ is a modernization fork of Logisim-evolution (a digital logic
+simulator and design tool). The primary goal of the project is to elevate the
+classic Java Swing application into a clean, modern, state-of-the-art tool
+inspired by modern Linux desktop design languages (e.g., GNOME / Libadwaita
+principles: dark mode ergonomics, pill controls, refined hierarchy, high-DPI
+vector iconography, and calm contrast), while maintaining full compatibility
+with existing Logisim circuit files (.circ), simulation semantics, and workflows.
+
+Key Architectural Principles:
+1. Pure Java Swing Implementation: Even though the UI follows modern design
+   patterns (Libadwaita / modern GNOME aesthetic), class naming avoids "libadw"
+   or "gtk" prefixes. Clean, modular Swing/FlatLaf components are used instead.
+2. Theme Symmetry: Both Dark Mode and Light Mode are first-class citizens.
+   Light mode must remain visually pixel-identical to classic Logisim where
+   expected, while Dark Mode provides a glare-free, high-legibility experience.
+3. Preservation of User Data:
+   - Export and print paths ALWAYS use the light palette on white backgrounds.
+   - User-chosen attributes (LED colors, custom label colors, custom subcircuit
+     drawings) are NEVER overwritten or altered.
+   - Stored .circ files remain byte-compatible and clean.
+
+--------------------------------------------------------------------------------
+2. CHRONOLOGICAL TIMELINE & USER INSTRUCTIONS
+--------------------------------------------------------------------------------
+
+Phase 1: Modern UI Shell & Auto Theme Detection
+-----------------------------------------------
+User Instructions:
+- "modernize the main UI that the user uses, like having a linux native modern
+   UI skin for logisim"
+- "add a auto system theme detector if not already present, as its currently
+   not launching per my theme"
+- "use modern simplified icons, generate by seeing the old icon and simplifying
+   and modernizing it... make icons keeping in mind for both dark and light themes"
+- "controls in design and simulate are very very small, unable to understand...
+   redesign this part"
+
+What Was Done:
+- Evaluated GTK4/Libadwaita native vs FlatLaf modern skinning. Selected FlatLaf
+  custom modern theme engine with deep component customization.
+- Implemented system theme listener/detector (`ModernDarkLaf`, `ModernLightLaf`,
+  `ThemeManager`) to automatically follow OS light/dark mode changes.
+- Built `ModernHeaderBar` replacing the legacy, cluttered toolbars.
+- Structured simulation controls into cohesive pill groups:
+  * Simulation status pill (Running indicator, Play/Pause, Step, Frequency).
+  * Zoom controls consolidated into a compact, unified widget.
+  * Vectorized high-resolution icons for simulation and editing tools.
+
+Phase 2: Left Panel (Component Explorer & Navigation)
+-----------------------------------------------------
+User Instructions:
+- "The file-explorer comparison is the right mental model... one toggle, same
+   content, different presentation. Keeping the refined list as the default
+   also respects existing Logisim users..."
+- "make the numbers display at right auto adjust based on the splitter width"
+- "vertical separator can be in default lowered as we remove the below zoom
+   indicator section"
+- "include that old double click to open/close groups feature also just in case
+   for old users"
+
+What Was Done:
+- Redesigned the left panel with dual views:
+  1. Refined List View: Modernized tree component with clean hierarchy, expand/
+     collapse indicators, and double-click to toggle library branches.
+  2. Tile Grid View: Card-based visual palette for fast visual component browsing.
+- Implemented `ComponentGlyphCache`: High-performance multi-resolution caching
+  system that draws crisp TTL chips (74xx series), box abbreviations (REG, CTR,
+  RAM, ROM, ALU), and vector thumbnails for subcircuits and gates.
+- Built instant search with dynamic auto-completion across all libraries.
+- Dynamically balanced splitters and removed redundant bottom zoom indicator.
+
+Phase 3: Modern Canvas & Grid Hierarchy
+---------------------------------------
+User Instructions:
+- "The grid mockup is published as an interactive page... Round vs Square (old)...
+   Dark uses the greyish #1f1f1f surface with #3d3d3d minor dots and #5a5a5a major dots.
+   Major and minor hierarchy: every fifth dot in both directions is larger and brighter."
+- "make sure to properly make a more modern versions of black and white grid
+   using modern colours"
+
+What Was Done:
+- Overhauled `GridPainter.java` and `CanvasPainter.java`:
+  * Implemented calm `#1f1f1f` dark canvas surface.
+  * Replaced square pixel grid with modern anti-aliased round dots.
+  * Introduced 5x major/minor dot hierarchy (`#3d3d3d` minor, `#5a5a5a` major)
+    allowing distance estimation without intrusive grid lines.
+  * Optimized coordinate transformations and dot rendering performance.
+
+Phase 4: Component Rendering on Dark Canvas (The Staged Implementation)
+-----------------------------------------------------------------------
+User Feedback & Audit:
+- On the new dark canvas, gate bodies (AND, OR, NOT) and input switch bodies were
+  drawn in pure solid black (`#000000`), making them nearly invisible.
+- Value labels and switch bars were dark on dark.
+- Wires and pin stubs used legacy saturated blue (`#0000ff`), lacking contrast.
+
+Core Design Decisions Established (D1 - D5):
+  D1. Do NOT change the return value of `AppPreferences.COMPONENT_COLOR` monitor
+      (`PrefMonitorInt.get()`) directly, because it is used by Preferences UI.
+  D2. Replace the old "0 is default" sentinel with an explicit boolean preference:
+      `ADAPT_COMPONENT_COLOR` (default `true`). When `true`, component color
+      resolves via `Palette.stroke()`. When `false`, use stored user color.
+  D3. Export (PNG/GIF/JPG/SVG/TikZ) and Print must ALWAYS use the light palette,
+      regardless of current UI theme.
+  D4. Light mode canvas must remain identical to original.
+  D5. User-chosen colors (LED color, custom labels, custom subcircuit drawings)
+      are never overridden.
+
+Stage 0 Follow-Up Answers:
+  - 0.1: `Palette.withForceLightPalette` / `setForceLightPalette` did not exist;
+         they were proposals.
+  - 0.2: `Palette.current()` and `isDarkTheme()` did not consult a paint scope.
+         In dark mode, exports previously leaked dark wire/label colors onto white
+         canvases. Fixed via `ThreadLocal` paint scope.
+  - 0.3: `ComponentGlyphCache` cache key previously lacked theme/adapt/scope. It
+         is used exclusively for UI widgets, never for export or print.
+  - 0.4: Confirmed no export or print path hops threads to EDT via `invokeLater`
+         or uses parallel streams during painting.
+
+Stage 1 Implementation (Completed & Verified):
+  1. Paint Scope: Implemented reentrant `ThreadLocal<Integer> FORCE_LIGHT_DEPTH`
+     scope (`enterLightScope()`, `withLightScope()`) in `Palette.java`.
+     Enforced light scope in `ExportImage.java` (`ExportThread.run`),
+     `Print.java` (`MyPrintable.print`), and `PrintHandler.java` (`print` & `exportImage`).
+     `Palette.current()`, `Palette.of(context)`, and `AppPreferences.isDarkTheme()`
+     all honor the light scope.
+  2. Preference `ADAPT_COMPONENT_COLOR`: Added `PrefMonitorBoolean` defaulting
+     to `true` in `AppPreferences.java`.
+  3. Context-Aware Stroke: `AppPreferences.getComponentColor()` returns
+     `new Color(COMPONENT_COLOR.get())` if `ADAPT=false`, and `Palette.stroke()`
+     if `ADAPT=true` (`#E6E6E6` in dark mode, `Color.BLACK` in light mode/scope).
+  4. Migration: Idempotent migration on preference load checks `componentColor`:
+     - `0` (default) or `0xFF000000` / `-16777216` (legacy black) -> `ADAPT=true`.
+     - Custom colors (e.g. blue, red) -> `ADAPT=false`.
+  5. Preferences UI: Added "Adapt component colors to theme" checkbox in
+     `WindowOptions.java`. While checked, the color button is disabled and
+     previews the resolved theme color swatch. Unchecking writes the resolved
+     color into the monitor if previously default.
+  6. Reset Grid Colors: `setDefaultGridColors()` resets `ADAPT_COMPONENT_COLOR`
+     to `true`.
+  7. Replacement Across Painters: Replaced `new Color(AppPreferences.COMPONENT_COLOR.get())`
+     with `AppPreferences.getComponentColor()` across 83 component painters
+     (gates, plexers, arithmetic, memory, I/O, wiring, SoC).
+  8. Glyph Cache: Updated cache key with `isDark`, `adapt`, and `forceLight`,
+     and hooked preference listeners to flush cache on change.
+
+--------------------------------------------------------------------------------
+3. REMAINING PLANNED STAGES (STAGES 2 - 6)
+--------------------------------------------------------------------------------
+
+STAGE 2: Splitter and Bus Rendering
+- Distinct bus vs wire visuals in dark mode.
+- High-contrast defined/mismatch/error wire and splitter values.
+
+STAGE 3: DipSwitch Modern Flat Styling
+- Replace legacy 3D switch glare with clean flat/pill switch styling.
+- Actuator off-white, distinct on/off contrast by position and brightness.
+
+STAGE 4: Subcircuit Default Appearance
+- Note: Build default appearance shapes with legacy colors (black fill, white
+  text) and remap dynamically at paint time only for non-custom appearances.
+- Header text maps to palette stroke color in dark mode; header fill maps to
+  #383838.
+- Never write theme colors into saved .circ XML files.
+
+STAGE 5: Selection and Ghost Colors
+- Dark mode marquee border = accent (`#3584e4`), fill = accent at ~16% alpha.
+- Contrast verification for drag-ghost preference and attribute halos.
+
+STAGE 6: Anti-Aliasing Stroke Caps & Hints (Flag-Gated Experiment)
+- Behind a hidden preference, test `CAP_ROUND`/`JOIN_ROUND` for component
+  outlines with `KEY_STROKE_CONTROL=PURE`.
+- Measure blur and overshoot at 100%, 200%, and 432% zoom before considering.
+
+--------------------------------------------------------------------------------
+4. KEY SOURCE FILES & ROLES
+--------------------------------------------------------------------------------
+- com.cburch.logisim.comp.Palette:
+  Central theme color palette (DARK vs LIGHT), ThreadLocal paint scope, stroke
+  resolution.
+- com.cburch.logisim.prefs.AppPreferences:
+  Preferences engine, theme detection, `ADAPT_COMPONENT_COLOR`, `getComponentColor()`.
+- com.cburch.logisim.gui.main.CanvasPainter:
+  Canvas rendering loop, viewport dispatch, component drawing coordinator.
+- com.cburch.logisim.gui.generic.GridPainter:
+  Modern round dot grid painter with major/minor dot hierarchy.
+- com.cburch.logisim.gui.main.ComponentGlyphCache:
+  Multi-resolution icon and thumbnail cache for library explorer and search.
+- com.cburch.logisim.gui.main.ExportImage & Print:
+  Image export (PNG, SVG, TikZ, JPG, GIF) and printing with forced light scope.
+- com.cburch.logisim.gui.prefs.WindowOptions & ColorChooserButton:
+  Preferences window options UI, live color preview swatches, adapt checkbox.
+
+================================================================================
+END OF LOGISIM-EVOLUTION+ CONTEXT DOCUMENT
+================================================================================

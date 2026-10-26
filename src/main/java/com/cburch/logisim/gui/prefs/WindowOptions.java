@@ -13,9 +13,11 @@ import static com.cburch.logisim.gui.Strings.S;
 
 import com.cburch.logisim.data.Direction;
 import com.cburch.logisim.fpga.gui.ZoomSlider;
+import com.cburch.logisim.gui.theme.ThemeManager;
 import com.cburch.logisim.prefs.AppPreferences;
 import com.cburch.logisim.proj.Projects;
 import com.cburch.logisim.util.TableLayout;
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.GraphicsEnvironment;
@@ -51,6 +53,7 @@ class WindowOptions extends OptionsPanel {
   private final JLabel gridDotColorTitle;
   private final ColorChooserButton gridZoomedDotColor;
   private final JLabel gridZoomedDotColorTitle;
+  private final JCheckBox adaptComponentColor;
   private final ColorChooserButton componentColor;
   private final JLabel componentColorTitle;
   private final ColorChooserButton componentIconColor;
@@ -89,6 +92,7 @@ class WindowOptions extends OptionsPanel {
 
     checks =
         new PrefBoolean[] {
+          new PrefBoolean(AppPreferences.AUTO_SYNC_THEME, S.getter("windowAutoSyncTheme")),
           new PrefBoolean(AppPreferences.SHOW_TICK_RATE, S.getter("windowTickRate")),
         };
 
@@ -135,10 +139,28 @@ class WindowOptions extends OptionsPanel {
     gridZoomedDotColor = new ColorChooserButton(window, AppPreferences.GRID_ZOOMED_DOT_COLOR);
     panel.add(gridZoomedDotColorTitle);
     panel.add(gridZoomedDotColor);
+    adaptComponentColor = new JCheckBox(S.get("windowAdaptComponentColor"));
+    adaptComponentColor.setSelected(AppPreferences.isAdaptComponentColor());
+    panel.add(adaptComponentColor);
+    panel.add(new JLabel());
     componentColorTitle = new JLabel(S.get("windowComponentColor"));
     componentColor = new ColorChooserButton(window, AppPreferences.COMPONENT_COLOR);
     panel.add(componentColorTitle);
     panel.add(componentColor);
+
+    adaptComponentColor.addActionListener(e -> {
+      final var adapt = adaptComponentColor.isSelected();
+      if (!adapt) {
+        final var stored = AppPreferences.COMPONENT_COLOR.get();
+        if (stored == AppPreferences.DEFAULT_COMPONENT_COLOR || stored == 0) {
+          AppPreferences.COMPONENT_COLOR.set(Color.BLACK.getRGB());
+        }
+      }
+      AppPreferences.ADAPT_COMPONENT_COLOR.setBoolean(adapt);
+    });
+    AppPreferences.ADAPT_COMPONENT_COLOR.addPropertyChangeListener(evt -> {
+      adaptComponentColor.setSelected(AppPreferences.isAdaptComponentColor());
+    });
     componentIconColorTitle = new JLabel(S.get("windowComponentIconColor"));
     componentIconColor = new ColorChooserButton(window, AppPreferences.COMPONENT_ICON_COLOR);
     panel.add(componentIconColorTitle);
@@ -289,6 +311,7 @@ class WindowOptions extends OptionsPanel {
     gridBgColorTitle.setText(S.get("windowGridBgColor"));
     gridDotColorTitle.setText(S.get("windowGridDotColor"));
     gridZoomedDotColorTitle.setText(S.get("windowGridZoomedDotColor"));
+    adaptComponentColor.setText(S.get("windowAdaptComponentColor"));
     componentColorTitle.setText(S.get("windowComponentColor"));
     componentIconColorTitle.setText(S.get("windowComponentIconColor"));
     textToolColorTitle.setText(S.get("windowTextToolColor"));
@@ -318,7 +341,7 @@ class WindowOptions extends OptionsPanel {
         int newIndex = lookAndFeel.getSelectedIndex();
         if (newIndex != index && newIndex >= 0 && newIndex < lookAndFeelInfos.length) {
           index = newIndex;
-          AppPreferences.LookAndFeel.set(lookAndFeelInfos[index].getClassName());
+          ThemeManager.applyTheme(lookAndFeelInfos[index].getClassName());
           initThemePreviewer();
         }
         checkRestartWarning();
@@ -350,8 +373,7 @@ class WindowOptions extends OptionsPanel {
     }
 
     private void checkRestartWarning() {
-      boolean show = !Objects.equals(AppPreferences.APP_FONT.get(), initialAppFont)
-          || !Objects.equals(AppPreferences.LookAndFeel.get(), initialLookAndFeel);
+      boolean show = !Objects.equals(AppPreferences.APP_FONT.get(), initialAppFont);
       restartWarning.setVisible(show);
       restartWarningSpacer.setVisible(show);
     }

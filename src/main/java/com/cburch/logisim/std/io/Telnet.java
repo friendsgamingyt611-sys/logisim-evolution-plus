@@ -106,7 +106,7 @@ public class Telnet extends InstanceFactory {
   public void paintInstance(InstancePainter painter) {
     final var g = painter.getGraphics();
 
-    g.setColor(new Color(AppPreferences.COMPONENT_COLOR.get()));
+    g.setColor(AppPreferences.getComponentColor());
 
     painter.drawBounds();
     painter.drawPort(IN, "in", Direction.EAST);
@@ -117,7 +117,7 @@ public class Telnet extends InstanceFactory {
     painter.drawPort(AVAIL, "av", Direction.WEST);
 
     var metric = g.getFontMetrics();
-    g.setColor(new Color(AppPreferences.COMPONENT_COLOR.get()));
+    g.setColor(AppPreferences.getComponentColor());
 
     final var bds = painter.getBounds();
     final var x0 = bds.getX() + (bds.getWidth() / 2);

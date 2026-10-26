@@ -207,7 +207,7 @@ public class Buzzer extends InstanceFactory {
     g.drawLine(x + width / 2, y + 4, x + width / 2, y + 36);
     g.setColor(Color.BLACK);
     g.fillOval(x + 15, y + 15, 10, 10);
-    g.setColor(new Color(AppPreferences.COMPONENT_COLOR.get()));
+    g.setColor(AppPreferences.getComponentColor());
     g.drawOval(x, y, 40, 40);
     painter.drawPorts();
     painter.drawLabel();

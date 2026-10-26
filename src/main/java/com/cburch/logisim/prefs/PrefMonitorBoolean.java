@@ -91,8 +91,11 @@ public class PrefMonitorBoolean extends AbstractPrefMonitor<Boolean> implements 
    * @param newValue The new value to set.
    */
   public void set(Boolean newValue) {
-    if (value != newValue) {
+    if (newValue != null && value != newValue) {
+      final var oldValue = value;
+      value = newValue;
       AppPreferences.getPrefs().putBoolean(getIdentifier(), newValue);
+      AppPreferences.firePropertyChange(getIdentifier(), oldValue, (boolean) newValue);
     }
   }
 

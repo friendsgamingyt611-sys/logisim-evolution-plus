@@ -260,7 +260,7 @@ class Pla extends InstanceFactory {
     int w = bds.getWidth();
     int h = bds.getHeight();
 
-    if (!ghost) g.setColor(new Color(AppPreferences.COMPONENT_COLOR.get()));
+    if (!ghost) g.setColor(AppPreferences.getComponentColor());
     GraphicsUtil.switchToWidth(g, 2);
     g.drawRect(x, y, bds.getWidth(), bds.getHeight());
 

@@ -170,7 +170,7 @@ public class Counter extends InstanceFactory implements DynamicElementProvider {
     controlTopy[0] = controlTopy[7] = ypos + 110;
     controlTopy[1] = controlTopy[2] = controlTopy[5] = controlTopy[6] = ypos + 100;
     controlTopy[3] = controlTopy[4] = ypos;
-    g.setColor(new Color(AppPreferences.COMPONENT_COLOR.get()));
+    g.setColor(AppPreferences.getComponentColor());
     g.drawPolyline(controlTopx, controlTopy, controlTopx.length);
     // These are up here because they reset the width to 1 when done.
     painter.drawClockSymbol(xpos + 20, ypos + 80);
@@ -285,7 +285,7 @@ public class Counter extends InstanceFactory implements DynamicElementProvider {
           ypos + 30,
           GraphicsUtil.H_LEFT,
           GraphicsUtil.V_CENTER);
-      g.setColor(new Color(AppPreferences.COMPONENT_COLOR.get()));
+      g.setColor(AppPreferences.getComponentColor());
     }
   }
 
@@ -324,7 +324,7 @@ public class Counter extends InstanceFactory implements DynamicElementProvider {
           realYpos + 10);
     }
 
-    g.setColor(new Color(AppPreferences.COMPONENT_COLOR.get()));
+    g.setColor(AppPreferences.getComponentColor());
     if (nrOfBits > 1) {
       GraphicsUtil.drawText(
           g,
@@ -410,7 +410,7 @@ public class Counter extends InstanceFactory implements DynamicElementProvider {
           realYpos + 10,
           GraphicsUtil.H_CENTER,
           GraphicsUtil.V_CENTER);
-      g.setColor(new Color(AppPreferences.COMPONENT_COLOR.get()));
+      g.setColor(AppPreferences.getComponentColor());
     }
   }
 
@@ -464,7 +464,7 @@ public class Counter extends InstanceFactory implements DynamicElementProvider {
       b = S.get("registerWidthLabel", "" + widthVal.getWidth());
     }
 
-    g.setColor(new Color(AppPreferences.COMPONENT_COLOR.get()));
+    g.setColor(AppPreferences.getComponentColor());
 
     // draw boundary, label
     painter.drawBounds();
@@ -484,7 +484,7 @@ public class Counter extends InstanceFactory implements DynamicElementProvider {
     painter.drawPort(CARRY);
     painter.drawPort(CLR, "0", Direction.SOUTH);
     painter.drawPort(EN, S.get("counterEnableLabel"), Direction.EAST);
-    g.setColor(new Color(AppPreferences.COMPONENT_COLOR.get()));
+    g.setColor(AppPreferences.getComponentColor());
     painter.drawClock(CK, Direction.NORTH);
 
     // draw contents

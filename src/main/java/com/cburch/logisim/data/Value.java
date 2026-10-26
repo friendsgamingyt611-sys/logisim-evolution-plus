@@ -12,6 +12,7 @@ package com.cburch.logisim.data;
 import com.cburch.logisim.prefs.AppPreferences;
 import com.cburch.logisim.circuit.CircuitWires.BusConnection;
 import com.cburch.logisim.util.Cache;
+import com.cburch.logisim.comp.Palette;
 import com.cburch.logisim.util.MiniFloat;
 
 import java.awt.Color;
@@ -475,17 +476,7 @@ public final class Value {
   }
 
   public Color getColor() {
-    if (error != 0) {
-      return errorColor;
-    } else if (width == 0) {
-      return nilColor;
-    } else if (width == 1) {
-      if (this == UNKNOWN) return unknownColor;
-      else if (this == TRUE) return trueColor;
-      else return falseColor;
-    } else {
-      return multiColor;
-    }
+    return Palette.current().valueColor(this);
   }
 
   public int getWidth() {

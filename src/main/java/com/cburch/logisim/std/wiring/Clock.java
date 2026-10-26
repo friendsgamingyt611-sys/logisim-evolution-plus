@@ -334,7 +334,7 @@ public class Clock extends InstanceFactory {
     final var newAppear = painter.getAttributeValue(ProbeAttributes.PROBEAPPEARANCE).equals(ProbeAttributes.APPEAR_EVOLUTION_NEW);
     final var dir = painter.getAttributeValue(StdAttr.FACING);
     GraphicsUtil.switchToWidth(g, 2);
-    final var shapeColor = new Color(AppPreferences.COMPONENT_COLOR.get());
+    final var shapeColor = AppPreferences.getComponentColor();
     g.setColor(shapeColor);
     if (newAppear) {
       paintNewShape(painter, x, y, width, height, dir, false);
@@ -350,7 +350,7 @@ public class Clock extends InstanceFactory {
       g.setColor(state.sending.getColor());
       drawUp = state.sending == Value.TRUE;
     } else {
-      g.setColor(new Color(AppPreferences.COMPONENT_COLOR.get()));
+      g.setColor(AppPreferences.getComponentColor());
       drawUp = true;
     }
     x += (dir == Direction.WEST && newAppear) ? 30 : 10;

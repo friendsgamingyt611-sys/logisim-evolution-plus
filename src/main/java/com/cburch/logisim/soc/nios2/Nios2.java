@@ -167,7 +167,7 @@ public class Nios2 extends SocInstanceFactory implements DynamicElementProvider 
   public void paintInstance(InstancePainter painter) {
     Location loc = painter.getLocation();
     Graphics2D g2 = (Graphics2D) painter.getGraphics();
-    g2.setColor(new Color(AppPreferences.COMPONENT_COLOR.get()));
+    g2.setColor(AppPreferences.getComponentColor());
     painter.drawBounds();
     painter.drawLabel();
     painter.drawClock(CLOCK, Direction.EAST);

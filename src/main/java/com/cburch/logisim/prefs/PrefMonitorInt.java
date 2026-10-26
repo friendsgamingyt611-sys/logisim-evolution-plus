@@ -74,8 +74,11 @@ class PrefMonitorInt extends AbstractPrefMonitor<Integer> {
    */
   public void set(Integer newValue) {
     final var newVal = newValue;
-    if (value != newVal) {
+    if (newVal != null && value != newVal) {
+      final var oldValue = value;
+      value = newVal;
       AppPreferences.getPrefs().putInt(getIdentifier(), newVal);
+      AppPreferences.firePropertyChange(getIdentifier(), oldValue, newVal);
     }
   }
 }

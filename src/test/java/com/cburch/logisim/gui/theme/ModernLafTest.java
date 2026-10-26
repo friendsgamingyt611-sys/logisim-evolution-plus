@@ -56,4 +56,27 @@ class ModernLafTest {
     var darkDefaults = darkLaf.getDefaults();
     assertNotNull(darkDefaults);
   }
+
+  @Test
+  void testThemeManagerPairing() {
+    assertEquals(
+        ModernDarkLaf.class.getName(),
+        ThemeManager.getPairedLaf(ModernLightLaf.class.getName(), true));
+    assertEquals(
+        ModernLightLaf.class.getName(),
+        ThemeManager.getPairedLaf(ModernDarkLaf.class.getName(), false));
+    assertEquals(
+        ModernDarkLaf.class.getName(),
+        ThemeManager.getPairedLaf(null, true));
+    assertEquals(
+        ModernLightLaf.class.getName(),
+        ThemeManager.getPairedLaf(null, false));
+  }
+
+  @Test
+  void testSystemDetectionRunsSafely() {
+    // Ensure isSystemDark executes without throwing exceptions on any platform
+    boolean isDark = ThemeManager.isSystemDark();
+    assertEquals(isDark, com.cburch.logisim.prefs.AppPreferences.isSystemDark());
+  }
 }

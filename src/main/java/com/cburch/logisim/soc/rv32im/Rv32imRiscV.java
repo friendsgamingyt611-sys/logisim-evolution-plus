@@ -118,7 +118,7 @@ public class Rv32imRiscV extends SocInstanceFactory implements DynamicElementPro
   public void paintInstance(InstancePainter painter) {
     final var loc = painter.getLocation();
     final var g2 = (Graphics2D) painter.getGraphics();
-    g2.setColor(new Color(AppPreferences.COMPONENT_COLOR.get()));
+    g2.setColor(AppPreferences.getComponentColor());
     painter.drawBounds();
     painter.drawLabel();
     painter.drawClock(1, Direction.EAST);

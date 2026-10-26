@@ -161,7 +161,7 @@ public class RealTimeClock extends InstanceFactory {
     GraphicsUtil.switchToWidth(g, 2);
     g.setColor(Color.WHITE);
     g.fillRect(x, y, width, height);
-    g.setColor(new Color(AppPreferences.COMPONENT_COLOR.get()));
+    g.setColor(AppPreferences.getComponentColor());
     g.drawRect(x, y, width, height);
 
     final var psize = painter.getAttributeValue(TIME_SIZE);

@@ -87,7 +87,7 @@ public class SocMemory extends SocInstanceFactory {
   public void paintInstance(InstancePainter painter) {
     Graphics2D g2 = (Graphics2D) painter.getGraphics();
     Location loc = painter.getLocation();
-    g2.setColor(new Color(AppPreferences.COMPONENT_COLOR.get()));
+    g2.setColor(AppPreferences.getComponentColor());
     painter.drawBounds();
     painter.drawLabel();
     Font f = g2.getFont();

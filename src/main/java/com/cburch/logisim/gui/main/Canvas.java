@@ -129,7 +129,7 @@ public class Canvas extends JPanel implements LocaleListener, CanvasPaneContents
     this.canvasPane = null;
     this.tickCounter = new TickCounter();
 
-    setBackground(new Color(AppPreferences.CANVAS_BG_COLOR.get()));
+    setBackground(AppPreferences.getCanvasBgColor());
     addMouseListener(myListener);
     addMouseMotionListener(myListener);
     addMouseWheelListener(myListener);
@@ -982,7 +982,7 @@ public class Canvas extends JPanel implements LocaleListener, CanvasPaneContents
         final var showTips = AppPreferences.COMPONENT_TIPS.getBoolean();
         setToolTipText(showTips ? "" : null);
       } else if (AppPreferences.CANVAS_BG_COLOR.isSource(event)) {
-        setBackground(new Color(AppPreferences.CANVAS_BG_COLOR.get()));
+        setBackground(AppPreferences.getCanvasBgColor());
       }
     }
 

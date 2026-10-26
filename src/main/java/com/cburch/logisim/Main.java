@@ -15,6 +15,7 @@ import com.cburch.logisim.gui.start.Startup;
 import com.cburch.logisim.prefs.AppPreferences;
 import com.cburch.logisim.gui.theme.ModernDarkLaf;
 import com.cburch.logisim.gui.theme.ModernLightLaf;
+import com.cburch.logisim.gui.theme.ThemeManager;
 import com.formdev.flatlaf.FlatDarculaLaf;
 import com.formdev.flatlaf.FlatDarkLaf;
 import com.formdev.flatlaf.FlatIntelliJLaf;
@@ -54,6 +55,7 @@ public class Main {
         ModernDarkLaf.installLafInfo();
         
         UIManager.setLookAndFeel(AppPreferences.LookAndFeel.get());
+        ThemeManager.startSystemThemeMonitor();
         
         // Apply global font preference
         final var appFont = AppPreferences.APP_FONT.get();

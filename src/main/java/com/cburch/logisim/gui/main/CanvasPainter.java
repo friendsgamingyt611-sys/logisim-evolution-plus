@@ -13,6 +13,7 @@ import com.cburch.logisim.circuit.Circuit;
 import com.cburch.logisim.circuit.WireSet;
 import com.cburch.logisim.comp.Component;
 import com.cburch.logisim.comp.ComponentDrawContext;
+import com.cburch.logisim.comp.Palette;
 import com.cburch.logisim.data.Value;
 import com.cburch.logisim.gui.generic.GridPainter;
 import com.cburch.logisim.prefs.AppPreferences;
@@ -95,7 +96,7 @@ class CanvasPainter implements PropertyChangeListener {
                 : Value.widthErrorCaptionBgcolor);
       }
     }
-    g.setColor(Color.BLACK);
+    g.setColor(Palette.current().stroke());
     GraphicsUtil.switchToWidth(g, 1);
   }
 
@@ -127,7 +128,7 @@ class CanvasPainter implements PropertyChangeListener {
           (int) Math.round(a),
           (int) Math.round(b));
       GraphicsUtil.switchToWidth(g, 1);
-      g.setColor(Color.BLACK);
+      g.setColor(Palette.current().stroke());
     }
 
     // draw circuit and selection
@@ -181,7 +182,7 @@ class CanvasPainter implements PropertyChangeListener {
     final double zoomFactor = canvas.getZoomFactor();
 
     grid.paintGrid(g);
-    g.setColor(Color.black);
+    g.setColor(Palette.current().stroke());
 
     final var gfxScaled = g.create();
     if (zoomFactor != 1.0 && gfxScaled instanceof Graphics2D g2d) {

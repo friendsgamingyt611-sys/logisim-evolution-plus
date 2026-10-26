@@ -88,7 +88,7 @@ public class Register extends InstanceFactory implements DynamicElementProvider 
       }
       GraphicsUtil.drawCenteredText(g, str, x + 30, y + 8);
     }
-    g.setColor(new Color(AppPreferences.COMPONENT_COLOR.get()));
+    g.setColor(AppPreferences.getComponentColor());
     GraphicsUtil.switchToWidth(g, 2);
     if (nrOfBits > 1) {
       g.drawLine(x + 15, y + 80, x + 15, y + 85);
@@ -106,7 +106,7 @@ public class Register extends InstanceFactory implements DynamicElementProvider 
     GraphicsUtil.switchToWidth(g, dq_widtdqWidth);
     g.drawLine(x, y + 30, x + 8, y + 30);
     g.drawLine(x + 52, y + 30, x + 60, y + 30);
-    g.setColor(new Color(AppPreferences.COMPONENT_COLOR.get()));
+    g.setColor(AppPreferences.getComponentColor());
     GraphicsUtil.switchToWidth(g, 2);
     g.drawRect(x + 10, y + 20, 40, 60);
     GraphicsUtil.switchToWidth(g, 1);
@@ -117,7 +117,7 @@ public class Register extends InstanceFactory implements DynamicElementProvider 
     GraphicsUtil.switchToWidth(g, 1);
     g.setColor(new Color(AppPreferences.COMPONENT_SECONDARY_COLOR.get()));
     GraphicsUtil.drawCenteredText(g, "R", x + 30, y + 68);
-    g.setColor(new Color(AppPreferences.COMPONENT_COLOR.get()));
+    g.setColor(AppPreferences.getComponentColor());
     if (hasWE) {
       GraphicsUtil.drawCenteredText(g, "WE", x + 22, y + 48);
       GraphicsUtil.switchToWidth(g, 2);
@@ -165,7 +165,7 @@ public class Register extends InstanceFactory implements DynamicElementProvider 
     }
 
     // draw boundary, label
-    g.setColor(new Color(AppPreferences.COMPONENT_COLOR.get()));
+    g.setColor(AppPreferences.getComponentColor());
     painter.drawBounds();
     g.setColor(painter.getAttributeValue(StdAttr.LABEL_COLOR));
     painter.drawLabel();
@@ -181,7 +181,7 @@ public class Register extends InstanceFactory implements DynamicElementProvider 
     g.setColor(new Color(AppPreferences.COMPONENT_SECONDARY_COLOR.get()));
     painter.drawPort(CLR, "0", Direction.SOUTH);
     painter.drawPort(EN, S.get("memEnableLabel"), Direction.EAST);
-    g.setColor(new Color(AppPreferences.COMPONENT_COLOR.get()));
+    g.setColor(AppPreferences.getComponentColor());
     painter.drawClock(CK, Direction.NORTH);
 
     // draw contents

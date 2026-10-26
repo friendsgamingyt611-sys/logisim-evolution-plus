@@ -119,7 +119,7 @@ public class BitFinder extends InstanceFactory {
   @Override
   public void paintInstance(InstancePainter painter) {
     Graphics g = painter.getGraphics();
-    painter.getGraphics().setColor(new Color(AppPreferences.COMPONENT_COLOR.get()));
+    painter.getGraphics().setColor(AppPreferences.getComponentColor());
     painter.drawBounds();
     painter.drawPorts();
 

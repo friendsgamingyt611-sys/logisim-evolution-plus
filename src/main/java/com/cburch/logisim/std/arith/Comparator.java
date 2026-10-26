@@ -103,7 +103,7 @@ public class Comparator extends InstanceFactory {
 
   @Override
   public void paintInstance(InstancePainter painter) {
-    painter.getGraphics().setColor(new Color(AppPreferences.COMPONENT_COLOR.get()));
+    painter.getGraphics().setColor(AppPreferences.getComponentColor());
     painter.drawBounds();
     painter.drawPort(IN0);
     painter.drawPort(IN1);

@@ -105,6 +105,14 @@ public class CategoryTabs extends JPanel implements ExplorerModel.Listener {
     buildTabs();
   }
 
+  @Override
+  public void updateUI() {
+    super.updateUI();
+    if (tabsContainer != null) {
+      buildTabs();
+    }
+  }
+
   public String getActiveCategory() {
     return activeCategory;
   }

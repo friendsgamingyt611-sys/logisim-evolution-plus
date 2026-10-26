@@ -11,6 +11,7 @@ package com.cburch.logisim.gui.prefs;
 
 import com.bric.colorpicker.ColorPickerDialog;
 import com.cburch.logisim.gui.icons.BaseIcon;
+import com.cburch.logisim.prefs.AppPreferences;
 import com.cburch.logisim.prefs.PrefMonitor;
 import java.awt.Color;
 import java.awt.Frame;
@@ -34,11 +35,18 @@ public class ColorChooserButton extends JButton implements PropertyChangeListene
     this.frame = frame;
     setIcon(new ColorIcon());
     pref.addPropertyChangeListener(this);
+    if (pref == AppPreferences.COMPONENT_COLOR) {
+      AppPreferences.ADAPT_COMPONENT_COLOR.addPropertyChangeListener(this);
+      setEnabled(!AppPreferences.isAdaptComponentColor());
+    }
     addActionListener(this);
   }
 
   @Override
   public void propertyChange(PropertyChangeEvent evt) {
+    if (myMonitor == AppPreferences.COMPONENT_COLOR) {
+      setEnabled(!AppPreferences.isAdaptComponentColor());
+    }
     repaint();
   }
 
@@ -53,7 +61,13 @@ public class ColorChooserButton extends JButton implements PropertyChangeListene
   private class ColorIcon extends BaseIcon {
     @Override
     protected void paintIcon(Graphics2D g2) {
-      g2.setColor(new Color(myMonitor.get()));
+      final Color c;
+      if (myMonitor == AppPreferences.COMPONENT_COLOR && AppPreferences.isAdaptComponentColor()) {
+        c = AppPreferences.getComponentColor();
+      } else {
+        c = new Color(myMonitor.get());
+      }
+      g2.setColor(c);
       g2.fillRect(0, 0, this.getIconWidth(), this.getIconHeight());
     }
 

@@ -192,7 +192,7 @@ public class Button extends InstanceFactory {
     var y = bds.getY();
     final var w = bds.getWidth();
     final var h = bds.getHeight();
-    final var baseColor = new Color(AppPreferences.COMPONENT_COLOR.get());
+    final var baseColor = AppPreferences.getComponentColor();
 
     Value val;
     if (painter.getShowState()) {

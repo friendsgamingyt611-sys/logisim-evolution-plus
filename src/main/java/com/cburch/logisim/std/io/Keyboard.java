@@ -288,7 +288,7 @@ public class Keyboard extends InstanceFactory {
   public void paintInstance(InstancePainter painter) {
     final var showState = painter.getShowState();
     final var g = painter.getGraphics();
-    g.setColor(new Color(AppPreferences.COMPONENT_COLOR.get()));
+    g.setColor(AppPreferences.getComponentColor());
     painter.drawClock(CK, Direction.EAST);
     painter.drawBounds();
     painter.drawPort(CLR);

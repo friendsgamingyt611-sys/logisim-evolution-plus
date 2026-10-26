@@ -66,7 +66,7 @@ public class FpRound extends InstanceFactory {
     final var g = painter.getGraphics();
     final var roundMode = painter.getAttributeValue(FpToInt.MODE_ATTRIBUTE);
 
-    g.setColor(new Color(AppPreferences.COMPONENT_COLOR.get()));
+    g.setColor(AppPreferences.getComponentColor());
     painter.drawBounds();
     painter.drawPort(IN);
 

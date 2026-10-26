@@ -218,7 +218,7 @@ public class RamAppearance {
     final var g = painter.getGraphics();
     final var bds = painter.getBounds();
     final var inst = painter.getInstance();
-    g.setColor(new Color(AppPreferences.COMPONENT_COLOR.get()));
+    g.setColor(AppPreferences.getComponentColor());
     /* draw label */
     final var Label = painter.getAttributeValue(StdAttr.LABEL);
     if (Label != null && painter.getAttributeValue(StdAttr.LABEL_VISIBILITY)) {
@@ -259,7 +259,7 @@ public class RamAppearance {
     final var g = painter.getGraphics();
     final var bds = painter.getBounds();
     final var inst = painter.getInstance();
-    g.setColor(new Color(AppPreferences.COMPONENT_COLOR.get()));
+    g.setColor(AppPreferences.getComponentColor());
     /* draw label */
     final var Label = painter.getAttributeValue(StdAttr.LABEL);
     if (Label != null && painter.getAttributeValue(StdAttr.LABEL_VISIBILITY)) {
@@ -561,7 +561,7 @@ public class RamAppearance {
             ypos[0] = y + 5;
             ypos[1] = ypos[2] = y + 10;
             g.setFont(font.deriveFont(7.0f));
-            g.setColor(new Color(AppPreferences.COMPONENT_COLOR.get()));
+            g.setColor(AppPreferences.getComponentColor());
             for (var j = 0; j < nrOfBits; j++) {
               g.drawPolyline(xpos, ypos, 3);
               GraphicsUtil.drawText(g, Integer.toString(j), xpos[2] - 3, ypos[2] - 3, GraphicsUtil.H_RIGHT, GraphicsUtil.V_BASELINE);
@@ -624,7 +624,7 @@ public class RamAppearance {
             ypos[0] = y + 5;
             ypos[1] = ypos[2] = y + 10;
             g.setFont(font.deriveFont(7.0f));
-            g.setColor(new Color(AppPreferences.COMPONENT_COLOR.get()));
+            g.setColor(AppPreferences.getComponentColor());
             for (var j = 0; j < nrOfBits; j++) {
               g.drawPolyline(xpos, ypos, 3);
               GraphicsUtil.drawText(g, Integer.toString(j), xpos[2] + 3, ypos[2] - 3, GraphicsUtil.H_LEFT, GraphicsUtil.V_BASELINE);
@@ -657,7 +657,7 @@ public class RamAppearance {
         final var xpos = new int[3];
         final var ypos = new int[3];
         g.setStroke(new BasicStroke(2));
-        g.setColor(new Color(AppPreferences.COMPONENT_COLOR.get()));
+        g.setColor(AppPreferences.getComponentColor());
         xpos[0] = x + 5;
         xpos[1] = x + 10;
         xpos[2] = x + 20;
@@ -684,7 +684,7 @@ public class RamAppearance {
 
 
     /* draw controllblock connections */
-    g.setColor(new Color(AppPreferences.COMPONENT_COLOR.get()));
+    g.setColor(AppPreferences.getComponentColor());
 
     g.setStroke(new BasicStroke(2));
     for (var i = 0; i < getNrOEPorts(attrs); i++) {

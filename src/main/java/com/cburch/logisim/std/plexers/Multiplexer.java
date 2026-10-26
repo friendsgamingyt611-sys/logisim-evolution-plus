@@ -248,7 +248,7 @@ public class Multiplexer extends InstanceFactory {
     GraphicsUtil.drawText(g, "0", x0, y0, halign, GraphicsUtil.V_BASELINE);
 
     // draw the trapezoid, "MUX" string, the individual ports
-    g.setColor(new Color(AppPreferences.COMPONENT_COLOR.get()));
+    g.setColor(AppPreferences.getComponentColor());
     final var lean =
         (inputs == 2)
             ? (size == PlexersLibrary.SIZE_NARROW ? 7 : 10)

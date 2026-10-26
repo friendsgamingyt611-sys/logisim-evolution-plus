@@ -72,6 +72,19 @@ public class CircuitsList extends JPanel implements ExplorerModel.Listener {
     refresh();
   }
 
+  @Override
+  public void updateUI() {
+    super.updateUI();
+    if (headerLabel != null) {
+      Color fgMuted = UIManager.getColor("Label.disabledForeground");
+      if (fgMuted == null) fgMuted = new Color(154, 153, 150);
+      headerLabel.setForeground(fgMuted);
+    }
+    if (model != null) {
+      refresh();
+    }
+  }
+
   public void refresh() {
     itemsPanel.removeAll();
     final var circuits = model.getCircuits();

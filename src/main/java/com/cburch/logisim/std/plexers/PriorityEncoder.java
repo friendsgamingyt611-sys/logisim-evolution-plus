@@ -97,7 +97,7 @@ public class PriorityEncoder extends InstanceFactory {
     final var g = painter.getGraphics();
     final var facing = painter.getAttributeValue(StdAttr.FACING);
 
-    g.setColor(new Color(AppPreferences.COMPONENT_COLOR.get()));
+    g.setColor(AppPreferences.getComponentColor());
     painter.drawBounds();
     final var bds = painter.getBounds();
     g.setColor(Color.GRAY);
@@ -122,7 +122,7 @@ public class PriorityEncoder extends InstanceFactory {
       halign = GraphicsUtil.H_LEFT;
     }
     GraphicsUtil.drawText(g, "0", x0, y0, halign, GraphicsUtil.V_BASELINE);
-    g.setColor(new Color(AppPreferences.COMPONENT_COLOR.get()));
+    g.setColor(AppPreferences.getComponentColor());
     GraphicsUtil.drawCenteredText(
         g, "Pri", bds.getX() + bds.getWidth() / 2, bds.getY() + bds.getHeight() / 2);
     painter.drawPorts();

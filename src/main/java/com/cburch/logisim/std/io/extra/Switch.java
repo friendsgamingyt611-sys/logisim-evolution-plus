@@ -192,7 +192,7 @@ public class Switch extends InstanceFactory {
         g.fillPolygon(xp, yp, xp.length);
         g.setColor(color);
         g.fillPolygon(xr, yr, xr.length);
-        g.setColor(new Color(AppPreferences.COMPONENT_COLOR.get()));
+        g.setColor(AppPreferences.getComponentColor());
       }
       g.drawPolygon(xp, yp, xp.length);
       g.drawPolygon(xr, yr, xr.length);
@@ -248,7 +248,7 @@ public class Switch extends InstanceFactory {
         g.fillPolygon(xp, yp, xp.length);
         g.setColor(color);
         g.fillPolygon(xr, yr, xr.length);
-        g.setColor(new Color(AppPreferences.COMPONENT_COLOR.get()));
+        g.setColor(AppPreferences.getComponentColor());
       }
       g.drawPolygon(xp, yp, xp.length);
       g.drawPolygon(xr, yr, xr.length);

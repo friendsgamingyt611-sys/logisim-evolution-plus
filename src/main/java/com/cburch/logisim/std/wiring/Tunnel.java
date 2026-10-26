@@ -217,7 +217,7 @@ public class Tunnel extends InstanceFactory {
     int y = loc.getY();
     Graphics g = painter.getGraphics();
     g.translate(x, y);
-    g.setColor(new Color(AppPreferences.COMPONENT_COLOR.get()));
+    g.setColor(AppPreferences.getComponentColor());
     paintGhost(painter);
     g.translate(-x, -y);
     painter.drawPorts();
