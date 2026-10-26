@@ -725,6 +725,8 @@ public class AppPreferences {
       create(new PrefMonitorInt("componentColor", DEFAULT_COMPONENT_COLOR));
   public static final PrefMonitor<Boolean> ADAPT_COMPONENT_COLOR =
       create(new PrefMonitorBoolean("adaptComponentColor", true));
+  public static final PrefMonitor<Boolean> EXPERIMENTAL_ROUND_STROKES =
+      create(new PrefMonitorBoolean("experimentalRoundStrokes", false));
 
   public static boolean isAdaptComponentColor() {
     return ADAPT_COMPONENT_COLOR.getBoolean();

@@ -852,7 +852,7 @@ public class CircuitWires {
     final var state = context.getCircuitState();
     final var g = (Graphics2D) context.getGraphics();
     g.setColor(context.getPalette().stroke());
-    GraphicsUtil.switchToWidth(g, Wire.WIDTH);
+    GraphicsUtil.switchToWidth(g, Wire.WIDTH, false);
     final var highlighted = context.getHighlightedWires();
 
     final var cmap = getConnectivity();
@@ -874,7 +874,7 @@ public class CircuitWires {
         }
         if (highlighted.containsWire(wire)) {
           width = wb.isBus() ? Wire.HIGHLIGHTED_WIDTH_BUS : Wire.HIGHLIGHTED_WIDTH;
-          GraphicsUtil.switchToWidth(g, width);
+          GraphicsUtil.switchToWidth(g, width, false);
           g.drawLine(s.getX(), s.getY(), t.getX(), t.getY());
 
           final var oldStroke = g.getStroke();
@@ -884,7 +884,7 @@ public class CircuitWires {
           g.setStroke(oldStroke);
         } else {
           width = wb.isBus() ? Wire.WIDTH_BUS : Wire.WIDTH;
-          GraphicsUtil.switchToWidth(g, width);
+          GraphicsUtil.switchToWidth(g, width, false);
           g.drawLine(s.getX(), s.getY(), t.getX(), t.getY());
         }
         /* The following part is used by the FPGA Commander's DRC to highlight a wire with DRC
@@ -893,7 +893,7 @@ public class CircuitWires {
         if (wire.isDrcHighlighted()) {
           width += 2;
           g.setColor(wire.getDrcHighlightColor());
-          GraphicsUtil.switchToWidth(g, 2);
+          GraphicsUtil.switchToWidth(g, 2, false);
           if (wire.isVertical()) {
             g.drawLine(s.getX() - width, s.getY(), t.getX() - width, t.getY());
             g.drawLine(s.getX() + width, s.getY(), t.getX() + width, t.getY());
@@ -943,11 +943,11 @@ public class CircuitWires {
             g.setColor(context.getPalette().stroke());
           }
           if (highlighted.containsWire(wire)) {
-            GraphicsUtil.switchToWidth(g, Wire.WIDTH + 2);
+            GraphicsUtil.switchToWidth(g, Wire.WIDTH + 2, false);
             g.drawLine(s.getX(), s.getY(), t.getX(), t.getY());
-            GraphicsUtil.switchToWidth(g, Wire.WIDTH);
+            GraphicsUtil.switchToWidth(g, Wire.WIDTH, false);
           } else {
-            GraphicsUtil.switchToWidth(g, wb.isBus() ? Wire.WIDTH_BUS : Wire.WIDTH);
+            GraphicsUtil.switchToWidth(g, wb.isBus() ? Wire.WIDTH_BUS : Wire.WIDTH, false);
             g.drawLine(s.getX(), s.getY(), t.getX(), t.getY());
           }
         }

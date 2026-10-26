@@ -13,6 +13,8 @@ import com.cburch.draw.util.TextMetrics;
 import com.cburch.logisim.circuit.RadixOption;
 import com.cburch.logisim.data.Value;
 
+import com.cburch.logisim.comp.Palette;
+import com.cburch.logisim.prefs.AppPreferences;
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Font;
@@ -231,8 +233,16 @@ public final class GraphicsUtil {
   }
 
   public static void switchToWidth(Graphics gfx, int width) {
+    switchToWidth(gfx, width, true);
+  }
+
+  public static void switchToWidth(Graphics gfx, int width, boolean allowRound) {
     if (gfx instanceof Graphics2D g2d) {
-      g2d.setStroke(new BasicStroke(width));
+      if (allowRound && AppPreferences.EXPERIMENTAL_ROUND_STROKES.getBoolean() && !Palette.isForceLight()) {
+        g2d.setStroke(new BasicStroke(width, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+      } else {
+        g2d.setStroke(new BasicStroke(width));
+      }
     }
   }
 

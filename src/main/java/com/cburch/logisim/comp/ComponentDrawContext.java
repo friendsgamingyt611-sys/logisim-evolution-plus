@@ -21,6 +21,8 @@ import com.cburch.logisim.prefs.AppPreferences;
 import com.cburch.logisim.util.GraphicsUtil;
 import java.awt.Color;
 import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
 
 public class ComponentDrawContext {
   private static final int PIN_OFFS = 2;
@@ -65,6 +67,9 @@ public class ComponentDrawContext {
     this.highlightedWires = WireSet.EMPTY;
     this.instancePainter = new InstancePainter(this, null);
     this.palette = Palette.of(this);
+    if (AppPreferences.EXPERIMENTAL_ROUND_STROKES.getBoolean() && !Palette.isForceLight() && g instanceof Graphics2D g2d) {
+      g2d.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_PURE);
+    }
   }
 
   //
@@ -295,6 +300,9 @@ public class ComponentDrawContext {
 
   public void setGraphics(Graphics g) {
     this.g = g;
+    if (AppPreferences.EXPERIMENTAL_ROUND_STROKES.getBoolean() && !Palette.isForceLight() && g instanceof Graphics2D g2d) {
+      g2d.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_PURE);
+    }
   }
 
   public void setHighlightedWires(WireSet value) {

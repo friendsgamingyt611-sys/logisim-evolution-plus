@@ -158,30 +158,55 @@ Stage 1 Implementation (Completed & Verified):
 --------------------------------------------------------------------------------
 3. REMAINING PLANNED STAGES (STAGES 2 - 6)
 --------------------------------------------------------------------------------
+CORE ARCHITECTURAL PRINCIPLE: "MODERNIZE WITH RESPECT FOR FUNCTIONAL TRADITIONS"
+--------------------------------------------------------------------------------
+Tradition with Purpose: In digital logic design (EDA), primary colors carry strict
+electrical semantics on the canvas: Green (1/0), Red (Error), Blue (Floating / Unknown Z),
+and Orange (Bit-width mismatch). Original Logisim used Magenta for the Attribute Halo
+not arbitrarily, but so engineers never confuse an inspection halo with floating blue (Z)
+wires or active signals.
 
-STAGE 2: Splitter and Bus Rendering
-- Distinct bus vs wire visuals in dark mode.
-- High-contrast defined/mismatch/error wire and splitter values.
+The Evolution+ Rule: Whenever a legacy visual convention carries a real functional or
+cognitive reason for existing, we preserve its semantic separation while modernizing its
+tonal execution to fit the GNOME / Libadwaita palette (e.g. GNOME HIG Orchid #C061CB for
+dark attribute halos, preserving Color.MAGENTA in light mode and light scopes).
 
-STAGE 3: DipSwitch Modern Flat Styling
-- Replace legacy 3D switch glare with clean flat/pill switch styling.
-- Actuator off-white, distinct on/off contrast by position and brightness.
+--------------------------------------------------------------------------------
+COMPLETED STAGES SUMMARY (STAGES 1 - 6)
+--------------------------------------------------------------------------------
 
-STAGE 4: Subcircuit Default Appearance
-- Note: Build default appearance shapes with legacy colors (black fill, white
-  text) and remap dynamically at paint time only for non-custom appearances.
-- Header text maps to palette stroke color in dark mode; header fill maps to
-  #383838.
-- Never write theme colors into saved .circ XML files.
+STAGE 1: Central Context-Aware Stroke & Paint Scope (Commit 4d6433f)
+- ThreadLocal nested-safe paint scope in Palette.java (FORCE_LIGHT_DEPTH).
+- ADAPT_COMPONENT_COLOR boolean preference monitor (default true).
+- Replaced hardcoded stroke colors across 83 component painters.
 
-STAGE 5: Selection and Ghost Colors
-- Dark mode marquee border = accent (`#3584e4`), fill = accent at ~16% alpha.
-- Contrast verification for drag-ghost preference and attribute halos.
+STAGE 2: Splitter and Bus Continuity (Commit b29eae9)
+- Palette.bus() token (#E6E6E6 in dark mode, Value.multiColor in light mode).
+- SplitterPainter and multi-bit bus wires seamlessly continuous in dark mode.
+
+STAGE 3: DipSwitch Flat Styling & std/io Audit (Commit 297b311)
+- Flat pill/well switch styling in DipSwitch.java (#262626 body, #141414 channel,
+  #F0F0F0 ON actuator, #9E9E9E OFF actuator).
+- Comprehensive audit of std/io components adhering to D5.
+
+STAGE 4: Subcircuit Default Appearance Byte-Compatibility (Commit f9496a4)
+- Dynamic paint-time remapping only for isDefaultAppearance() in dark mode:
+  header band = #383838, header text = #E6E6E6.
+- Preserves exact legacy stored shape colors; zero theme tokens written to .circ XML.
+
+STAGE 5: Libadwaita Selection, Halo, & Readout Harmonization (Commit c068e21)
+- Selection marquee: Libadwaita accent blue #3584E4 border with 16% alpha fill.
+- Attribute inspection halo: GNOME HIG Orchid #C061CB (Dark) / Color.MAGENTA (Light).
+- Value readouts (Probe.java): #262626 body fill, #62A0EA sky blue radix subscripts.
+- Constants (Constant.java): #262626 body fill, #E6E6E6 multi-bit text.
+- Contrast verification: Halo against dark canvas = 4.58:1; Ghost = 5.85:1.
 
 STAGE 6: Anti-Aliasing Stroke Caps & Hints (Flag-Gated Experiment)
-- Behind a hidden preference, test `CAP_ROUND`/`JOIN_ROUND` for component
-  outlines with `KEY_STROKE_CONTROL=PURE`.
-- Measure blur and overshoot at 100%, 200%, and 432% zoom before considering.
+- Hidden preference: EXPERIMENTAL_ROUND_STROKES (default false).
+- Component-only BasicStroke.CAP_ROUND / JOIN_ROUND via GraphicsUtil.switchToWidth.
+- CircuitWires.java retains standard stroke caps (0 overshoot at connection dots).
+- RenderingHints.KEY_STROKE_CONTROL = VALUE_STROKE_PURE in ComponentDrawContext.
+- Zoom & overshoot evaluation verified at 100%, 200%, and 432%.
 
 --------------------------------------------------------------------------------
 4. KEY SOURCE FILES & ROLES
