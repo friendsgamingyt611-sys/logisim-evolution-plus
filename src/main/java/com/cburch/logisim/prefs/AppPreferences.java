@@ -628,64 +628,52 @@ public class AppPreferences {
   public static final int LIGHT_GRID_MINOR_DOT_COLOR = 0xFFD8D8D8;
   public static final int LIGHT_GRID_MAJOR_DOT_COLOR = 0xFF808080;
 
+  public static boolean isCanvasBgDefault(int val) {
+    return val == DEFAULT_CANVAS_BG_COLOR
+        || val == 0xFFFFFFFF
+        || val == -1
+        || val == DARK_CANVAS_BG_COLOR
+        || val == LIGHT_CANVAS_BG_COLOR;
+  }
+
+  public static boolean isGridBgDefault(int val) {
+    return val == DEFAULT_GRID_BG_COLOR
+        || val == 0xFFFFFFFF
+        || val == -1
+        || val == DARK_CANVAS_BG_COLOR
+        || val == LIGHT_CANVAS_BG_COLOR;
+  }
+
   public static Color getCanvasBgColor() {
     final var val = CANVAS_BG_COLOR.get();
-    if (isDarkTheme()) {
-      if (val == DEFAULT_CANVAS_BG_COLOR || val == 0xFFFFFFFF || val == -1) {
-        return new Color(DARK_CANVAS_BG_COLOR);
-      }
-      return new Color(val);
-    } else {
-      if (val == DEFAULT_CANVAS_BG_COLOR || val == 0xFFFFFFFF || val == -1) {
-        return new Color(LIGHT_CANVAS_BG_COLOR);
-      }
-      return new Color(val);
+    if (isCanvasBgDefault(val)) {
+      return com.cburch.logisim.comp.Palette.current().background();
     }
+    return new Color(val);
   }
 
   public static Color getGridBgColor() {
     final var val = GRID_BG_COLOR.get();
-    if (isDarkTheme()) {
-      if (val == DEFAULT_GRID_BG_COLOR || val == 0xFFFFFFFF || val == -1) {
-        return new Color(DARK_CANVAS_BG_COLOR);
-      }
-      return new Color(val);
-    } else {
-      if (val == DEFAULT_GRID_BG_COLOR || val == 0xFFFFFFFF || val == -1) {
-        return new Color(LIGHT_CANVAS_BG_COLOR);
-      }
-      return new Color(val);
+    if (isGridBgDefault(val)) {
+      return com.cburch.logisim.comp.Palette.current().background();
     }
+    return new Color(val);
   }
 
   public static Color getGridMinorDotColor() {
     final var val = GRID_DOT_COLOR.get();
-    if (isDarkTheme()) {
-      if (val == DEFAULT_GRID_DOT_COLOR || val == 0xFF777777) {
-        return new Color(DARK_GRID_MINOR_DOT_COLOR);
-      }
-      return new Color(val);
-    } else {
-      if (val == DEFAULT_GRID_DOT_COLOR || val == 0xFF777777) {
-        return new Color(LIGHT_GRID_MINOR_DOT_COLOR);
-      }
-      return new Color(val);
+    if (val == DEFAULT_GRID_DOT_COLOR || val == 0xFF777777 || val == DARK_GRID_MINOR_DOT_COLOR || val == LIGHT_GRID_MINOR_DOT_COLOR) {
+      return isDarkTheme() ? new Color(DARK_GRID_MINOR_DOT_COLOR) : new Color(LIGHT_GRID_MINOR_DOT_COLOR);
     }
+    return new Color(val);
   }
 
   public static Color getGridMajorDotColor() {
     final var val = GRID_ZOOMED_DOT_COLOR.get();
-    if (isDarkTheme()) {
-      if (val == DEFAULT_ZOOMED_DOT_COLOR || val == 0xFFCCCCCC) {
-        return new Color(DARK_GRID_MAJOR_DOT_COLOR);
-      }
-      return new Color(val);
-    } else {
-      if (val == DEFAULT_ZOOMED_DOT_COLOR || val == 0xFFCCCCCC) {
-        return new Color(LIGHT_GRID_MAJOR_DOT_COLOR);
-      }
-      return new Color(val);
+    if (val == DEFAULT_ZOOMED_DOT_COLOR || val == 0xFFCCCCCC || val == DARK_GRID_MAJOR_DOT_COLOR || val == LIGHT_GRID_MAJOR_DOT_COLOR) {
+      return isDarkTheme() ? new Color(DARK_GRID_MAJOR_DOT_COLOR) : new Color(LIGHT_GRID_MAJOR_DOT_COLOR);
     }
+    return new Color(val);
   }
   public static final int DEFAULT_COMPONENT_COLOR = 0x00000000;
   public static final int DEFAULT_COMPONENT_SECONDARY_COLOR = 0x99999999;
@@ -744,12 +732,19 @@ public class AppPreferences {
     if (Palette.isForceLight()) {
       return false;
     }
-    try {
-      if (com.formdev.flatlaf.FlatLaf.isLafDark()) {
+    final var laf = javax.swing.UIManager.getLookAndFeel();
+    if (laf instanceof com.formdev.flatlaf.FlatLaf flatLaf) {
+      return flatLaf.isDark();
+    }
+    final var lafName = LookAndFeel.get();
+    if (lafName != null && !lafName.isBlank()) {
+      final var lower = lafName.toLowerCase();
+      if (lower.contains("dark") || lower.contains("darcula")) {
         return true;
       }
-    } catch (Throwable ignored) {
-      // Fallback
+      if (lower.contains("light") || lower.contains("intellij")) {
+        return false;
+      }
     }
     return isSystemDark();
   }

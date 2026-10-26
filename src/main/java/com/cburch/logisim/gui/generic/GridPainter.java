@@ -45,6 +45,7 @@ public class GridPainter implements PropertyChangeListener {
     AppPreferences.GRID_BG_COLOR.addPropertyChangeListener(this);
     AppPreferences.GRID_DOT_COLOR.addPropertyChangeListener(this);
     AppPreferences.GRID_ZOOMED_DOT_COLOR.addPropertyChangeListener(this);
+    AppPreferences.LookAndFeel.addPropertyChangeListener(this);
   }
 
   public void addPropertyChangeListener(String prop, PropertyChangeListener listener) {
@@ -225,7 +226,8 @@ public class GridPainter implements PropertyChangeListener {
     if (AppPreferences.GRID_BG_COLOR.isSource(event)
         || AppPreferences.GRID_DOT_COLOR.isSource(event)
         || AppPreferences.GRID_ZOOMED_DOT_COLOR.isSource(event)
-        || AppPreferences.CANVAS_BG_COLOR.isSource(event)) {
+        || AppPreferences.CANVAS_BG_COLOR.isSource(event)
+        || AppPreferences.LookAndFeel.isSource(event)) {
       createGridImage(gridSize, zoomFactor);
       if (destination != null) {
         destination.repaint();

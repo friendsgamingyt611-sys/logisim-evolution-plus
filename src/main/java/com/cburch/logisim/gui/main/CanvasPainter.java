@@ -46,6 +46,7 @@ class CanvasPainter implements PropertyChangeListener {
     AppPreferences.GRID_BG_COLOR.addPropertyChangeListener(this);
     AppPreferences.GRID_DOT_COLOR.addPropertyChangeListener(this);
     AppPreferences.GRID_ZOOMED_DOT_COLOR.addPropertyChangeListener(this);
+    AppPreferences.LookAndFeel.addPropertyChangeListener(this);
   }
 
   private void drawWidthIncompatibilityData(Graphics base, Graphics g, Project proj) {
@@ -212,7 +213,9 @@ class CanvasPainter implements PropertyChangeListener {
   public void propertyChange(PropertyChangeEvent event) {
     if (AppPreferences.GRID_BG_COLOR.isSource(event)
         || AppPreferences.GRID_DOT_COLOR.isSource(event)
-        || AppPreferences.GRID_ZOOMED_DOT_COLOR.isSource(event)) {
+        || AppPreferences.GRID_ZOOMED_DOT_COLOR.isSource(event)
+        || AppPreferences.CANVAS_BG_COLOR.isSource(event)
+        || AppPreferences.LookAndFeel.isSource(event)) {
       canvas.repaint();
     }
   }

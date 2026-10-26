@@ -11,6 +11,7 @@ package com.cburch.logisim.fpga.gui;
 
 import static com.cburch.logisim.fpga.Strings.S;
 
+import com.cburch.logisim.prefs.AppPreferences;
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Component;
@@ -55,13 +56,18 @@ public class HdlColorRenderer extends JLabel implements TableCellRenderer {
     pillBg = null;
     pillFg = null;
 
-    Color tableBg = isSelected
-        ? UIManager.getColor("Table.selectionBackground")
-        : (rowIdx % 2 == 1
-            ? (UIManager.getColor("Table.alternateRowColor") != null
-                ? UIManager.getColor("Table.alternateRowColor")
-                : UIManager.getColor("Table.background"))
-            : UIManager.getColor("Table.background"));
+    Color tableBg;
+    if (isSelected) {
+      Color accent = UIManager.getColor("Component.accentColor");
+      if (accent == null) accent = new Color(53, 132, 228);
+      tableBg = new Color(accent.getRed(), accent.getGreen(), accent.getBlue(), AppPreferences.isDarkTheme() ? 65 : 38);
+    } else {
+      tableBg = (rowIdx % 2 == 1
+          ? (UIManager.getColor("Table.alternateRowColor") != null
+              ? UIManager.getColor("Table.alternateRowColor")
+              : UIManager.getColor("Table.background"))
+          : UIManager.getColor("Table.background"));
+    }
     setBackground(tableBg);
 
     setBorder(BorderFactory.createEmptyBorder(0, 10, 0, 10));
@@ -73,7 +79,10 @@ public class HdlColorRenderer extends JLabel implements TableCellRenderer {
     if (columnIdx == LABEL) {
       Color muted = UIManager.getColor("Label.disabledForeground");
       if (muted == null) muted = new Color(154, 153, 150);
-      setForeground(isSelected ? UIManager.getColor("Table.selectionForeground") : muted);
+      Color fg = isSelected
+          ? (AppPreferences.isDarkTheme() ? Color.WHITE : UIManager.getColor("Table.foreground"))
+          : muted;
+      setForeground(fg);
       setText(value);
       setHorizontalAlignment(JLabel.LEFT);
       return this;
@@ -102,7 +111,10 @@ public class HdlColorRenderer extends JLabel implements TableCellRenderer {
         setHorizontalAlignment(JLabel.LEFT);
       }
     } else {
-      setForeground(isSelected ? UIManager.getColor("Table.selectionForeground") : UIManager.getColor("Table.foreground"));
+      Color fg = isSelected
+          ? (AppPreferences.isDarkTheme() ? Color.WHITE : UIManager.getColor("Table.foreground"))
+          : UIManager.getColor("Table.foreground");
+      setForeground(fg);
       setText(value);
       setHorizontalAlignment(JLabel.LEFT);
     }
@@ -114,7 +126,10 @@ public class HdlColorRenderer extends JLabel implements TableCellRenderer {
     if (columnIdx == LABEL) {
       Color muted = UIManager.getColor("Label.disabledForeground");
       if (muted == null) muted = new Color(154, 153, 150);
-      setForeground(isSelected ? UIManager.getColor("Table.selectionForeground") : muted);
+      Color fg = isSelected
+          ? (AppPreferences.isDarkTheme() ? Color.WHITE : UIManager.getColor("Table.foreground"))
+          : muted;
+      setForeground(fg);
       setText(value);
       setHorizontalAlignment(JLabel.LEFT);
       return this;

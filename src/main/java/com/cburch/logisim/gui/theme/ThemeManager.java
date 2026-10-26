@@ -296,6 +296,10 @@ public class ThemeManager {
           final var frame = proj.getFrame();
           if (frame != null) {
             SwingUtilities.updateComponentTreeUI(frame);
+            if (frame.getCanvas() != null) {
+              frame.getCanvas().setBackground(AppPreferences.getCanvasBgColor());
+              frame.getCanvas().repaint();
+            }
             frame.repaint();
           }
         }
