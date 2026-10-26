@@ -20,6 +20,7 @@ import java.awt.image.BufferedImage;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
+import java.util.Objects;
 
 public class GridPainter implements PropertyChangeListener {
   public static final String ZOOM_PROPERTY = "zoom";
@@ -35,6 +36,8 @@ public class GridPainter implements PropertyChangeListener {
   private BufferedImage gridImage;
   private int gridImageWidth;
   private int gridImageHeight;
+  private boolean lastRenderedDark;
+  private Color lastRenderedBg;
 
   public GridPainter(Component destination) {
     this.destination = destination;
@@ -104,6 +107,12 @@ public class GridPainter implements PropertyChangeListener {
   public void paintGrid(Graphics g) {
     final var clip = g.getClipBounds();
     if (clip == null) return;
+
+    final var currentDark = AppPreferences.isDarkTheme();
+    final var currentBg = AppPreferences.getGridBgColor();
+    if (gridImage == null || currentDark != lastRenderedDark || !Objects.equals(currentBg, lastRenderedBg)) {
+      createGridImage(gridSize, zoomFactor);
+    }
 
     if (!showGrid) {
       g.setColor(AppPreferences.getCanvasBgColor());
@@ -210,6 +219,16 @@ public class GridPainter implements PropertyChangeListener {
     gridImage = img;
     gridImageWidth = tileW;
     gridImageHeight = tileH;
+    lastRenderedDark = AppPreferences.isDarkTheme();
+    lastRenderedBg = bg;
+  }
+
+  public void invalidateGrid() {
+    gridImage = null;
+    lastRenderedBg = null;
+    if (destination != null) {
+      destination.repaint();
+    }
   }
 
   private static Color blend(Color bg, Color fg, float alpha) {
@@ -228,10 +247,7 @@ public class GridPainter implements PropertyChangeListener {
         || AppPreferences.GRID_ZOOMED_DOT_COLOR.isSource(event)
         || AppPreferences.CANVAS_BG_COLOR.isSource(event)
         || AppPreferences.LookAndFeel.isSource(event)) {
-      createGridImage(gridSize, zoomFactor);
-      if (destination != null) {
-        destination.repaint();
-      }
+      invalidateGrid();
     }
   }
 

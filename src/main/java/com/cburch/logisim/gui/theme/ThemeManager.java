@@ -29,11 +29,15 @@ public class ThemeManager {
 
   private static volatile boolean cachedIsDark = false;
   private static volatile long lastCheckTime = 0;
+  private static volatile int preferredLinuxDetector = -1;
   private static ScheduledExecutorService monitorService = null;
 
   public static boolean isSystemDark() {
+    if (SwingUtilities.isEventDispatchThread()) {
+      return cachedIsDark;
+    }
     final var now = System.currentTimeMillis();
-    if (now - lastCheckTime < 1000) {
+    if (lastCheckTime > 0 && now - lastCheckTime < 1000) {
       return cachedIsDark;
     }
     cachedIsDark = querySystemDarkNow();
@@ -43,20 +47,39 @@ public class ThemeManager {
 
   public static boolean querySystemDarkNow() {
     if (SystemInfo.isLinux) {
+      final var pref = preferredLinuxDetector;
+      if (pref == 0) {
+        final var portal = queryLinuxPortal();
+        if (portal != null) return portal;
+      } else if (pref == 1) {
+        final var gsettings = queryLinuxGSettings();
+        if (gsettings != null) return gsettings;
+      } else if (pref == 2) {
+        final var gtk = queryLinuxGtkSettings();
+        if (gtk != null) return gtk;
+      } else if (pref == 3) {
+        final var kde = queryLinuxKde();
+        if (kde != null) return kde;
+      }
+
       final var portal = queryLinuxPortal();
       if (portal != null) {
+        preferredLinuxDetector = 0;
         return portal;
       }
       final var gsettings = queryLinuxGSettings();
       if (gsettings != null) {
+        preferredLinuxDetector = 1;
         return gsettings;
       }
       final var gtk = queryLinuxGtkSettings();
       if (gtk != null) {
+        preferredLinuxDetector = 2;
         return gtk;
       }
       final var kde = queryLinuxKde();
       if (kde != null) {
+        preferredLinuxDetector = 3;
         return kde;
       }
       return false;
@@ -295,9 +318,9 @@ public class ThemeManager {
         for (final var proj : Projects.getOpenProjects()) {
           final var frame = proj.getFrame();
           if (frame != null) {
-            SwingUtilities.updateComponentTreeUI(frame);
             if (frame.getCanvas() != null) {
               frame.getCanvas().setBackground(AppPreferences.getCanvasBgColor());
+              frame.getCanvas().invalidateGrid();
               frame.getCanvas().repaint();
             }
             frame.repaint();
@@ -343,8 +366,8 @@ public class ThemeManager {
             // Keep monitor alive
           }
         },
-        1500,
-        1500,
+        750,
+        750,
         TimeUnit.MILLISECONDS);
   }
 

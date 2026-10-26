@@ -171,6 +171,12 @@ class CanvasPainter implements PropertyChangeListener {
     return grid;
   }
 
+  public void invalidateGrid() {
+    if (grid != null) {
+      grid.invalidateGrid();
+    }
+  }
+
   Component getHaloedComponent() {
     return haloedComponent;
   }

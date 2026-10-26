@@ -514,6 +514,12 @@ public class Canvas extends JPanel implements LocaleListener, CanvasPaneContents
     }
   }
 
+  public void invalidateGrid() {
+    if (painter != null) {
+      painter.invalidateGrid();
+    }
+  }
+
   @Override
   protected void processMouseEvent(final MouseEvent e) {
     repairMouseEvent(e);
