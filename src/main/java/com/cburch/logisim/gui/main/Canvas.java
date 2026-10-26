@@ -118,6 +118,10 @@ public class Canvas extends JPanel implements LocaleListener, CanvasPaneContents
   private CanvasPane canvasPane;
   private Bounds oldPreferredSize;
   private volatile boolean inPaint = false; // only for within paintComponent
+  private double targetZoomFactor = -1.0;
+  private int zoomAnchorX = 0;
+  private int zoomAnchorY = 0;
+  private javax.swing.Timer zoomEasingTimer = null;
 
   public Canvas(Project proj) {
     this.proj = proj;
@@ -491,11 +495,12 @@ public class Canvas extends JPanel implements LocaleListener, CanvasPaneContents
     // Also update register values showing in the state registers tab
     getProject().getFrame().getRegTabContent().writeValuesToLabels();
 
-    if (AppPreferences.AntiAliassing.getBoolean()) {
-      final var g2 = (Graphics2D) g;
-      g2.setRenderingHint(
-          RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+    if (g instanceof Graphics2D g2) {
       g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+      g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+      g2.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_PURE);
+      g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+      g2.setRenderingHint(RenderingHints.KEY_FRACTIONALMETRICS, RenderingHints.VALUE_FRACTIONALMETRICS_ON);
     }
 
     inPaint = true; // volatile
@@ -943,19 +948,42 @@ public class Canvas extends JPanel implements LocaleListener, CanvasPaneContents
       } else if (mwe.isShiftDown()) {
         canvasPane.getHorizontalScrollBar().setValue(scrollValue(canvasPane.getHorizontalScrollBar(), mwe.getWheelRotation()));
       } else {
-        // Continuous zoom centered on mouse using precise wheel rotation
+        // Continuous zoom centered on mouse with inertial easing transition
         repairMouseEvent(mwe);
         final var zoomModel = proj.getFrame().getZoomModel();
         if (zoomModel != null) {
           final var opts = zoomModel.getZoomOptions();
           final var min = opts.get(0) / 100.0;
           final var max = opts.get(opts.size() - 1) / 100.0;
-          final var zoom = zoomModel.getZoomFactor();
+          final var currentZoom = zoomModel.getZoomFactor();
+          if (targetZoomFactor < 0 || zoomEasingTimer == null || !zoomEasingTimer.isRunning()) {
+            targetZoomFactor = currentZoom;
+          }
           final double base = 1.05; // ~5% per rotation unit
           final double rotation = mwe.getPreciseWheelRotation();
           final double factor = Math.pow(base, -rotation);
-          final double newZoom = Math.max(min, Math.min(max, zoom * factor));
-          zoomModel.setZoomFactor(newZoom, mwe);
+          targetZoomFactor = Math.max(min, Math.min(max, targetZoomFactor * factor));
+          zoomAnchorX = mwe.getX();
+          zoomAnchorY = mwe.getY();
+
+          if (zoomEasingTimer == null) {
+            zoomEasingTimer = new javax.swing.Timer(16, e -> {
+              final var cur = zoomModel.getZoomFactor();
+              final double diff = targetZoomFactor - cur;
+              if (Math.abs(diff) < 0.002) {
+                zoomModel.setZoomFactor(targetZoomFactor, zoomAnchorX, zoomAnchorY);
+                targetZoomFactor = -1.0;
+                zoomEasingTimer.stop();
+              } else {
+                final double nextZoom = cur + diff * 0.25;
+                zoomModel.setZoomFactor(nextZoom, zoomAnchorX, zoomAnchorY);
+              }
+            });
+            zoomEasingTimer.setRepeats(true);
+          }
+          if (!zoomEasingTimer.isRunning()) {
+            zoomEasingTimer.start();
+          }
         }
       }
       mwe.consume();

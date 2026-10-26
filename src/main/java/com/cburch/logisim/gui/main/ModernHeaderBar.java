@@ -456,7 +456,7 @@ public class ModernHeaderBar extends JPanel implements LocaleListener {
 
     // Continuous Slider: 20% to 500%
     JSlider slider = new JSlider(20, 500, Math.min(500, Math.max(20, curPercent)));
-    slider.putClientProperty(FlatClientProperties.STYLE, "trackHeight: 4; thumbSize: 14,14;");
+    slider.putClientProperty(FlatClientProperties.STYLE, "thumbSize: 14,14;");
     panel.add(slider);
     panel.add(Box.createVerticalStrut(8));
 

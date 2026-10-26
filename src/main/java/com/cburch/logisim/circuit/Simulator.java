@@ -168,6 +168,7 @@ public class Simulator {
     // lastTick is used only within loop() by a single thread.
     // No synchronization needed.
     private long lastTick = System.nanoTime(); // time of last propagation start
+    private long lastGuiNotifyNanos = 0;
 
     SimThread(Simulator s) {
       super("SimThread");
@@ -585,7 +586,17 @@ public class Simulator {
       // accompanied by a tick, step, or propagate. That allows for a repaint in
       // some components.
       if (ticked || stepped || propagated || doNudge) {
-        sim.firePropagationCompleted(ticked, stepped && !propagated, propagated);
+        final var highFreq = autoTicking && (sim.getTickFrequency() > getDisplayRefreshRate());
+        if (highFreq) {
+          final var intervalNanos = 1_000_000_000L / Math.max(30, getDisplayRefreshRate());
+          if (now - lastGuiNotifyNanos >= intervalNanos || stepped || doReset) {
+            lastGuiNotifyNanos = now;
+            sim.firePropagationCompleted(ticked, stepped && !propagated, propagated);
+          }
+        } else {
+          lastGuiNotifyNanos = now;
+          sim.firePropagationCompleted(ticked, stepped && !propagated, propagated);
+        }
       }
       if (clockDied) {
         sim.fireSimulatorStateChanged();
@@ -768,6 +779,43 @@ public class Simulator {
     for (final var listener : copyStatusListeners()) {
       listener.simulatorStateChanged(event);
     }
+  }
+
+  private static final int DEFAULT_REFRESH_RATE = 60;
+  private static volatile int cachedRefreshRate = -1;
+
+  public static int getDisplayRefreshRate() {
+    int rate = cachedRefreshRate;
+    if (rate > 0) return rate;
+    if (java.awt.GraphicsEnvironment.isHeadless()) {
+      cachedRefreshRate = DEFAULT_REFRESH_RATE;
+      return DEFAULT_REFRESH_RATE;
+    }
+    try {
+      final var ge = java.awt.GraphicsEnvironment.getLocalGraphicsEnvironment();
+      final var gd = (ge != null) ? ge.getDefaultScreenDevice() : null;
+      final var dm = (gd != null) ? gd.getDisplayMode() : null;
+      rate = (dm != null) ? dm.getRefreshRate() : DEFAULT_REFRESH_RATE;
+      if (rate <= 0) rate = DEFAULT_REFRESH_RATE;
+    } catch (Throwable t) {
+      rate = DEFAULT_REFRESH_RATE;
+    }
+    cachedRefreshRate = rate;
+    return rate;
+  }
+
+  public boolean isHighFrequency() {
+    return isAutoTicking() && (getTickFrequency() > getDisplayRefreshRate());
+  }
+
+  private static float pulsePhase = 0.0f;
+
+  public static float getPulsePhase() {
+    return pulsePhase;
+  }
+
+  public static void stepPulsePhase() {
+    pulsePhase = (pulsePhase + 1.25f) % 20.0f;
   }
 
   public double getTickFrequency() {

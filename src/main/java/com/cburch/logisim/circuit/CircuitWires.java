@@ -26,6 +26,7 @@ import com.cburch.logisim.std.wiring.Tunnel;
 import com.cburch.logisim.util.CollectionUtil;
 import com.cburch.logisim.util.GraphicsUtil;
 import com.cburch.logisim.util.IteratorUtil;
+import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.util.ArrayList;
@@ -292,6 +293,9 @@ public class CircuitWires {
     /** Only used if dependentBuses is empty */
     Value pullVal;
 
+    /** Last time the resolved value on this bus toggled (for high-speed pulse visualizer) */
+    long lastToggleTime = 0;
+
     ValuedBus(int i, WireBundle wb, Connectivity cmap) {
       idx = i;
       filterComponents(cmap, wb.xpoints); // initializes locations[] and connections[]
@@ -339,40 +343,42 @@ public class CircuitWires {
     }
 
     Value recalculate() {
+      final var oldVal = busVal;
+      final Value ret;
       if (width <= 0) {
-        busVal = Value.NIL;
-        dirty = false;
-        return busVal;
+        ret = Value.NIL;
       } else if (dependentBuses.length == 0) {
         // degenerate case: threads are irrelevant
-        busVal = localDrivenValue;
+        var v = localDrivenValue;
         if (pullVal != null) {
-          busVal = busVal.pullEachBitTowards(pullVal);
+          v = v.pullEachBitTowards(pullVal);
         }
-        dirty = false;
-        return busVal;
+        ret = v;
       } else if (width == 1) {
-        busVal = threads[0].threadValue();
-        dirty = false;
-        return busVal;
-      }
-      long error = 0, unknown = 0, value = 0;
-      for (var i = 0; i < width; i++) {
-        long mask = 1L << i;
-        final var tv = threads[i].threadValue();
-        if (tv == Value.TRUE) {
-          value |= mask;
-        } else if (tv == Value.FALSE) {
-          ;
-        } else if (tv == Value.UNKNOWN) {
-          unknown |= mask;
-        } else {
-          error |= mask;
+        ret = threads[0].threadValue();
+      } else {
+        long error = 0, unknown = 0, value = 0;
+        for (var i = 0; i < width; i++) {
+          long mask = 1L << i;
+          final var tv = threads[i].threadValue();
+          if (tv == Value.TRUE) {
+            value |= mask;
+          } else if (tv == Value.FALSE) {
+            ;
+          } else if (tv == Value.UNKNOWN) {
+            unknown |= mask;
+          } else {
+            error |= mask;
+          }
         }
+        ret = Value.create_unsafe(width, error, unknown, value);
       }
-      busVal = Value.create_unsafe(width, error, unknown, value);
+      busVal = ret;
       dirty = false;
-      return busVal;
+      if (oldVal != null && !oldVal.equals(ret)) {
+        lastToggleTime = System.currentTimeMillis();
+      }
+      return ret;
     }
   }
 
@@ -857,18 +863,50 @@ public class CircuitWires {
 
     final var cmap = getConnectivity();
     final var isValid = cmap.isValid();
+
+    final var proj = (state != null) ? state.getProject() : null;
+    final var sim = (proj != null) ? proj.getSimulator() : null;
+    final var isHighFreq = (sim != null) && sim.isHighFrequency();
+
+    final var highSpeedBundles = new HashSet<WireBundle>();
+    if (isHighFreq && showState) {
+      final var circ = context.getCircuit();
+      if (circ != null) {
+        for (final var clk : circ.getClocks()) {
+          final var clkEnd = clk.getEnd(0);
+          if (clkEnd != null) {
+            final var b = cmap.getBundleAt(clkEnd.getLocation());
+            if (b != null) {
+              highSpeedBundles.add(b.find());
+            }
+          }
+        }
+      }
+    }
+
+    final var streamGreen = new Color(0x33, 0xD1, 0x7A);
+    final var streamCyan = new Color(0x62, 0xA0, 0xEA);
+    final var animPhase = Simulator.getPulsePhase();
+
     if (CollectionUtil.isNullOrEmpty(hidden)) {
       for (final var wire : wires) {
         final var s = wire.e0;
         final var t = wire.e1;
         final var wb = cmap.getBundleAt(s);
         var width = 5;
+        final var wireData = (state != null) ? state.getWireData() : null;
+        final var vb = (wireData != null) ? wireData.busAt.get(s) : null;
+        final var isHighSpeed = isHighFreq && wb != null && wb.isValid() && showState
+            && (highSpeedBundles.contains(wb.find()) || (vb != null && (System.currentTimeMillis() - vb.lastToggleTime < 250)));
+
         if (!wb.isValid()) {
           g.setColor(context.getPalette().widthError());
         } else if (!showState) {
           g.setColor(context.getPalette().stroke());
         } else if (!isValid) {
           g.setColor(context.getPalette().nil());
+        } else if (isHighSpeed) {
+          g.setColor(streamGreen);
         } else {
           g.setColor(getBusValue(state, s).getColor());
         }
@@ -886,6 +924,20 @@ public class CircuitWires {
           width = wb.isBus() ? Wire.WIDTH_BUS : Wire.WIDTH;
           GraphicsUtil.switchToWidth(g, width, false);
           g.drawLine(s.getX(), s.getY(), t.getX(), t.getY());
+          if (isHighSpeed) {
+            final var oldStroke = g.getStroke();
+            final var dashStroke = new BasicStroke(
+                width,
+                BasicStroke.CAP_ROUND,
+                BasicStroke.JOIN_ROUND,
+                10.0f,
+                new float[] { 6.0f, 4.0f },
+                animPhase);
+            g.setStroke(dashStroke);
+            g.setColor(streamCyan);
+            g.drawLine(s.getX(), s.getY(), t.getX(), t.getY());
+            g.setStroke(oldStroke);
+          }
         }
         /* The following part is used by the FPGA Commander's DRC to highlight a wire with DRC
          * problems (KTT1)
@@ -909,10 +961,12 @@ public class CircuitWires {
           final var wb = cmap.getBundleAt(loc);
           if (wb != null) {
             var color = context.getPalette().stroke();
+            final var isHighSpeedDot = isHighFreq && wb.isValid() && showState
+                && (highSpeedBundles.contains(wb.find()) || (state != null && state.getWireData() != null && state.getWireData().busAt.get(loc) != null && (System.currentTimeMillis() - state.getWireData().busAt.get(loc).lastToggleTime < 250)));
             if (!wb.isValid()) {
               color = context.getPalette().widthError();
             } else if (showState) {
-              color = !isValid ? context.getPalette().nil() : state.getValue(loc).getColor();
+              color = isHighSpeedDot ? streamCyan : (!isValid ? context.getPalette().nil() : state.getValue(loc).getColor());
             }
             g.setColor(color);
 
@@ -935,10 +989,14 @@ public class CircuitWires {
           final var s = wire.e0;
           final var t = wire.e1;
           final var wb = cmap.getBundleAt(s);
+          final var wireData = (state != null) ? state.getWireData() : null;
+          final var vb = (wireData != null) ? wireData.busAt.get(s) : null;
+          final var isHighSpeed = isHighFreq && wb != null && wb.isValid() && showState
+              && (highSpeedBundles.contains(wb.find()) || (vb != null && (System.currentTimeMillis() - vb.lastToggleTime < 250)));
           if (!wb.isValid()) {
             g.setColor(context.getPalette().widthError());
           } else if (showState) {
-            g.setColor(!isValid ? context.getPalette().nil() : getBusValue(state, s).getColor());
+            g.setColor(!isValid ? context.getPalette().nil() : (isHighSpeed ? streamGreen : getBusValue(state, s).getColor()));
           } else {
             g.setColor(context.getPalette().stroke());
           }
@@ -947,8 +1005,23 @@ public class CircuitWires {
             g.drawLine(s.getX(), s.getY(), t.getX(), t.getY());
             GraphicsUtil.switchToWidth(g, Wire.WIDTH, false);
           } else {
-            GraphicsUtil.switchToWidth(g, wb.isBus() ? Wire.WIDTH_BUS : Wire.WIDTH, false);
+            final var wWidth = wb.isBus() ? Wire.WIDTH_BUS : Wire.WIDTH;
+            GraphicsUtil.switchToWidth(g, wWidth, false);
             g.drawLine(s.getX(), s.getY(), t.getX(), t.getY());
+            if (isHighSpeed) {
+              final var oldStroke = g.getStroke();
+              final var dashStroke = new BasicStroke(
+                  wWidth,
+                  BasicStroke.CAP_ROUND,
+                  BasicStroke.JOIN_ROUND,
+                  10.0f,
+                  new float[] { 6.0f, 4.0f },
+                  animPhase);
+              g.setStroke(dashStroke);
+              g.setColor(streamCyan);
+              g.drawLine(s.getX(), s.getY(), t.getX(), t.getY());
+              g.setStroke(oldStroke);
+            }
           }
         }
       }
@@ -965,10 +1038,12 @@ public class CircuitWires {
           if (icount > 2) {
             final var wireBundle = cmap.getBundleAt(loc);
             if (wireBundle != null) {
+              final var isHighSpeedDot = isHighFreq && wireBundle.isValid() && showState
+                  && (highSpeedBundles.contains(wireBundle.find()) || (state != null && state.getWireData() != null && state.getWireData().busAt.get(loc) != null && (System.currentTimeMillis() - state.getWireData().busAt.get(loc).lastToggleTime < 250)));
               if (!wireBundle.isValid()) {
                 g.setColor(context.getPalette().widthError());
               } else if (showState) {
-                g.setColor(!isValid ? context.getPalette().nil() : getBusValue(state, loc).getColor());
+                g.setColor(isHighSpeedDot ? streamCyan : (!isValid ? context.getPalette().nil() : getBusValue(state, loc).getColor()));
               } else {
                 g.setColor(context.getPalette().stroke());
               }

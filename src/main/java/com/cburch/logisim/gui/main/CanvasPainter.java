@@ -25,6 +25,7 @@ import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
+import java.awt.geom.AffineTransform;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.Collections;
@@ -187,6 +188,7 @@ class CanvasPainter implements PropertyChangeListener {
   // painting methods
   //
   void paintContents(Graphics g, Project proj) {
+    com.cburch.logisim.circuit.Simulator.stepPulsePhase();
     final var size = canvas.getSize();
     final double zoomFactor = canvas.getZoomFactor();
 
@@ -196,10 +198,14 @@ class CanvasPainter implements PropertyChangeListener {
     final var gfxScaled = g.create();
     if (gfxScaled instanceof Graphics2D g2d) {
       g2d.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 10));
-      g2d.setRenderingHint(RenderingHints.KEY_FRACTIONALMETRICS, RenderingHints.VALUE_FRACTIONALMETRICS_ON);
+      g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+      g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+      g2d.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_PURE);
       g2d.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+      g2d.setRenderingHint(RenderingHints.KEY_FRACTIONALMETRICS, RenderingHints.VALUE_FRACTIONALMETRICS_ON);
       if (zoomFactor != 1.0) {
-        g2d.scale(zoomFactor, zoomFactor);
+        final var at = AffineTransform.getScaleInstance(zoomFactor, zoomFactor);
+        g2d.transform(at);
       }
     }
     final var circ = proj.getCurrentCircuit();

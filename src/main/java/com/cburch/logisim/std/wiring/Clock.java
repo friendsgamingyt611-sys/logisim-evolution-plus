@@ -14,6 +14,7 @@ import static com.cburch.logisim.std.Strings.S;
 import com.cburch.logisim.LogisimVersion;
 import com.cburch.logisim.circuit.CircuitState;
 import com.cburch.logisim.circuit.RadixOption;
+import com.cburch.logisim.circuit.Simulator;
 import com.cburch.logisim.circuit.Wire;
 import com.cburch.logisim.comp.Component;
 import com.cburch.logisim.data.Attribute;
@@ -343,24 +344,49 @@ public class Clock extends InstanceFactory {
     painter.drawLabel();
 
     boolean drawUp;
+    final var circState = painter.getCircuitState();
+    final var proj = (circState != null) ? circState.getProject() : null;
+    final var sim = (proj != null) ? proj.getSimulator() : null;
+    final var isHighFreq = (sim != null) && sim.isHighFrequency();
+
     if (painter.getShowState()) {
-      ClockState state = getState(painter);
-      g.setColor(state.sending.getColor());
-      drawUp = state.sending == Value.TRUE;
+      if (isHighFreq) {
+        // High-frequency stream mode: smooth pulsing cyan-green glow without raw binary strobing
+        final var phase = Simulator.getPulsePhase();
+        final var t = (float) ((Math.sin(phase * 0.4) + 1.0) / 2.0);
+        final var c1 = new Color(0x33, 0xD1, 0x7A);
+        final var c2 = new Color(0x62, 0xA0, 0xEA);
+        final var r = (int) (c1.getRed() + t * (c2.getRed() - c1.getRed()));
+        final var gr = (int) (c1.getGreen() + t * (c2.getGreen() - c1.getGreen()));
+        final var bl = (int) (c1.getBlue() + t * (c2.getBlue() - c1.getBlue()));
+        g.setColor(new Color(r, gr, bl));
+        drawUp = true;
+      } else {
+        final var state = getState(painter);
+        g.setColor(state.sending.getColor());
+        drawUp = state.sending == Value.TRUE;
+      }
     } else {
       g.setColor(AppPreferences.getComponentColor());
       drawUp = true;
     }
     x += (dir == Direction.WEST && newAppear) ? 30 : 10;
     y += (dir == Direction.NORTH && newAppear) ? 30 : 10;
-    int[] xs = {x - 6, x - 6, x, x, x + 6, x + 6};
-    int[] ys;
-    if (drawUp) {
-      ys = new int[] {y, y - 4, y - 4, y + 4, y + 4, y};
+    if (isHighFreq && painter.getShowState()) {
+      // Draw balanced high-speed clock train
+      int[] xs = {x - 7, x - 7, x - 2, x - 2, x + 3, x + 3, x + 7};
+      int[] ys = {y + 4, y - 4, y - 4, y + 4, y + 4, y - 4, y - 4};
+      g.drawPolyline(xs, ys, xs.length);
     } else {
-      ys = new int[] {y, y + 4, y + 4, y - 4, y - 4, y};
+      int[] xs = {x - 6, x - 6, x, x, x + 6, x + 6};
+      int[] ys;
+      if (drawUp) {
+        ys = new int[] {y, y - 4, y - 4, y + 4, y + 4, y};
+      } else {
+        ys = new int[] {y, y + 4, y + 4, y - 4, y - 4, y};
+      }
+      g.drawPolyline(xs, ys, xs.length);
     }
-    g.drawPolyline(xs, ys, xs.length);
 
     painter.drawPorts();
   }
