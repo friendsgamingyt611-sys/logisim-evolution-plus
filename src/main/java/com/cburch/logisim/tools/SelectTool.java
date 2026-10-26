@@ -213,11 +213,12 @@ public class SelectTool extends Tool {
         bot = i;
       }
 
+      final var palette = context.getPalette();
       final var gBase = context.getGraphics();
       int w = right - left - 1;
       int h = bot - top - 1;
       if (w > 2 && h > 2) {
-        gBase.setColor(BACKGROUND_RECT_SELECT);
+        gBase.setColor(palette.selectionMarqueeFill());
         gBase.fillRect(left + 1, top + 1, w - 1, h - 1);
       }
 
@@ -228,11 +229,11 @@ public class SelectTool extends Tool {
         final var gDup = gBase.create();
         context.setGraphics(gDup);
         c.getFactory()
-            .drawGhost(context, COLOR_RECT_SELECT, cloc.getX(), cloc.getY(), c.getAttributeSet());
+            .drawGhost(context, palette.selectionMarqueeBorder(), cloc.getX(), cloc.getY(), c.getAttributeSet());
         gDup.dispose();
       }
 
-      gBase.setColor(COLOR_RECT_SELECT);
+      gBase.setColor(palette.selectionMarqueeBorder());
       GraphicsUtil.switchToWidth(gBase, 2);
       if (w < 0) {
         w = 0;

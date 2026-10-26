@@ -51,6 +51,18 @@ public interface Palette {
 
   Color headerText();
 
+  Color accent();
+
+  Color selectionHalo();
+
+  Color selectionMarqueeBorder();
+
+  Color selectionMarqueeFill();
+
+  Color probeFill();
+
+  Color raisedSurface();
+
   Palette DARK = new DarkPalette();
   Palette LIGHT = new LightPalette();
 
@@ -213,6 +225,41 @@ public interface Palette {
       return stroke();
     }
 
+    private static final Color ACCENT = new Color(0x35, 0x84, 0xE4);
+    private static final Color HALO = new Color(0xC0, 0x61, 0xCB);
+    private static final Color RADIX = new Color(0x62, 0xA0, 0xEA);
+    private static final Color MARQUEE_FILL = new Color(0x35, 0x84, 0xE4, 41);
+
+    @Override
+    public Color accent() {
+      return ACCENT;
+    }
+
+    @Override
+    public Color selectionHalo() {
+      return HALO;
+    }
+
+    @Override
+    public Color selectionMarqueeBorder() {
+      return ACCENT;
+    }
+
+    @Override
+    public Color selectionMarqueeFill() {
+      return MARQUEE_FILL;
+    }
+
+    @Override
+    public Color probeFill() {
+      return FILL;
+    }
+
+    @Override
+    public Color raisedSurface() {
+      return FILL;
+    }
+
     @Override
     public Color fill() {
       return FILL;
@@ -220,7 +267,7 @@ public interface Palette {
 
     @Override
     public Color blueIndex() {
-      return LABEL;
+      return RADIX;
     }
 
     @Override
@@ -331,6 +378,43 @@ public interface Palette {
       return Color.white;
     }
 
+    private static final Color ACCENT = new Color(0x35, 0x84, 0xE4);
+    private static final Color RADIX = new Color(0x00, 0x66, 0xCC);
+    private static final Color PROBE_FILL = new Color(0xFF, 0xF0, 0x99);
+    private static final Color RAISED_SURFACE = new Color(230, 230, 230);
+    private static final Color MARQUEE_BORDER = new Color(0, 64, 128, 255);
+    private static final Color MARQUEE_FILL = new Color(192, 192, 255, 192);
+
+    @Override
+    public Color accent() {
+      return ACCENT;
+    }
+
+    @Override
+    public Color selectionHalo() {
+      return Color.MAGENTA;
+    }
+
+    @Override
+    public Color selectionMarqueeBorder() {
+      return MARQUEE_BORDER;
+    }
+
+    @Override
+    public Color selectionMarqueeFill() {
+      return MARQUEE_FILL;
+    }
+
+    @Override
+    public Color probeFill() {
+      return PROBE_FILL;
+    }
+
+    @Override
+    public Color raisedSurface() {
+      return RAISED_SURFACE;
+    }
+
     @Override
     public Color fill() {
       return FILL;
@@ -338,7 +422,7 @@ public interface Palette {
 
     @Override
     public Color blueIndex() {
-      return Color.BLUE;
+      return RADIX;
     }
 
     @Override

@@ -200,7 +200,7 @@ public class AddTool extends Tool implements Transferable, PropertyChangeListene
     /* take care of coloring the components differently that require a label */
     if (state == SHOW_GHOST) {
       drawColor = autoLabeler.isActive(canvas.getCircuit())
-          ? Color.MAGENTA : new Color(AppPreferences.COMPONENT_GHOST_COLOR.get());
+          ? context.getPalette().accent() : new Color(AppPreferences.COMPONENT_GHOST_COLOR.get());
       source.drawGhost(context, drawColor, x, y, getBaseAttributes());
       if (matrixPlace) {
         source.drawGhost(context, drawColor, x + bds.getWidth() + 3, y, getBaseAttributes());
@@ -213,7 +213,7 @@ public class AddTool extends Tool implements Transferable, PropertyChangeListene
             getBaseAttributes());
       }
     } else if (state == SHOW_ADD) {
-      drawColor = autoLabeler.isActive(canvas.getCircuit()) ? Color.BLUE : Color.BLACK;
+      drawColor = autoLabeler.isActive(canvas.getCircuit()) ? context.getPalette().accent() : context.getPalette().stroke();
       source.drawGhost(context, drawColor, x, y, getBaseAttributes());
       if (matrixPlace) {
         source.drawGhost(context, drawColor, x + bds.getWidth() + 3, y, getBaseAttributes());

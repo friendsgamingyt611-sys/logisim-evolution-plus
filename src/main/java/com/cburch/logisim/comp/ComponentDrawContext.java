@@ -165,7 +165,7 @@ public class ComponentDrawContext {
     final var e = comp.getEnd(i);
     final var pt = e.getLocation();
     final var curColor = g.getColor();
-    g.setColor(getShowState()
+    g.setColor((getShowState() && getCircuitState() != null)
             ? getCircuitState().getValue(pt).getColor()
             : palette.pinOutline());
     drawPinMarker(pt.getX(), pt.getY());
@@ -179,7 +179,7 @@ public class ComponentDrawContext {
     final var pt = e.getLocation();
     int x = pt.getX();
     int y = pt.getY();
-    if (getShowState()) {
+    if (getShowState() && getCircuitState() != null) {
       g.setColor(getCircuitState().getValue(pt).getColor());
     } else {
       g.setColor(palette.pinOutline());
@@ -201,7 +201,7 @@ public class ComponentDrawContext {
     final var curColor = g.getColor();
     for (final var e : comp.getEnds()) {
       final var pt = e.getLocation();
-      if (getShowState()) {
+      if (getShowState() && getCircuitState() != null) {
         g.setColor(getCircuitState().getValue(pt).getColor());
       } else {
         g.setColor(palette.pinOutline());

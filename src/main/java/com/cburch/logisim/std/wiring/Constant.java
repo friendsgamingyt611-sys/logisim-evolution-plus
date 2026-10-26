@@ -245,8 +245,9 @@ public class Constant extends InstanceFactory {
     int y = loc.getY();
 
     Graphics g = painter.getGraphics();
+    final var palette = painter.getPalette();
     if (painter.shouldDrawColor()) {
-      g.setColor(BACKGROUND_COLOR);
+      g.setColor(palette.raisedSurface());
       g.fillRect(x + bds.getX(), y + bds.getY(), bds.getWidth(), bds.getHeight());
     }
     if (v.getWidth() == 1) {
@@ -258,7 +259,7 @@ public class Constant extends InstanceFactory {
           x + bds.getX() + bds.getWidth() / 2,
           y + bds.getY() + bds.getHeight() / 2 - 2);
     } else {
-      g.setColor(Color.BLACK);
+      g.setColor(palette.stroke());
       g.setFont(DEFAULT_FONT);
       GraphicsUtil.drawCenteredText(
           g,

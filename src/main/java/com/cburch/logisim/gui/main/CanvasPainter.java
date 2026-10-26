@@ -116,7 +116,7 @@ class CanvasPainter implements PropertyChangeListener {
         && haloedCircuit == circ
         && !hidden.contains(haloedComponent)) {
       GraphicsUtil.switchToWidth(g, 3);
-      g.setColor(Canvas.HALO_COLOR);
+      g.setColor(Palette.current().selectionHalo());
       final var bds = haloedComponent.getBounds(g).expand(5);
       final var width = bds.getWidth();
       final var height = bds.getHeight();

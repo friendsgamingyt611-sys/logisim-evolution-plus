@@ -347,16 +347,18 @@ public class Probe extends InstanceFactory implements DynamicElementProvider {
     // included
     int x = bds.getX();
     int y = bds.getY();
-    Color back = new Color(0xff, 0xf0, 0x99);
+    final var palette = painter.getPalette();
+    Color back = palette.probeFill();
+    Color outline = palette.isDark() ? palette.stroke() : Color.lightGray;
     if (value.getWidth() <= 1) {
       g.setColor(back);
       g.fillOval(x + 1, y + 1, bds.getWidth() - 2, bds.getHeight() - 2);
-      g.setColor(Color.lightGray);
+      g.setColor(outline);
       g.drawOval(x + 1, y + 1, bds.getWidth() - 2, bds.getHeight() - 2);
     } else {
       g.setColor(back);
       g.fillRoundRect(x + 1, y + 1, bds.getWidth() - 2, bds.getHeight() - 2, 20, 20);
-      g.setColor(Color.lightGray);
+      g.setColor(outline);
       g.drawRoundRect(x + 1, y + 1, bds.getWidth() - 2, bds.getHeight() - 2, 20, 20);
     }
 

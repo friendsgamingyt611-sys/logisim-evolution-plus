@@ -982,7 +982,7 @@ public class Pin extends InstanceFactory {
       g2.rotate(rotation);
       Color col = g.getColor();
       if (isBus) {
-        g.setColor(Value.multiColor);
+        g.setColor(painter.getPalette().bus());
         GraphicsUtil.switchToWidth(g, Wire.WIDTH_BUS);
         g.drawLine(Wire.WIDTH_BUS / 2 - 5, 0, 0, 0);
         GraphicsUtil.switchToWidth(g, 2);
@@ -1046,7 +1046,7 @@ public class Pin extends InstanceFactory {
       g2.rotate(rotation);
       final var col = g.getColor();
       if (isBus) {
-        g.setColor(Value.multiColor);
+        g.setColor(painter.getPalette().bus());
         GraphicsUtil.switchToWidth(g, Wire.WIDTH_BUS);
         g.drawLine(-3, 0, -Wire.WIDTH_BUS / 2, 0);
         GraphicsUtil.switchToWidth(g, 2);
