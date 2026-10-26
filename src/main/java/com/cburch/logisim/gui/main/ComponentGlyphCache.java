@@ -17,6 +17,7 @@ import com.cburch.logisim.tools.AddTool;
 import com.cburch.logisim.tools.Tool;
 import com.cburch.logisim.vhdl.base.VhdlEntity;
 
+import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics2D;
@@ -102,7 +103,26 @@ public class ComponentGlyphCache {
       }
     }
 
-    // 2. Check if this is a TTL or part-number chip (e.g. 7400, 7404, 74138)
+    // 2. Check wiring components that had legacy white-background bitmap icons
+    final var lowerName = name.toLowerCase();
+    if (lowerName.equals("clock")) {
+      paintClockGlyph(g2, pixelSize, fgColor);
+      g2.dispose();
+      cache.put(cacheKey, img);
+      return img;
+    } else if (lowerName.equals("por") || lowerName.contains("power-on reset")) {
+      paintPorGlyph(g2, pixelSize, fgColor);
+      g2.dispose();
+      cache.put(cacheKey, img);
+      return img;
+    } else if (lowerName.equals("noconnect") || lowerName.contains("do not connect") || lowerName.contains("no connection")) {
+      paintNoConnectGlyph(g2, pixelSize, fgColor);
+      g2.dispose();
+      cache.put(cacheKey, img);
+      return img;
+    }
+
+    // 3. Check if this is a TTL or part-number chip (e.g. 7400, 7404, 74138)
     final var chipNum = extractChipNumber(name);
     if (chipNum != null) {
       paintChipGlyph(g2, chipNum, pixelSize, fgColor);
@@ -254,5 +274,50 @@ public class ComponentGlyphCache {
 
   private static void paintVhdlThumbnail(Graphics2D g2, String name, int size, Color color) {
     paintBoxAbbrevGlyph(g2, "HDL", size, color);
+  }
+
+  private static void paintClockGlyph(Graphics2D g2, int size, Color color) {
+    int pad = Math.max(2, size / 8);
+    int arc = Math.max(2, size / 6);
+    g2.setColor(color);
+    g2.setStroke(new BasicStroke(Math.max(1.2f, size / 14.0f), BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+    g2.drawRoundRect(pad, pad, size - 2 * pad, size - 2 * pad, arc, arc);
+
+    int yMid = size / 2;
+    int yTop = pad + (size - 2 * pad) * 3 / 10;
+    int yBot = size - pad - (size - 2 * pad) * 3 / 10;
+    int x1 = pad + (size - 2 * pad) * 2 / 10;
+    int x2 = pad + (size - 2 * pad) * 5 / 10;
+    int x3 = pad + (size - 2 * pad) * 8 / 10;
+
+    int[] xs = {x1, x1, x2, x2, x3, x3};
+    int[] ys = {yMid, yTop, yTop, yBot, yBot, yMid};
+    g2.drawPolyline(xs, ys, 6);
+  }
+
+  private static void paintPorGlyph(Graphics2D g2, int size, Color color) {
+    int pad = Math.max(2, size / 8);
+    int arc = Math.max(2, size / 6);
+    g2.setColor(color);
+    g2.setStroke(new BasicStroke(Math.max(1.2f, size / 14.0f), BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+    g2.drawRoundRect(pad, pad, size - 2 * pad, size - 2 * pad, arc, arc);
+
+    int yTop = pad + (size - 2 * pad) * 3 / 10;
+    int yBot = size - pad - (size - 2 * pad) * 3 / 10;
+    int x1 = pad + (size - 2 * pad) * 2 / 10;
+    int xMid = size / 2;
+    int x2 = size - pad - (size - 2 * pad) * 2 / 10;
+
+    int[] xs = {x1, xMid, xMid, x2};
+    int[] ys = {yTop, yTop, yBot, yBot};
+    g2.drawPolyline(xs, ys, 4);
+  }
+
+  private static void paintNoConnectGlyph(Graphics2D g2, int size, Color color) {
+    int pad = Math.max(3, size / 4);
+    g2.setColor(new Color(225, 50, 50));
+    g2.setStroke(new BasicStroke(Math.max(2.0f, size / 7.0f), BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+    g2.drawLine(pad, pad, size - pad, size - pad);
+    g2.drawLine(pad, size - pad, size - pad, pad);
   }
 }

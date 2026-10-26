@@ -68,13 +68,22 @@ public class CircuitsList extends JPanel implements ExplorerModel.Listener {
 
     add(itemsPanel, BorderLayout.CENTER);
 
+    updateBorder();
     model.addListener(this);
     refresh();
+  }
+
+  private void updateBorder() {
+    Color divColor = AppPreferences.isDarkTheme()
+        ? new Color(255, 255, 255, 28)
+        : new Color(0, 0, 0, 24);
+    setBorder(javax.swing.BorderFactory.createMatteBorder(0, 0, 1, 0, divColor));
   }
 
   @Override
   public void updateUI() {
     super.updateUI();
+    updateBorder();
     if (headerLabel != null) {
       Color fgMuted = UIManager.getColor("Label.disabledForeground");
       if (fgMuted == null) fgMuted = new Color(154, 153, 150);
@@ -260,9 +269,18 @@ public class CircuitsList extends JPanel implements ExplorerModel.Listener {
       }
 
       if (isActive) {
-        // Current circuit: 3px left bar, no fill
+        // Current circuit: 3px left bar
         g2.setColor(accent);
         g2.fillRoundRect(marginX, 2, AppPreferences.getScaled(3), h - 4, 2, 2);
+
+        // Active simulation indicator badge on the right
+        int dotR = AppPreferences.getScaled(3);
+        int dotX = w - marginX - AppPreferences.getScaled(14);
+        int dotY = (h - dotR * 2) / 2;
+        g2.setColor(new Color(46, 194, 126, 60));
+        g2.fillOval(dotX - 2, dotY - 2, dotR * 2 + 4, dotR * 2 + 4);
+        g2.setColor(new Color(46, 194, 126));
+        g2.fillOval(dotX, dotY, dotR * 2, dotR * 2);
       }
 
       g2.dispose();

@@ -38,7 +38,7 @@ public class IoLibrary extends Library {
       Attributes.forColor("offcolor", S.getter("ioOffColor"));
   static final Attribute<Color> ATTR_BACKGROUND =
       Attributes.forColor("bg", S.getter("ioBackgroundColor"));
-  static final Attribute<Boolean> ATTR_ACTIVE =
+  public static final Attribute<Boolean> ATTR_ACTIVE =
       Attributes.forBoolean("active", S.getter("ioActiveAttr"));
 
   static final Color DEFAULT_BACKGROUND = new Color(255, 255, 255, 0);

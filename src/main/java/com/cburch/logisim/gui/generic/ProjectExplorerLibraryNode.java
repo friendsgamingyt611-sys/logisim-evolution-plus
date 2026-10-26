@@ -14,6 +14,7 @@ import com.cburch.logisim.file.LibraryListener;
 import com.cburch.logisim.file.LogisimFile;
 import com.cburch.logisim.std.base.BaseLibrary;
 import com.cburch.logisim.tools.Library;
+import com.cburch.logisim.tools.Tool;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -54,17 +55,43 @@ public class ProjectExplorerLibraryNode extends ProjectExplorerModel.Node<Librar
     if (lib != null) {
       final var showLib = (showMouseTools & lib instanceof BaseLibrary) || !lib.isHidden();
       if (showLib) {
+        final var filter = getModel().getFilter();
         final var addTools = includeCircuits || !(lib instanceof LogisimFile);
+        List<Tool> effectiveTools = new ArrayList<>();
         if (addTools) {
-          buildChildren(new ProjectExplorerToolNode(getModel(), null), lib.getTools(), 0);
+          for (Tool t : lib.getTools()) {
+            if (filter == null || t.getDisplayName().toLowerCase().contains(filter)) {
+              effectiveTools.add(t);
+            }
+          }
+          buildChildren(new ProjectExplorerToolNode(getModel(), null), effectiveTools, 0);
         }
-        final var toolOffset = addTools ? lib.getTools().size() : 0;
+        final var toolOffset = effectiveTools.size();
+        List<Library> effectiveLibs = new ArrayList<>();
+        for (Library subLib : lib.getLibraries()) {
+          if (filter == null || hasMatchingDescendant(subLib, filter) || subLib.getDisplayName().toLowerCase().contains(filter)) {
+            effectiveLibs.add(subLib);
+          }
+        }
         buildChildren(
             new ProjectExplorerLibraryNode(getModel(), null, guiElement, showMouseTools, includeCircuits),
-            lib.getLibraries(),
+            effectiveLibs,
             toolOffset);
       }
     }
+  }
+
+  private static boolean hasMatchingDescendant(Library l, String filter) {
+    if (l == null) return false;
+    for (Tool t : l.getTools()) {
+      if (t.getDisplayName().toLowerCase().contains(filter)) return true;
+    }
+    for (Library sub : l.getLibraries()) {
+      if (sub.getDisplayName().toLowerCase().contains(filter) || hasMatchingDescendant(sub, filter)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   private <T> void buildChildren(ProjectExplorerModel.Node<T> factory, List<? extends T> items, int startIndex) {

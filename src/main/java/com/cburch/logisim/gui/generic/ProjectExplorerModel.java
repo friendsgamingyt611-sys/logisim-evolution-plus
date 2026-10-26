@@ -31,6 +31,7 @@ class ProjectExplorerModel extends DefaultTreeModel implements ProjectListener {
   private Project proj;
   private final boolean showMouseTools;
   private final boolean includeCircuits;
+  private String filter = null;
 
   ProjectExplorerModel(Project proj, JTree gui, boolean showMouseTools) {
     this(proj, gui, showMouseTools, true);
@@ -44,6 +45,18 @@ class ProjectExplorerModel extends DefaultTreeModel implements ProjectListener {
     setRoot(new ProjectExplorerLibraryNode(this, proj.getLogisimFile(), gui, showMouseTools, includeCircuits));
     proj.addProjectListener(this);
     uiElement = gui;
+  }
+
+  public String getFilter() {
+    return filter;
+  }
+
+  public void setFilter(String query) {
+    final var q = (query == null || query.isBlank()) ? null : query.trim().toLowerCase();
+    if (q == null ? this.filter != null : !q.equals(this.filter)) {
+      this.filter = q;
+      setLogisimFile(proj != null ? proj.getLogisimFile() : null);
+    }
   }
 
   Node<Tool> findTool(Tool tool) {
@@ -88,7 +101,9 @@ class ProjectExplorerModel extends DefaultTreeModel implements ProjectListener {
 
   private void setLogisimFile(LogisimFile file) {
     final var oldRoot = (Node<?>) getRoot();
-    oldRoot.decommission();
+    if (oldRoot != null) {
+      oldRoot.decommission();
+    }
     setRoot(
         (file == null)
             ? null

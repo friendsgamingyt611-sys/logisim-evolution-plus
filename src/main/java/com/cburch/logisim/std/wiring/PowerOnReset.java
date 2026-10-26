@@ -213,7 +213,18 @@ public class PowerOnReset extends InstanceFactory {
     if (attr == StdAttr.FACING || attr == PORSIZE) {
       instance.recomputeBounds();
     }
+  }
 
+  @Override
+  public void paintIcon(InstancePainter painter) {
+    Graphics2D g2 = (Graphics2D) painter.getGraphics();
+    Color fg = AppPreferences.getComponentColor();
+    g2.setColor(fg);
+    GraphicsUtil.switchToWidth(g2, 2);
+    g2.drawRoundRect(2, 2, 15, 15, 4, 4);
+    int[] xs = {4, 9, 9, 15};
+    int[] ys = {6, 6, 13, 13};
+    g2.drawPolyline(xs, ys, 4);
   }
 
   @Override
@@ -226,7 +237,7 @@ public class PowerOnReset extends InstanceFactory {
     int width =  bds.getWidth();
     int height = bds.getHeight();
     GraphicsUtil.switchToWidth(g, 2);
-    g.setColor(Color.WHITE);
+    g.setColor(AppPreferences.isDarkTheme() ? new Color(45, 45, 45) : Color.WHITE);
     g.fillRect(x, y, width, height);
     g.setColor(AppPreferences.getComponentColor());
     g.drawRect(x, y, width, height);

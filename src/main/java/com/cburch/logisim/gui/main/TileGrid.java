@@ -239,7 +239,19 @@ public class TileGrid extends JPanel implements ExplorerModel.Listener {
           ? Color.WHITE
           : (AppPreferences.isDarkTheme() ? new Color(230, 232, 235) : new Color(31, 30, 29));
 
-      final var nameLabel = new JLabel("<html><center>" + escapeHtml(tool.getDisplayName()) + "</center></html>", JLabel.CENTER);
+      final var sq = model.getSearchQuery();
+      String rawName = tool.getDisplayName();
+      String formattedName;
+      if (sq != null && !sq.isBlank() && rawName.toLowerCase().contains(sq.toLowerCase())) {
+        int idx = rawName.toLowerCase().indexOf(sq.toLowerCase());
+        String b = escapeHtml(rawName.substring(0, idx));
+        String m = escapeHtml(rawName.substring(idx, idx + sq.length()));
+        String a = escapeHtml(rawName.substring(idx + sq.length()));
+        formattedName = b + "<span style='color: #3584e4; font-weight: bold;'>" + m + "</span>" + a;
+      } else {
+        formattedName = escapeHtml(rawName);
+      }
+      final var nameLabel = new JLabel("<html><center>" + formattedName + "</center></html>", JLabel.CENTER);
       nameLabel.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, AppPreferences.getScaled(11)));
       nameLabel.setForeground(fgMain);
       textPanel.add(nameLabel, BorderLayout.CENTER);

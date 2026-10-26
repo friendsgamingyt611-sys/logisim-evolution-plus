@@ -57,6 +57,14 @@ public class DoNotConnect extends InstanceFactory {
   }
 
   @Override
+  public void paintIcon(InstancePainter painter) {
+    Graphics2D g2 = (Graphics2D) painter.getGraphics();
+    g2.setColor(new Color(225, 50, 50));
+    g2.drawLine(3, 3, 15, 15);
+    g2.drawLine(3, 15, 15, 3);
+  }
+
+  @Override
   public void paintGhost(InstancePainter painter) {
     drawInstance(painter, true);
   }

@@ -230,13 +230,11 @@ public class Clock extends InstanceFactory {
   @Override
   public void paintIcon(InstancePainter painter) {
     Graphics g = painter.getGraphics();
-    if (toolIcon != null) {
-      toolIcon.paintIcon(painter.getDestination(), g, 2, 2);
-    } else {
-      g.drawRect(4, 4, 13, 13);
-      g.setColor(Value.FALSE.getColor());
-      g.drawPolyline(new int[] {6, 6, 10, 10, 14, 14}, new int[] {10, 6, 6, 14, 14, 10}, 6);
-    }
+    Graphics2D g2 = (Graphics2D) g;
+    g2.setColor(AppPreferences.getComponentColor());
+    GraphicsUtil.switchToWidth(g2, 2);
+    g2.drawRoundRect(2, 2, 15, 15, 4, 4);
+    g2.drawPolyline(new int[] {5, 5, 9, 9, 14, 14}, new int[] {11, 6, 6, 13, 13, 8}, 6);
 
     Direction dir = painter.getAttributeValue(StdAttr.FACING);
     int pinx = 15;

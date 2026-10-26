@@ -297,32 +297,26 @@ public class ProjectExplorer extends JTree implements LocaleListener {
     }
     g2.dispose();
     super.paintComponent(g);
+  }
 
-    // Right-aligned category count badges auto-adjusting to splitter width
-    final var g3 = (Graphics2D) g.create();
-    g3.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
-    final var badgeFont = AppPreferences.getScaledFont(getFont()).deriveFont(Font.PLAIN, AppPreferences.getScaled(11));
-    g3.setFont(badgeFont);
-    final var fm = g3.getFontMetrics(badgeFont);
-    final var fgMuted = new Color(154, 160, 168);
-
-    for (int r = 0; r < getRowCount(); r++) {
-      final var path = getPathForRow(r);
-      if (path != null && path.getLastPathComponent() instanceof ProjectExplorerLibraryNode libNode) {
-        int count = libNode.getChildCount();
-        if (count > 0) {
-          final var b = getRowBounds(r);
-          if (b == null) continue;
-          final var text = String.valueOf(count);
-          final var strW = fm.stringWidth(text);
-          final var textX = treeW - AppPreferences.getScaled(18) - strW;
-          final var textY = b.y + (b.height - fm.getHeight()) / 2 + fm.getAscent();
-          g3.setColor(isRowSelected(r) ? new Color(255, 255, 255, 180) : fgMuted);
-          g3.drawString(text, textX, textY);
-        }
+  public void setFilter(String filter) {
+    if (getModel() instanceof ProjectExplorerModel m) {
+      m.setFilter(filter);
+      if (filter != null && !filter.isBlank()) {
+        expandAllNodes();
       }
     }
-    g3.dispose();
+  }
+
+  public void expandAllNodes() {
+    for (int i = 0; i < getRowCount(); i++) {
+      expandRow(i);
+    }
+  }
+
+  private static String escapeHtml(String text) {
+    if (text == null) return "";
+    return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
   }
 
   public Tool getSelectedTool() {
@@ -448,7 +442,17 @@ public class ProjectExplorer extends JTree implements LocaleListener {
           label.setFont(plainFont);
         }
 
-        label.setText(tool.getDisplayName());
+        final var rawName = tool.getDisplayName();
+        final var filter = (getModel() instanceof ProjectExplorerModel pem) ? pem.getFilter() : null;
+        if (filter != null && !filter.isBlank() && rawName.toLowerCase().contains(filter)) {
+          int idx = rawName.toLowerCase().indexOf(filter);
+          String b = escapeHtml(rawName.substring(0, idx));
+          String m = escapeHtml(rawName.substring(idx, idx + filter.length()));
+          String a = escapeHtml(rawName.substring(idx + filter.length()));
+          label.setText("<html>" + b + "<span style='color: #3584e4; font-weight: bold;'>" + m + "</span>" + a + "</html>");
+        } else {
+          label.setText(rawName);
+        }
         setToolTipText(tool.getDescription());
       } else if (value instanceof ProjectExplorerLibraryNode libNode) {
         final var lib = libNode.getValue();
