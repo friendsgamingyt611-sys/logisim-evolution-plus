@@ -28,6 +28,10 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.Insets;
+import java.awt.RenderingHints;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import javax.swing.BorderFactory;
@@ -101,11 +105,15 @@ public class ModernHeaderBar extends JPanel implements LocaleListener {
   }
 
   private void initStyle() {
-    Color bg = AppPreferences.isDarkTheme() ? new Color(37, 37, 38) : new Color(243, 244, 246);
+    Color bg = UIManager.getColor("Chrome.barBackground");
+    if (bg == null) {
+      bg = AppPreferences.isDarkTheme() ? new Color(37, 37, 38) : new Color(243, 244, 246);
+    }
     setBackground(bg);
-    putClientProperty(FlatClientProperties.STYLE,
-        "background: " + (AppPreferences.isDarkTheme() ? "#252526" : "#f3f4f6") + ";");
-    Color borderColor = AppPreferences.isDarkTheme() ? new Color(51, 51, 51) : new Color(208, 213, 221);
+    Color borderColor = UIManager.getColor("Chrome.borderColor");
+    if (borderColor == null) {
+      borderColor = AppPreferences.isDarkTheme() ? new Color(51, 51, 51) : new Color(208, 213, 221);
+    }
     setBorder(BorderFactory.createCompoundBorder(
         BorderFactory.createMatteBorder(0, 0, 1, 0, borderColor),
         BorderFactory.createEmptyBorder(4, 10, 4, 10)));
@@ -145,10 +153,33 @@ public class ModernHeaderBar extends JPanel implements LocaleListener {
     JPanel centerPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 0));
     centerPanel.setOpaque(false);
 
-    circuitPickerButton = new JButton("main", new ChevronDownIcon());
+    circuitPickerButton = new JButton("main", new ChevronDownIcon()) {
+      @Override
+      protected void paintComponent(Graphics g) {
+        super.paintComponent(g);
+        if (project != null && project.isFileDirty()) {
+          final var g2 = (Graphics2D) g.create();
+          g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+          Color warn = UIManager.getColor("Chrome.warning");
+          if (warn == null) {
+            warn = AppPreferences.isDarkTheme() ? new Color(0xE5, 0xA5, 0x0A) : new Color(0xB8, 0x7D, 0x00);
+          }
+          g2.setColor(warn);
+          int dotSize = AppPreferences.getScaled(6);
+          Insets insets = getInsets();
+          int textW = getFontMetrics(getFont()).stringWidth(getText());
+          int x = (insets != null ? insets.left : 0) + textW + AppPreferences.getScaled(4);
+          int y = (getHeight() - dotSize) / 2;
+          g2.fillOval(x, y, dotSize, dotSize);
+          g2.dispose();
+        }
+      }
+    };
+    circuitPickerButton.setFont(new Font(Font.SANS_SERIF, Font.BOLD, AppPreferences.getScaled(13)));
     circuitPickerButton.setHorizontalTextPosition(SwingConstants.LEFT);
+    circuitPickerButton.setIconTextGap(AppPreferences.getScaled(14));
     circuitPickerButton.putClientProperty(FlatClientProperties.STYLE,
-        "arc: 999; margin: 3,12,3,8; font: bold +1; borderWidth: 0; background: null;");
+        "arc: 999; margin: 3,12,3,8; borderWidth: 0; background: null;");
     circuitPickerButton.addActionListener(e -> showCircuitMenu(circuitPickerButton));
 
     centerPanel.add(circuitPickerButton);
@@ -314,8 +345,8 @@ public class ModernHeaderBar extends JPanel implements LocaleListener {
       return;
     Circuit current = project.getCurrentCircuit();
     String name = (current != null) ? current.getName() : "main";
-    boolean dirty = project.isFileDirty();
-    circuitPickerButton.setText(name + (dirty ? " \u25cf" : ""));
+    circuitPickerButton.setText(name);
+    circuitPickerButton.repaint();
   }
 
   public void updateSimControls() {

@@ -21,6 +21,7 @@ public class Toolbar extends JPanel {
   public static final Object HORIZONTAL = new Object();
   private static final long serialVersionUID = 1L;
   private final JPanel subpanel;
+  private final JPanel centerPanel;
   private final MyListener myListener;
   private ToolbarModel model;
   private Object orientation;
@@ -30,19 +31,26 @@ public class Toolbar extends JPanel {
     super(new BorderLayout());
     this.subpanel = new JPanel();
     this.subpanel.setBorder(javax.swing.BorderFactory.createEmptyBorder(3, 6, 3, 6));
-    Color tbBg = AppPreferences.isDarkTheme() ? new Color(37, 37, 38) : new Color(243, 244, 246);
+    Color tbBg = javax.swing.UIManager.getColor("Chrome.barBackground");
+    if (tbBg == null) {
+      tbBg = AppPreferences.isDarkTheme() ? new Color(37, 37, 38) : new Color(243, 244, 246);
+    }
     this.setBackground(tbBg);
     this.subpanel.setBackground(tbBg);
-    Color tbBorder = AppPreferences.isDarkTheme() ? new Color(51, 51, 51) : new Color(208, 213, 221);
+    Color tbBorder = javax.swing.UIManager.getColor("Chrome.borderColor");
+    if (tbBorder == null) {
+      tbBorder = AppPreferences.isDarkTheme() ? new Color(51, 51, 51) : new Color(208, 213, 221);
+    }
     this.setBorder(javax.swing.BorderFactory.createMatteBorder(0, 0, 1, 0, tbBorder));
     this.model = model;
     this.orientation = HORIZONTAL;
     this.myListener = new MyListener();
     this.curPressed = null;
 
-    final var centerPanel = new JPanel();
-    centerPanel.setBackground(tbBg);
-    this.add(centerPanel, BorderLayout.CENTER);
+    this.centerPanel = new JPanel();
+    this.centerPanel.setOpaque(false);
+    this.centerPanel.setBackground(tbBg);
+    this.add(this.centerPanel, BorderLayout.CENTER);
     setOrientation(HORIZONTAL);
 
     computeContents();
@@ -53,10 +61,19 @@ public class Toolbar extends JPanel {
   public void updateUI() {
     super.updateUI();
     if (subpanel != null) {
-      Color tbBg = AppPreferences.isDarkTheme() ? new Color(37, 37, 38) : new Color(243, 244, 246);
+      Color tbBg = javax.swing.UIManager.getColor("Chrome.barBackground");
+      if (tbBg == null) {
+        tbBg = AppPreferences.isDarkTheme() ? new Color(37, 37, 38) : new Color(243, 244, 246);
+      }
       setBackground(tbBg);
       subpanel.setBackground(tbBg);
-      Color tbBorder = AppPreferences.isDarkTheme() ? new Color(51, 51, 51) : new Color(208, 213, 221);
+      if (centerPanel != null) {
+        centerPanel.setBackground(tbBg);
+      }
+      Color tbBorder = javax.swing.UIManager.getColor("Chrome.borderColor");
+      if (tbBorder == null) {
+        tbBorder = AppPreferences.isDarkTheme() ? new Color(51, 51, 51) : new Color(208, 213, 221);
+      }
       setBorder(javax.swing.BorderFactory.createMatteBorder(0, 0, 1, 0, tbBorder));
     }
   }

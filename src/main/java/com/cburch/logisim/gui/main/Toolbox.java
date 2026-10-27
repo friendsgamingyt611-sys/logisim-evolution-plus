@@ -126,9 +126,12 @@ public class Toolbox extends JPanel implements ExplorerModel.Listener, ProjectLi
         if (proj != null && proj.getLogisimFile() != null && proj.getLogisimFile().isDirty()) {
           final var g2 = (Graphics2D) g.create();
           g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-          Color warn = AppPreferences.isDarkTheme()
-              ? new Color(0xE5, 0xA5, 0x0A)
-              : new Color(0xB8, 0x7D, 0x00);
+          Color warn = UIManager.getColor("Chrome.warning");
+          if (warn == null) {
+            warn = AppPreferences.isDarkTheme()
+                ? new Color(0xE5, 0xA5, 0x0A)
+                : new Color(0xB8, 0x7D, 0x00);
+          }
           g2.setColor(warn);
           int dotSize = AppPreferences.getScaled(6);
           int textW = getFontMetrics(getFont()).stringWidth(getText());
@@ -380,9 +383,12 @@ public class Toolbox extends JPanel implements ExplorerModel.Listener, ProjectLi
       protected void paintComponent(Graphics g) {
         super.paintComponent(g);
         final var g2 = (Graphics2D) g.create();
-        Color c = UIManager.getColor("Component.borderColor");
+        Color c = UIManager.getColor("Chrome.subtleBorderColor");
         if (c == null) {
-          c = AppPreferences.isDarkTheme() ? new Color(0x30, 0x30, 0x30) : new Color(0xD0, 0xD5, 0xDD);
+          c = UIManager.getColor("Component.borderColor");
+        }
+        if (c == null) {
+          c = AppPreferences.isDarkTheme() ? new Color(0x30, 0x30, 0x30) : new Color(0xD0, 0xD5, 0xD0);
         }
         g2.setColor(c);
         int midX = getWidth() / 2;

@@ -51,8 +51,8 @@ public class RegTabContent extends JScrollPane
   private final JPanel panel = new JPanel(new GridBagLayout());
   private final GridBagConstraints gridConstraints = new GridBagConstraints();
   private final Project proj;
-  private final MyLabel hdrName = new MyLabel("", Font.ITALIC | Font.BOLD, false, Color.LIGHT_GRAY);
-  private final MyLabel hdrValue = new MyLabel("", Font.BOLD, false, Color.LIGHT_GRAY);
+  private final MyLabel hdrName = new MyLabel("", Font.ITALIC | Font.BOLD, false, null);
+  private final MyLabel hdrValue = new MyLabel("", Font.BOLD, false, null);
   private boolean showing = false;
   private CircuitState circuitState;
   private final ArrayList<Circuit> circuits = new ArrayList<>();

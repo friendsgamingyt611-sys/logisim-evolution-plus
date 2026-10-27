@@ -79,13 +79,19 @@ public class AttrTable extends JPanel implements LocaleListener {
     table.setDefaultEditor(Object.class, editor);
     table.setTableHeader(null);
     table.setRowHeight(AppPreferences.getScaled(30));
-    final var gridColor = AppPreferences.isDarkTheme() ? new Color(46, 46, 46) : new Color(228, 231, 236);
+    Color gridColor = javax.swing.UIManager.getColor("Chrome.subtleBorderColor");
+    if (gridColor == null) {
+      gridColor = javax.swing.UIManager.getColor("Table.gridColor");
+    }
+    if (gridColor == null) {
+      gridColor = AppPreferences.isDarkTheme() ? new Color(46, 46, 46) : new Color(228, 231, 236);
+    }
     table.setGridColor(gridColor);
     table.setShowHorizontalLines(true);
-    table.setShowVerticalLines(true);
-    table.setIntercellSpacing(new Dimension(1, 1));
+    table.setShowVerticalLines(false);
+    table.setIntercellSpacing(new Dimension(0, 1));
     table.putClientProperty(com.formdev.flatlaf.FlatClientProperties.STYLE,
-        "showHorizontalLines: true; showVerticalLines: true; intercellSpacing: 1,1;");
+        "showHorizontalLines: true; showVerticalLines: false; intercellSpacing: 0,1;");
 
     final var baseFont = title.getFont();
     final var titleSize = Math.round(baseFont.getSize() * 1.2F);
@@ -104,6 +110,26 @@ public class AttrTable extends JPanel implements LocaleListener {
 
     LocaleManager.addLocaleListener(this);
     localeChanged();
+  }
+
+  @Override
+  public void updateUI() {
+    super.updateUI();
+    if (table != null) {
+      table.setRowHeight(AppPreferences.getScaled(30));
+      Color gridColor = javax.swing.UIManager.getColor("Chrome.subtleBorderColor");
+      if (gridColor == null) {
+        gridColor = javax.swing.UIManager.getColor("Table.gridColor");
+      }
+      if (gridColor != null) {
+        table.setGridColor(gridColor);
+      }
+      table.setShowHorizontalLines(true);
+      table.setShowVerticalLines(false);
+      table.setIntercellSpacing(new Dimension(0, 1));
+      table.putClientProperty(com.formdev.flatlaf.FlatClientProperties.STYLE,
+          "showHorizontalLines: true; showVerticalLines: false; intercellSpacing: 0,1;");
+    }
   }
 
   public AttrTableModel getAttrTableModel() {
