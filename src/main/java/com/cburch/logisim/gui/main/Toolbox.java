@@ -27,6 +27,7 @@ import com.cburch.logisim.gui.icons.symbolic.MoveUpIcon;
 import com.cburch.logisim.gui.menu.LogisimMenuBar;
 import com.cburch.logisim.gui.menu.LogisimMenuItem;
 import com.cburch.logisim.gui.menu.MenuListener;
+import com.cburch.logisim.gui.menu.ProjectCircuitActions;
 import com.cburch.logisim.prefs.AppPreferences;
 import com.cburch.logisim.proj.Project;
 import com.cburch.logisim.proj.ProjectEvent;
@@ -357,6 +358,9 @@ public class Toolbox extends JPanel implements ExplorerModel.Listener, ProjectLi
     if (proj.getLogisimFile() != null) {
       proj.getLogisimFile().addLibraryListener(this);
     }
+    if (menu != null) {
+      menu.addEnabledListener(source -> updateActionButtons());
+    }
 
     cardLayout.show(cardsPanel, model.getViewMode());
     updateActionButtons();
@@ -460,11 +464,7 @@ public class Toolbox extends JPanel implements ExplorerModel.Listener, ProjectLi
 
   public void updateActionButtons() {
     final var cur = (proj != null) ? proj.getCurrentCircuit() : null;
-    final var file = (proj != null) ? proj.getLogisimFile() : null;
     final var curName = (cur != null) ? cur.getName() : "";
-    final var tools = (file != null) ? file.getTools() : null;
-    final var curIndex = (file != null && cur != null) ? file.indexOfCircuit(cur) : -1;
-    final var numCircuits = (tools != null) ? tools.size() : 0;
 
     if (btnAddCircuit != null) {
       btnAddCircuit.setEnabled(menu != null && menu.isEnabled(LogisimMenuBar.ADD_CIRCUIT));
@@ -475,7 +475,8 @@ public class Toolbox extends JPanel implements ExplorerModel.Listener, ProjectLi
       btnAddVhdl.setToolTipText("Add HDL Entity...");
     }
     if (btnMoveUp != null) {
-      boolean canUp = menu != null && menu.isEnabled(LogisimMenuBar.MOVE_CIRCUIT_UP);
+      boolean canUp = menu != null ? menu.isEnabled(LogisimMenuBar.MOVE_CIRCUIT_UP)
+          : ProjectCircuitActions.canMoveUp(proj, cur);
       btnMoveUp.setEnabled(canUp);
       if (canUp) {
         btnMoveUp.setToolTipText("Move '" + curName + "' up · Shift+Ctrl+U");
@@ -484,7 +485,8 @@ public class Toolbox extends JPanel implements ExplorerModel.Listener, ProjectLi
       }
     }
     if (btnMoveDown != null) {
-      boolean canDown = menu != null && menu.isEnabled(LogisimMenuBar.MOVE_CIRCUIT_DOWN);
+      boolean canDown = menu != null ? menu.isEnabled(LogisimMenuBar.MOVE_CIRCUIT_DOWN)
+          : ProjectCircuitActions.canMoveDown(proj, cur);
       btnMoveDown.setEnabled(canDown);
       if (canDown) {
         btnMoveDown.setToolTipText("Move '" + curName + "' down · Shift+Ctrl+D");
@@ -585,10 +587,18 @@ public class Toolbox extends JPanel implements ExplorerModel.Listener, ProjectLi
   @Override
   public void projectChanged(ProjectEvent event) {
     updateProjectTitle();
+    updateActionButtons();
+    if (circuitsList != null) {
+      circuitsList.refresh();
+    }
   }
 
   @Override
   public void libraryChanged(LibraryEvent event) {
     updateProjectTitle();
+    updateActionButtons();
+    if (circuitsList != null) {
+      circuitsList.refresh();
+    }
   }
 }

@@ -155,7 +155,7 @@ public class ExplorerModel implements ProjectListener, LibraryListener, Property
     for (final var tool : file.getTools()) {
       if (tool instanceof AddTool addTool) {
         final var factory = addTool.getFactory(false);
-        if (factory instanceof SubcircuitFactory || factory instanceof VhdlEntity) {
+        if (factory instanceof SubcircuitFactory) {
           result.add(addTool);
         }
       }

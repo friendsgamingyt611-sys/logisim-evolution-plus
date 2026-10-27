@@ -211,14 +211,49 @@ public class ProjectCircuitActions {
     analyzer.toFront();
   }
 
+  public static java.util.List<Circuit> getDisplayedCircuits(Project proj) {
+    if (proj == null || proj.getLogisimFile() == null) {
+      return java.util.Collections.emptyList();
+    }
+    return proj.getLogisimFile().getCircuits();
+  }
+
+  public static int getCircuitIndex(Project proj, Circuit cur) {
+    if (proj == null || cur == null || proj.getLogisimFile() == null) {
+      return -1;
+    }
+    return getDisplayedCircuits(proj).indexOf(cur);
+  }
+
+  public static boolean canMoveUp(Project proj, Circuit cur) {
+    int idx = getCircuitIndex(proj, cur);
+    return idx > 0;
+  }
+
+  public static boolean canMoveDown(Project proj, Circuit cur) {
+    int idx = getCircuitIndex(proj, cur);
+    final var circuits = getDisplayedCircuits(proj);
+    return idx >= 0 && idx < circuits.size() - 1;
+  }
+
   public static void doMoveCircuit(Project proj, Circuit cur, int delta) {
-    final var tool = proj.getLogisimFile().getAddTool(cur);
-    if (tool != null) {
-      final var oldPos = proj.getLogisimFile().indexOfCircuit(cur);
-      final var newPos = oldPos + delta;
-      final var toolsCount = proj.getLogisimFile().getTools().size();
-      if (newPos >= 0 && newPos < toolsCount) {
-        proj.doAction(LogisimFileActions.moveCircuit(tool, newPos));
+    if (proj == null || cur == null || proj.getLogisimFile() == null) return;
+    final var file = proj.getLogisimFile();
+    final var circuits = file.getCircuits();
+    final var curIdx = circuits.indexOf(cur);
+    if (curIdx < 0) return;
+    final var targetIdx = curIdx + delta;
+    if (targetIdx < 0 || targetIdx >= circuits.size()) return;
+
+    final var targetCircuit = circuits.get(targetIdx);
+    final var tool = file.getAddTool(cur);
+    final var targetTool = file.getAddTool(targetCircuit);
+    if (tool != null && targetTool != null) {
+      final var tools = file.getTools();
+      final var targetPosInTools = tools.indexOf(targetTool);
+      if (targetPosInTools >= 0) {
+        proj.doAction(LogisimFileActions.moveCircuit(tool, targetPosInTools));
+        proj.setCurrentCircuit(cur);
       }
     }
   }

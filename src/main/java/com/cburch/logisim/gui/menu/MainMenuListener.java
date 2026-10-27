@@ -118,22 +118,11 @@ public class MainMenuListener extends MenuListener {
       final var viewAppearance = editorView.equals(Frame.EDIT_APPEARANCE);
       final var viewLayout = editorView.equals(Frame.EDIT_LAYOUT);
 
-      var canSetMain = false;
-      var canMoveUp = false;
-      var canMoveDown = false;
-      var canRemove = false;
-      var canRevert = false;
-
-      // is project circuit?
-      if (curIndex >= 0) {
-        List<?> tools = proj.getLogisimFile().getTools();
-
-        canSetMain = proj.getLogisimFile().getMainCircuit() != cur;
-        canMoveUp = curIndex > 0;
-        canMoveDown = curIndex < tools.size() - 1;
-        canRemove = tools.size() > 1;
-        canRevert = viewAppearance && !cur.getAppearance().isDefaultAppearance();
-      }
+      final var canSetMain = file != null && cur != null && file.getMainCircuit() != cur;
+      final var canMoveUp = ProjectCircuitActions.canMoveUp(proj, cur);
+      final var canMoveDown = ProjectCircuitActions.canMoveDown(proj, cur);
+      final var canRemove = file != null && cur != null && file.getCircuitCount() > 1 && proj.getDependencies().canRemove(cur);
+      final var canRevert = file != null && cur != null && file.contains(cur) && viewAppearance && !cur.getAppearance().isDefaultAppearance();
 
       menubar.setEnabled(LogisimMenuBar.ADD_CIRCUIT, true);
       menubar.setEnabled(LogisimMenuBar.ADD_VHDL, true);
@@ -187,7 +176,11 @@ public class MainMenuListener extends MenuListener {
           circ.getAppearance().addCanvasModelListener(this);
         }
         computeEnabled();
-      } else if (action == ProjectEvent.ACTION_SET_FILE) {
+      } else if (action == ProjectEvent.ACTION_SET_FILE
+          || action == ProjectEvent.ACTION_COMPLETE
+          || action == ProjectEvent.UNDO_COMPLETE
+          || action == ProjectEvent.REDO_COMPLETE
+          || action == ProjectEvent.ACTION_SET_STATE) {
         computeEnabled();
       }
     }
