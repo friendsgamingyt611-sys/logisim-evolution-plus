@@ -11,6 +11,7 @@ package com.cburch.logisim;
 
 import com.cburch.logisim.generated.BuildInfo;
 import com.cburch.logisim.gui.generic.OptionPane;
+import com.cburch.logisim.gui.main.GraphicsBootstrap;
 import com.cburch.logisim.gui.start.Startup;
 import com.cburch.logisim.prefs.AppPreferences;
 import com.cburch.logisim.gui.theme.ModernDarkLaf;
@@ -37,6 +38,7 @@ public class Main {
    * @param args Optional arguments.
    */
   public static void main(String[] args) {
+    GraphicsBootstrap.init(args);
     // To print debug log level information, run with:
     //    java -Dorg.slf4j.simpleLogger.defaultLogLevel=debug
     // or uncomment next line
@@ -97,6 +99,7 @@ public class Main {
 
     try {
       startup.run();
+      GraphicsBootstrap.markStartupSuccessful();
     } catch (Throwable e) {
       final var strWriter = new StringWriter();
       final var printWriter = new PrintWriter(strWriter);

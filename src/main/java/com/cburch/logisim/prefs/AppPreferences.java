@@ -608,6 +608,9 @@ public class AppPreferences {
   public static final PrefMonitor<Boolean> SMOOTH_ZOOM =
       create(new PrefMonitorBoolean("smoothZoom", false));
 
+  public static final PrefMonitor<Boolean> GPU_ACCELERATION =
+      create(new PrefMonitorBoolean("gpuAcceleration", false));
+
   public static final String EXPLORER_VIEW_LIST = "list";
   public static final String EXPLORER_VIEW_TILES = "tiles";
   public static final PrefMonitor<String> EXPLORER_VIEW =
