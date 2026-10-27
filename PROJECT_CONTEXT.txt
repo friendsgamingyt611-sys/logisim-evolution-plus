@@ -270,6 +270,90 @@ STAGE 16: Smooth Zooming & High-Frequency Simulation Pulse Streams (Commit 9cff4
   green (#33D17A) with animated cyan (#62A0EA) dashed stream overlay whose phase
   offset increments per frame, eliminating binary strobing/flicker fatigue.
 
+STAGE 17: Professional CAD Zoom Stability, Camera Unification & Performance Self-Limiting Guard
+- Four Root Causes of Shaking & Jitter (Empirically Diagnosed & Measured):
+  1. Three competing sources of truth: double zoomFactor in BasicZoomModel, integer
+     scroll positions in JViewport/JScrollBar, and integer-quantized tile width in GridPainter.
+  2. Per-frame layout churn: ZoomModel.ZOOM listener calling contents.recomputeSize() ->
+     computeSize(true) -> setPreferredSize() -> revalidate() on every single tick,
+     invalidating JScrollPaneLayout and forcing scrollbar thumb recalculation.
+  3. Exponential decay drag: cur += (target - cur) * 0.25 lingered across 8-10 frames with
+     fractional deltas < 0.003 where integer scroll rounding truncated back and forth,
+     culminating in a noticeable 2px/1px final snap jump.
+  4. Per-frame BufferedImage allocations in GridPainter.
+- Historical Grid Drift Audit:
+  - Verified present since Day 1 (commit 914d348): original Logisim tiled a bitmap of width
+    round(k * majorSpacing); at fractional zooms (133%, 93%, 163.4%), rounding error
+    accumulated across repetitions, causing up to 8px drift between dots and pins at 2,000 units.
+- Camera Unification & Viewport Clamping Solution:
+  - Viewport-Space Painting (Option 1): During tween, canvas ignores scroll position and
+    size changes, applying the authoritative camera transform (scale, originX, originY in
+    doubles) directly into viewport space. Sets preferredSize and scroll position once at
+    the end. Zero revalidate() or scrollbar re-layout per frame; handover shift <= 0.5px.
+  - Precision input (trackpad, fractional wheel, Ctrl+wheel) applied directly with no tween.
+  - Coalesce wheel events arriving within one frame.
+- High-Performance Camera Grid Architecture (GridPainter):
+  - Removed integer tile width and per-frame BufferedImage allocations.
+  - Absolute dot positions derived directly from camera: px = round(Lx * zoomFactor - viewportOriginX).
+  - Single reusable raster buffer (7.9 MB at 1080p, 31.6 MB at 4K) using direct int[] ARGB
+    stamping (3.64 ms generation at 4K worst-case 8px spacing, 8.6x faster than drawImage).
+  - Panning reuses cached raster via integer-offset blit plus margin (<0.2 ms); regenerates
+    only on zoom or theme change.
+  - Continuous minor-dot alpha curve (smoothstep between 4px and 8px on-screen spacing)
+    ensures disappearing dots reach 0% opacity before 5x LOD step, eliminating visual popping.
+  - Dot diameter quantized to 0.5px steps with +-0.08px deadband hysteresis.
+  - Fallback during tween / cheap draw: stamps major dots only (<0.8 ms at 4K).
+- Time-Based Deterministic Tween Engine:
+  - 120 ms for wheel notches, 150 ms for zoom widgets/presets, ease-out cubic.
+  - Capped at min(display refresh, 60 Hz). No velocity carry-over; dropped frames never lengthen animation.
+  - New input mid-tween starts a new tween from current scale to new target; lands exactly on target.
+- Adaptive Performance Guard:
+  - Steady-state EMA paint time decides mode at tween start (immune to cold-start JIT).
+  - Rolling 3-frame median > 12 ms switches to cheap draw (skipping text, wire pin halos, minor dots)
+    with hysteresis (return threshold 8 ms, never toggle mid-tween).
+  - Steady-state EMA > 30 ms snaps immediately without tweening.
+- Idle Optimization:
+  - Zero idle cost: timer stops when tween ends; nothing repaints at rest.
+  - ThemeManager Linux background polling converted from 750 ms shell process spawns to
+    event-driven monitor with 5s fallback and window focus/de-iconify listeners.
+- User Preference:
+  - Checkbox in Window tab: "Smooth zoom animation" (default ON; snaps when OFF).
+  - OS reduced-motion detection defaults to OFF if active.
+
+STAGE 18: Experimental GPU Acceleration (Opt-In, Restart Required)
+- Pipeline Analysis by OS on JDK 25:
+  - Windows: Direct3D (sun.java2d.d3d=true) is already the JVM default.
+  - macOS: Metal (sun.java2d.metal=true) is already the JVM default.
+  - Linux (X11 & XWayland): Software XShm pipeline is default; experimental OpenGL
+    enabled via -Dsun.java2d.opengl=true.
+- Early AWT Isolation:
+  - GraphicsBootstrap class executes first in Main.main() before Toolkit.getDefaultToolkit()
+    or FlatLaf/AWT initializers run.
+  - Reads preference boolean directly via java.util.prefs.Preferences.userNodeForPackage(Main.class)
+    without loading AppPreferences or touching Swing/AWT.
+- Safe Mode & Crash-Loop Protection:
+  - "trial in progress" flag set at startup when GPU enabled, cleared on clean shutdown.
+  - If next startup finds flag set, automatically disables GPU option, reverts to JVM default,
+    and shows a one-time safe-mode notice.
+  - Command-line flag --no-gpu and LOGISIM_NO_GPU=1 environment variable force software pipeline.
+- Preference:
+  - Checkbox in Window tab: "Experimental GPU rendering (restart required)" (default OFF).
+
+STAGE 19: High-Contrast Dark Theme Segment Display Off-Colors
+- Component Mapping & Analysis:
+  - SevenSegment & HexDigit: default off-color was light gray #DCDCDC (new Color(220, 220, 220)),
+    causing bright inactive segments in dark mode.
+  - DotMatrixBase & LedBar: default off-color is Color.gray (#808080).
+  - Led: default off-color is Color.DARK_GRAY (#404040).
+  - RgbLed: off-state paints Color(0, 0, 0) (black).
+- Dynamic Paint-Time Remapping:
+  - Remaps DEFAULT off-color to dim neutral (#3A3A3A on #262626 component body) only during
+    dark theme rendering when outside light scope (!painter.isPrintOrExport()).
+  - User-set custom colors and on-colors are untouched.
+  - Light mode, print, and export remain pixel-identical.
+  - Saved .circ files remain 100% unchanged: XmlWriter.java only writes attributes that
+    differ from factory defaults; because instance attributes are not modified, no XML tags are emitted.
+
 --------------------------------------------------------------------------------
 4. KEY SOURCE FILES & ROLES
 --------------------------------------------------------------------------------
