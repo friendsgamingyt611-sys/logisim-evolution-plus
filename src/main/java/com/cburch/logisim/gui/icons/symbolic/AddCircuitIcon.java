@@ -2,12 +2,12 @@ package com.cburch.logisim.gui.icons.symbolic;
 
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.GradientPaint;
 import java.awt.Graphics2D;
 import java.awt.geom.Path2D;
-import java.awt.geom.RoundRectangle2D;
 
 /**
- * Modern monochrome vector icon for Add Circuit: IC subcircuit box with a plus badge at lower-right.
+ * Trademark Add Circuit icon: classic bold green cross with modern gradient styling.
  */
 public class AddCircuitIcon extends SymbolicIcon {
 
@@ -21,40 +21,54 @@ public class AddCircuitIcon extends SymbolicIcon {
 
   @Override
   protected void paintSymbolic(Graphics2D g2, int size, Color color, Component c) {
-    float s = size;
-    g2.setStroke(createStroke(1.75f));
-    g2.setColor(color);
+    float s = size / 20.0f;
+    boolean isEnabled = (c == null || c.isEnabled());
 
-    // Box bounds
-    float x = s * 0.20f;
-    float y = s * 0.16f;
-    float w = s * 0.54f;
-    float h = s * 0.58f;
-    float arc = s * 0.12f;
+    // Coordinates for the classic 12-point plus cross
+    float x1 = 3.0f * s;
+    float x2 = 7.5f * s;
+    float x3 = 12.5f * s;
+    float x4 = 17.0f * s;
 
-    // Subcircuit body
-    g2.draw(new RoundRectangle2D.Float(x, y, w, h, arc, arc));
+    float y1 = 3.0f * s;
+    float y2 = 7.5f * s;
+    float y3 = 12.5f * s;
+    float y4 = 17.0f * s;
 
-    // Internal logic gate chevron
-    Path2D.Float chevron = new Path2D.Float();
-    chevron.moveTo(x + w * 0.32f, y + h * 0.30f);
-    chevron.lineTo(x + w * 0.68f, y + h * 0.50f);
-    chevron.lineTo(x + w * 0.32f, y + h * 0.70f);
-    g2.draw(chevron);
+    Path2D.Float cross = new Path2D.Float();
+    cross.moveTo(x2, y1);
+    cross.lineTo(x3, y1);
+    cross.lineTo(x3, y2);
+    cross.lineTo(x4, y2);
+    cross.lineTo(x4, y3);
+    cross.lineTo(x3, y3);
+    cross.lineTo(x3, y4);
+    cross.lineTo(x2, y4);
+    cross.lineTo(x2, y3);
+    cross.lineTo(x1, y3);
+    cross.lineTo(x1, y2);
+    cross.lineTo(x2, y2);
+    cross.closePath();
 
-    // Left input pins
-    float pinLen = s * 0.12f;
-    g2.drawLine((int) (x - pinLen), (int) (y + h * 0.35f), (int) x, (int) (y + h * 0.35f));
-    g2.drawLine((int) (x - pinLen), (int) (y + h * 0.65f), (int) x, (int) (y + h * 0.65f));
+    // Vibrant gradient colors (Light: #28B463 to #196F3D, Dark: #76F0A4 to #42DC80)
+    boolean isDark = com.cburch.logisim.prefs.AppPreferences.isDarkTheme();
+    Color topColor = isDark ? new Color(0x76, 0xF0, 0xA4) : new Color(0x28, 0xB4, 0x63);
+    Color botColor = isDark ? new Color(0x42, 0xDC, 0x80) : new Color(0x19, 0x6F, 0x3D);
+    Color outlineColor = isDark ? new Color(0x30, 0xC8, 0x6D) : new Color(0x14, 0x5A, 0x32);
 
-    // Right output pin (top only, leaving lower right for badge)
-    g2.drawLine((int) (x + w), (int) (y + h * 0.35f), (int) (x + w + pinLen), (int) (y + h * 0.35f));
+    if (!isEnabled) {
+      topColor = toDisabled(topColor);
+      botColor = toDisabled(botColor);
+      outlineColor = toDisabled(outlineColor);
+    }
 
-    // Lower right plus badge with 2px knockout gap
-    float badgeCx = s * 0.74f;
-    float badgeCy = s * 0.74f;
-    float badgeR = s * 0.22f;
-    float knockoutGap = 2.0f;
-    drawKnockoutBadge(g2, badgeCx, badgeCy, badgeR, knockoutGap, color, c);
+    // 1. Fill cross with gradient
+    g2.setPaint(new GradientPaint(0, y1, topColor, 0, y4, botColor));
+    g2.fill(cross);
+
+    // 2. Draw crisp border outline
+    g2.setPaint(outlineColor);
+    g2.setStroke(createStroke(1.1f * s));
+    g2.draw(cross);
   }
 }

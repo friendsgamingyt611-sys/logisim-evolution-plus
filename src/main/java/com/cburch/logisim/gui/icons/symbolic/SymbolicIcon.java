@@ -45,6 +45,22 @@ public abstract class SymbolicIcon implements Icon {
     return null;
   }
 
+  public static Color toDisabled(Color c) {
+    if (c == null) {
+      return new Color(128, 128, 128, Math.round(255 * 0.40f));
+    }
+    int gray = (int) Math.round(0.299 * c.getRed() + 0.587 * c.getGreen() + 0.114 * c.getBlue());
+    return new Color(gray, gray, gray, Math.round(255 * 0.40f));
+  }
+
+  public static Color getRoleColor(String key, Color lightFallback, Color darkFallback, boolean isEnabled) {
+    Color c = UIManager.getColor(key);
+    if (c == null) {
+      c = AppPreferences.isDarkTheme() ? darkFallback : lightFallback;
+    }
+    return isEnabled ? c : toDisabled(c);
+  }
+
   @Override
   public void paintIcon(Component c, Graphics g, int x, int y) {
     final var g2 = (Graphics2D) g.create();
@@ -54,15 +70,18 @@ public abstract class SymbolicIcon implements Icon {
     final var isEnabled = (c == null || c.isEnabled());
     Color fg;
     if (fixedColor != null) {
-      fg = fixedColor;
+      fg = isEnabled ? fixedColor : toDisabled(fixedColor);
     } else {
       final var semantic = getSemanticColor();
       if (!isEnabled) {
         if (semantic != null) {
-          fg = new Color(semantic.getRed(), semantic.getGreen(), semantic.getBlue(), 90);
+          fg = toDisabled(semantic);
         } else {
-          Color disabled = UIManager.getColor("Button.disabledText");
-          fg = (disabled != null) ? disabled : new Color(128, 128, 128, 102);
+          Color base = (c != null && c.getForeground() != null) ? c.getForeground() : UIManager.getColor("Button.foreground");
+          if (base == null) {
+            base = AppPreferences.isDarkTheme() ? new Color(235, 235, 235) : new Color(38, 40, 44);
+          }
+          fg = toDisabled(base);
         }
       } else if (semantic != null) {
         fg = semantic;
@@ -71,7 +90,7 @@ public abstract class SymbolicIcon implements Icon {
       } else {
         Color defaultFg = UIManager.getColor("Button.foreground");
         if (defaultFg == null) defaultFg = UIManager.getColor("Label.foreground");
-        fg = (defaultFg != null) ? defaultFg : (AppPreferences.isDarkTheme() ? new Color(235, 235, 235) : new Color(30, 30, 30));
+        fg = (defaultFg != null) ? defaultFg : (AppPreferences.isDarkTheme() ? new Color(235, 235, 235) : new Color(38, 40, 44));
       }
     }
 

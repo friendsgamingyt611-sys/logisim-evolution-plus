@@ -7,7 +7,7 @@ import java.awt.geom.Line2D;
 import java.awt.geom.Path2D;
 
 /**
- * Modern monochrome stroked Down Arrow icon (shaft with chevron head, round caps).
+ * Modern vector Move Down Arrow icon (bold chevron head pointing down, shaft ending in a horizontal base bar).
  */
 public class MoveDownIcon extends SymbolicIcon {
 
@@ -22,14 +22,24 @@ public class MoveDownIcon extends SymbolicIcon {
   @Override
   protected void paintSymbolic(Graphics2D g2, int size, Color color, Component c) {
     float s = size;
-    g2.setStroke(createStroke(1.85f));
-    g2.setColor(color);
+    g2.setStroke(createStroke(1.95f));
+
+    boolean isEnabled = (c == null || c.isEnabled());
+    Color moveColor = getRoleColor("Action.move", new Color(0x1C, 0x71, 0xD8), new Color(0x58, 0xA6, 0xFF), isEnabled);
+    g2.setColor(moveColor);
 
     float midX = s * 0.50f;
-    float topY = s * 0.22f;
-    float botY = s * 0.78f;
+    float topY = s * 0.20f;
+    float botY = s * 0.82f;
     float spreadX = s * 0.28f;
-    float chevY = s * 0.52f;
+    float chevY = s * 0.56f;
+
+    // Base bar at top
+    float barHalf = s * 0.22f;
+    g2.draw(new Line2D.Float(midX - barHalf, topY, midX + barHalf, topY));
+
+    // Arrow shaft from base down to head
+    g2.draw(new Line2D.Float(midX, topY, midX, botY));
 
     // Chevron head pointing down
     Path2D.Float chevron = new Path2D.Float();
@@ -37,8 +47,5 @@ public class MoveDownIcon extends SymbolicIcon {
     chevron.lineTo(midX, botY);
     chevron.lineTo(midX + spreadX, chevY);
     g2.draw(chevron);
-
-    // Arrow shaft
-    g2.draw(new Line2D.Float(midX, topY, midX, botY));
   }
 }

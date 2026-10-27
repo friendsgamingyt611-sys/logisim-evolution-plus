@@ -211,7 +211,7 @@ public class Toolbox extends JPanel implements ExplorerModel.Listener, ProjectLi
 
     btnDelete = createActionButton(new DeleteIcon(20), "Remove Circuit", LogisimMenuBar.REMOVE_CIRCUIT);
     btnDelete.putClientProperty(FlatClientProperties.STYLE,
-        "arc: 6; margin: 4,4,4,4; focusWidth: 2; focusColor: #3584e480; hoverForeground: #e01b24;");
+        "arc: 6; margin: 4,4,4,4; focusWidth: 2; focusColor: #c01c2880; hoverBackground: #c01c2818; hoverForeground: #c01c28;");
 
     // Group 1: Add Circuit, Add VHDL
     actionStrip.add(btnAddCircuit);
@@ -433,7 +433,7 @@ public class Toolbox extends JPanel implements ExplorerModel.Listener, ProjectLi
     btn.setToolTipText(defaultTip);
     btn.putClientProperty(FlatClientProperties.BUTTON_TYPE, FlatClientProperties.BUTTON_TYPE_TOOLBAR_BUTTON);
     btn.putClientProperty(FlatClientProperties.STYLE,
-        "arc: 6; margin: 4,4,4,4; focusWidth: 2; focusColor: #3584e480; selectedBackground: $Component.accentColor; selectedForeground: #ffffff;");
+        "arc: 6; margin: 4,4,4,4; focusWidth: 2; focusColor: #3584e480; selectedBackground: null; selectedBorderColor: #1c71d8; selectedBorderWidth: 1.5;");
     int btnSize = AppPreferences.getScaled(34);
     btn.setPreferredSize(new Dimension(btnSize, btnSize));
     btn.setMinimumSize(new Dimension(btnSize, btnSize));

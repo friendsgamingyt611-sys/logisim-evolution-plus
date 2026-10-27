@@ -48,6 +48,12 @@ public class ModernLightLaf extends FlatLightLaf {
     defaults.put("Chrome.mutedText", new Color(0x6A, 0x6A, 0x6F));
     defaults.put("Chrome.warning", new Color(0xB8, 0x7D, 0x00));
 
+    // Semantic action icon tokens
+    defaults.put("Action.create", new Color(0x1E, 0x8E, 0x4E));
+    defaults.put("Action.move", new Color(0x1C, 0x71, 0xD8));
+    defaults.put("Action.edit", new Color(0xC2, 0x5A, 0x00));
+    defaults.put("Action.destroy", new Color(0xC0, 0x1C, 0x28));
+
     // Underline tabbed pane styling
     defaults.put("TabbedPane.tabType", "underline");
     defaults.put("TabbedPane.underlineColor", new Color(0x1C, 0x71, 0xD8));

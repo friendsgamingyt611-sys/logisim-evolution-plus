@@ -7,8 +7,7 @@ import java.awt.geom.Line2D;
 import java.awt.geom.Path2D;
 
 /**
- * Modern vector Delete icon: trash-can outline (lid with handle, tapered bin, vertical ribs).
- * Monochrome by default; turns Danger on hover via button styling.
+ * Modern vector Delete icon: trash-can outline in Action.destroy red (lid with handle, tapered bin, vertical ribs).
  */
 public class DeleteIcon extends SymbolicIcon {
 
@@ -24,7 +23,10 @@ public class DeleteIcon extends SymbolicIcon {
   protected void paintSymbolic(Graphics2D g2, int size, Color color, Component c) {
     float s = size;
     g2.setStroke(createStroke(1.75f));
-    g2.setColor(color);
+
+    boolean isEnabled = (c == null || c.isEnabled());
+    Color destroyColor = getRoleColor("Action.destroy", new Color(0xC0, 0x1C, 0x28), new Color(0xFF, 0x6B, 0x6B), isEnabled);
+    g2.setColor(destroyColor);
 
     // Lid handle
     float hX1 = s * 0.40f;

@@ -48,6 +48,12 @@ public class ModernDarkLaf extends FlatDarkLaf {
     defaults.put("Chrome.mutedText", new Color(0x9A, 0x99, 0x96));
     defaults.put("Chrome.warning", new Color(0xE5, 0xA5, 0x0A));
 
+    // Semantic action icon tokens tuned for high visibility and contrast
+    defaults.put("Action.create", new Color(0x52, 0xD6, 0x8A));
+    defaults.put("Action.move", new Color(0x58, 0xA6, 0xFF));
+    defaults.put("Action.edit", new Color(0xFF, 0xB3, 0x47));
+    defaults.put("Action.destroy", new Color(0xFF, 0x6B, 0x6B));
+
     // Underline tabbed pane styling
     defaults.put("TabbedPane.tabType", "underline");
     defaults.put("TabbedPane.underlineColor", new Color(0x35, 0x84, 0xE4));

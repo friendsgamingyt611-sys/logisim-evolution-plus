@@ -135,4 +135,53 @@ public class ContrastTokensTest {
     System.out.printf("%-35s : %.2f:1%n", "Black on Paper", cr);
     assertTrue(cr >= 7.0);
   }
+
+  @Test
+  void testActionTokensContrast() {
+    // Light mode surfaces
+    final Color lightChrome = new Color(0xE6, 0xE9, 0xEE);
+    final Color lightGroup = new Color(0xF8, 0xF9, 0xFB);
+
+    // Light action tokens
+    final Color lightCreate = new Color(0x1E, 0x8E, 0x4E);
+    final Color lightMove = new Color(0x1C, 0x71, 0xD8);
+    final Color lightEdit = new Color(0xC2, 0x5A, 0x00);
+    final Color lightDestroy = new Color(0xC0, 0x1C, 0x28);
+
+    System.out.println("=== WCAG 2.1 Contrast Ratios for LIGHT Action Tokens ===");
+    assertAndPrintContrast("Light Create on Chrome", lightCreate, lightChrome, 3.0);
+    assertAndPrintContrast("Light Create on Group", lightCreate, lightGroup, 3.0);
+    assertAndPrintContrast("Light Move on Chrome", lightMove, lightChrome, 3.0);
+    assertAndPrintContrast("Light Move on Group", lightMove, lightGroup, 3.0);
+    assertAndPrintContrast("Light Edit on Chrome", lightEdit, lightChrome, 3.0);
+    assertAndPrintContrast("Light Edit on Group", lightEdit, lightGroup, 3.0);
+    assertAndPrintContrast("Light Destroy on Chrome", lightDestroy, lightChrome, 3.0);
+    assertAndPrintContrast("Light Destroy on Group", lightDestroy, lightGroup, 3.0);
+
+    // Dark mode surfaces
+    final Color darkChrome = new Color(0x30, 0x33, 0x38);
+    final Color darkGroup = new Color(0x3B, 0x3E, 0x45);
+
+    // Dark action tokens tuned for high visibility and contrast
+    final Color darkCreate = new Color(0x52, 0xD6, 0x8A);
+    final Color darkMove = new Color(0x58, 0xA6, 0xFF);
+    final Color darkEdit = new Color(0xFF, 0xB3, 0x47);
+    final Color darkDestroy = new Color(0xFF, 0x6B, 0x6B);
+
+    System.out.println("=== WCAG 2.1 Contrast Ratios for DARK Action Tokens ===");
+    assertAndPrintContrast("Dark Create on Chrome", darkCreate, darkChrome, 3.0);
+    assertAndPrintContrast("Dark Create on Group", darkCreate, darkGroup, 3.0);
+    assertAndPrintContrast("Dark Move on Chrome", darkMove, darkChrome, 3.0);
+    assertAndPrintContrast("Dark Move on Group", darkMove, darkGroup, 3.0);
+    assertAndPrintContrast("Dark Edit on Chrome", darkEdit, darkChrome, 3.0);
+    assertAndPrintContrast("Dark Edit on Group", darkEdit, darkGroup, 3.0);
+    assertAndPrintContrast("Dark Destroy on Chrome", darkDestroy, darkChrome, 3.0);
+    assertAndPrintContrast("Dark Destroy on Group", darkDestroy, darkGroup, 3.0);
+  }
+
+  private static void assertAndPrintContrast(String label, Color fg, Color bg, double minRatio) {
+    double cr = getContrastRatio(fg, bg);
+    System.out.printf("%-35s : %.2f:1%n", label, cr);
+    assertTrue(cr >= minRatio, label + " contrast " + cr + " must be >= " + minRatio + ":1");
+  }
 }

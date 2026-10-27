@@ -2,12 +2,15 @@ package com.cburch.logisim.gui.icons.symbolic;
 
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.Font;
+import java.awt.GradientPaint;
 import java.awt.Graphics2D;
-import java.awt.geom.Line2D;
-import java.awt.geom.Path2D;
+import java.awt.RenderingHints;
+import java.awt.font.TextLayout;
+import java.awt.geom.AffineTransform;
 
 /**
- * Modern monochrome vector icon for Add HDL: Stage 11 DIP chip outline with a plus badge at lower-right.
+ * Trademark Add HDL/VHDL Entity icon: classic stacked VH/DL lettering with modern gradient styling.
  */
 public class AddVhdlIcon extends SymbolicIcon {
 
@@ -21,44 +24,37 @@ public class AddVhdlIcon extends SymbolicIcon {
 
   @Override
   protected void paintSymbolic(Graphics2D g2, int size, Color color, Component c) {
-    float s = size / 20.0f;
-    g2.setStroke(createStroke(1.75f));
-    g2.setColor(color);
+    boolean isEnabled = (c == null || c.isEnabled());
+    g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
 
-    float cx = 4.5f * s;
-    float cy = 2.5f * s;
-    float cw = 9.0f * s;
-    float ch = 12.0f * s;
+    // Trademark green gradient (Light: #28B463 to #196F3D, Dark: #76F0A4 to #42DC80)
+    boolean isDark = com.cburch.logisim.prefs.AppPreferences.isDarkTheme();
+    Color topColor = isDark ? new Color(0x76, 0xF0, 0xA4) : new Color(0x28, 0xB4, 0x63);
+    Color botColor = isDark ? new Color(0x42, 0xDC, 0x80) : new Color(0x19, 0x6F, 0x3D);
 
-    // DIP body with top notch
-    Path2D.Float body = new Path2D.Float();
-    body.moveTo(cx, cy + 1.5f * s);
-    body.quadTo(cx, cy, cx + 1.5f * s, cy);
-    body.lineTo(cx + 3.0f * s, cy);
-    // Top notch
-    body.curveTo(cx + 3.2f * s, cy + 1.8f * s, cx + 5.8f * s, cy + 1.8f * s, cx + 6.0f * s, cy);
-    body.lineTo(cx + cw - 1.5f * s, cy);
-    body.quadTo(cx + cw, cy, cx + cw, cy + 1.5f * s);
-    body.lineTo(cx + cw, cy + ch - 1.5f * s);
-    body.quadTo(cx + cw, cy + ch, cx + cw - 1.5f * s, cy + ch);
-    body.lineTo(cx + 1.5f * s, cy + ch);
-    body.quadTo(cx, cy + ch, cx, cy + ch - 1.5f * s);
-    body.closePath();
-    g2.draw(body);
+    if (!isEnabled) {
+      topColor = toDisabled(topColor);
+      botColor = toDisabled(botColor);
+    }
 
-    // Side pins
-    g2.draw(new Line2D.Float(1.5f * s, 5.0f * s, cx, 5.0f * s));
-    g2.draw(new Line2D.Float(1.5f * s, 8.5f * s, cx, 8.5f * s));
-    g2.draw(new Line2D.Float(1.5f * s, 12.0f * s, cx, 12.0f * s));
+    float fontSize = (float) size / 1.75f;
+    Font font = new Font(Font.SANS_SERIF, Font.BOLD, Math.round(fontSize));
+    var frc = g2.getFontRenderContext();
 
-    g2.draw(new Line2D.Float(cx + cw, 5.0f * s, 16.5f * s, 5.0f * s));
-    g2.draw(new Line2D.Float(cx + cw, 8.5f * s, 16.5f * s, 8.5f * s));
+    var l1 = new TextLayout("VH", font, frc);
+    var l2 = new TextLayout("DL", font, frc);
 
-    // Lower right plus badge with 2px knockout gap
-    float badgeCx = 15.0f * s;
-    float badgeCy = 15.0f * s;
-    float badgeR = 4.4f * s;
-    float knockoutGap = 2.0f;
-    drawKnockoutBadge(g2, badgeCx, badgeCy, badgeR, knockoutGap, color, c);
+    double left1 = (size / 2.0) - l1.getBounds().getCenterX();
+    double top1 = (size * 0.28) - l1.getBounds().getCenterY();
+
+    double left2 = (size / 2.0) - l2.getBounds().getCenterX();
+    double top2 = (size * 0.72) - l2.getBounds().getCenterY();
+
+    var shape1 = AffineTransform.getTranslateInstance(left1, top1).createTransformedShape(l1.getOutline(null));
+    var shape2 = AffineTransform.getTranslateInstance(left2, top2).createTransformedShape(l2.getOutline(null));
+
+    g2.setPaint(new GradientPaint(0, (float) (size * 0.1), topColor, 0, (float) (size * 0.9), botColor));
+    g2.fill(shape1);
+    g2.fill(shape2);
   }
 }
