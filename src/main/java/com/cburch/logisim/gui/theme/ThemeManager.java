@@ -33,12 +33,11 @@ public class ThemeManager {
   private static ScheduledExecutorService monitorService = null;
 
   public static boolean isSystemDark() {
-    if (SwingUtilities.isEventDispatchThread()) {
-      return cachedIsDark;
-    }
     final var now = System.currentTimeMillis();
-    if (lastCheckTime > 0 && now - lastCheckTime < 1000) {
-      return cachedIsDark;
+    if (lastCheckTime > 0) {
+      if (SwingUtilities.isEventDispatchThread() || now - lastCheckTime < 1000) {
+        return cachedIsDark;
+      }
     }
     cachedIsDark = querySystemDarkNow();
     lastCheckTime = now;
@@ -338,6 +337,15 @@ public class ThemeManager {
     }
     cachedIsDark = querySystemDarkNow();
     lastCheckTime = System.currentTimeMillis();
+
+    // Cold-start alignment if auto-sync is enabled
+    if (AppPreferences.AUTO_SYNC_THEME.get()) {
+      final var currentLaf = AppPreferences.LookAndFeel.get();
+      final var paired = getPairedLaf(currentLaf, cachedIsDark);
+      if (paired != null && !paired.equals(currentLaf)) {
+        applyTheme(paired);
+      }
+    }
 
     monitorService =
         Executors.newSingleThreadScheduledExecutor(

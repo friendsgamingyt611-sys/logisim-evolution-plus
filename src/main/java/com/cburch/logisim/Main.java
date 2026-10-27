@@ -66,7 +66,16 @@ public class Main {
         ModernLightLaf.installLafInfo();
         ModernDarkLaf.installLafInfo();
         
-        UIManager.setLookAndFeel(AppPreferences.LookAndFeel.get());
+        var initialLaf = AppPreferences.LookAndFeel.get();
+        if (AppPreferences.AUTO_SYNC_THEME.get()) {
+          final var sysDark = ThemeManager.querySystemDarkNow();
+          final var paired = ThemeManager.getPairedLaf(initialLaf, sysDark);
+          if (paired != null && !paired.equals(initialLaf)) {
+            initialLaf = paired;
+            AppPreferences.LookAndFeel.set(initialLaf);
+          }
+        }
+        UIManager.setLookAndFeel(initialLaf);
         ThemeManager.startSystemThemeMonitor();
         
         // Apply global font preference

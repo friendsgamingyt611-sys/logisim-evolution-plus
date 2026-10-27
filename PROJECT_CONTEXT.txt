@@ -441,7 +441,7 @@ STAGE 25: Action Strip Semantic Icons Redesign (Commit 51d83b8)
   - Remove: Trash can outline with lid and handle in semantic coral red (#FF6B6B dark, #C01C28 light).
 - Dual-Disabled Semantics: Disabled state applies both 40% opacity AND full desaturation to neutral gray.
 
-STAGE 26: Surface Layering, Selection Containment, & Splitter Dynamics (Commit pending)
+STAGE 26: Surface Layering, Selection Containment, & Splitter Dynamics (Commit 905d87e)
 - Seven Tonal Surface Tiers: Centralized Surface tokens in ModernLightLaf and ModernDarkLaf:
   - Surface.canvas: #FFFFFF (Light), #1F1F1F (Dark)
   - Surface.well: #FFFFFF (Light), #25282C (Dark)
@@ -461,6 +461,15 @@ STAGE 26: Surface Layering, Selection Containment, & Splitter Dynamics (Commit p
   (DRAG_OFFSET = 2, DRAG_SIZE = 5), 1px Surface.borderStrong resting line, and accent color on hover/drag.
 - Properties Table Containment: Label column rendered in Surface.panel tone, Value column in
   Surface.well tone, with subtle cell dividers and empty viewport area matching Surface.panel.
+
+STAGE 26.1: Cold-Start OS Theme Detection & Auto-Sync Alignment
+- Startup Theme Alignment: In Main.java, before creating windows and applying LookAndFeel, resolve
+  initial LaF against active OS theme (ThemeManager.querySystemDarkNow()) when AUTO_SYNC_THEME is enabled.
+- Uninitialized EDT Guard Fix: In ThemeManager.java, isSystemDark() eagerly queries the system state
+  on first invocation (lastCheckTime == 0) instead of returning default false.
+- Cold-Start Monitor Sync: In ThemeManager.startSystemThemeMonitor(), align configured LaF to paired
+  theme if the application was started while the OS was already in Dark or Light mode.
+
 
 --------------------------------------------------------------------------------
 4. KEY SOURCE FILES & ROLES
