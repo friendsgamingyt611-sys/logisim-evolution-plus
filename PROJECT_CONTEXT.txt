@@ -354,26 +354,93 @@ STAGE 19: High-Contrast Dark Theme Segment Display Off-Colors
   - Saved .circ files remain 100% unchanged: XmlWriter.java only writes attributes that
     differ from factory defaults; because instance attributes are not modified, no XML tags are emitted.
 
+STAGE 20: Explorer Header & Action Strip Redesign
+- Two-Row Explorer Header (Toolbox.java):
+  - Row 1 (Project Header, 40 px tall): Project icon, 13 px SemiBold title with trailing
+    ellipsis and full name tooltip, painted 6 px Warning dot (#B87D00 in light, #E5A50A in dark)
+    when project is dirty, and segmented toggle [☰] [⊞] with 16 px vector glyphs.
+  - Row 2 (Action Strip, 44 px tall): Full sidebar width, 34x34 px action buttons, 20 px vector
+    glyphs, 2 px gaps, 1 px subtle dividers, and flexible glue pushing Delete to the far right.
+- Vector Icons with 2 px Knockout Badges:
+  - AddCircuitIcon, AddVhdlIcon, MoveUpIcon, MoveDownIcon, AppearanceIcon, DeleteIcon.
+  - Monochromatic rendering across all actions; Delete turns red (#E01B24) only on hover.
+- Stateful Toggle Appearance:
+  - JToggleButton synchronized bidirectionally with Frame.getEditorView() / setEditorView().
+- Keyboard Accelerators & Shadow Removal:
+  - Preserved existing shortcuts (Shift+Ctrl+U for Move Up, Shift+Ctrl+D for Move Down).
+  - Removed Ctrl+K shadow from Toolbox search, keeping "/" for search and Ctrl+K for simulation auto-tick.
+- Sidebar Dimensions & Collapse Verification:
+  - Expressed in Swing coordinates via AppPreferences.getScaled(266): 266 px at 100%, 399 px at 150%, 532 px at 200%.
+  - Verified 5 cycles of collapse/restore and safe clamping of persisted widths narrower than minimum.
+
+STAGE 21: Light Chrome & Live-Switch Patches
+- Architecture & Central Tokens:
+  - Central chrome tokens in ModernDarkLaf and ModernLightLaf (Chrome.barBackground, Chrome.tabTrack,
+    Chrome.tabBackground, Chrome.borderColor, Chrome.subtleBorderColor, Chrome.mutedText, Chrome.warning).
+- Live-Switch Patch Elimination:
+  - Frame topTab/bottomTab: removed hardcoded background style strings; tabs use transparent tracks
+    with underline selection (tabType: underline, 30 px height, content separators enabled).
+  - Toolbar centerPanel: made instance variable, set transparent (setOpaque(false)), and dynamically
+    refreshed with Chrome.barBackground in updateUI().
+  - AttrTable: 30 px row height, horizontal-only 1 px divider using Chrome.subtleBorderColor, vertical
+    grid lines disabled, cell padding 10 px, and updateUI() hook.
+  - RegTabContent: removed hardcoded Color.LIGHT_GRAY backgrounds; header labels now transparent.
+  - TestPanel: replaced static pastel color constants with dynamic theme-sensitive methods.
+  - ModernHeaderBar: circuitPickerButton uses explicit 13 px SemiBold font token and paints a 6 px
+    Warning token dot instead of Unicode character \u25cf.
+
+STAGE 22: Three-Palette Architecture & Byte-Identical Print Exports
+- Three-Palette Design (Palette.java):
+  - Palette.DARK: modern dark on-screen palette with Decision D6 neutral cool grey bus token (#B4BCC8).
+  - Palette.LIGHT: modern light on-screen palette (#FCFCFC canvas, #26282C stroke, #0F6B3D wire 0,
+    #26A269 wire 1, #1C71D8 unknown, #C01C28 error, #C64600 mismatch, #3D4452 bus, #1A5FB4 label,
+    #9141AC halo, #E4E6EA subcircuit header fill).
+  - Palette.PRINT: exact classic black-on-white values preserved for zero-regression printing and file exports.
+- Decision D6 (Neutral Multi-Bit Bus Token):
+  - Multi-bit defined bus wires render with neutral cool grey in both themes (#B4BCC8 in Dark, #3D4452 in Light),
+    eliminating confusion with floating/unknown wires.
+  - Floating / unknown single-bit wires remain blue in both themes (#5B9BFF in Dark, #1C71D8 in Light).
+  - Splitter spine and dot automatically use the neutral cool grey bus token.
+- Print Scope Renaming & Byte-Identical Exports:
+  - Renamed enterLightScope() / withLightScope() to enterPrintScope() / withPrintScope().
+  - All file exports (PNG, SVG, TikZ, JPG, GIF) run strictly in print scope returning Palette.PRINT.
+  - Exported PNG and SVG outputs from dark mode and light mode are 100% byte-identical to each other
+    and to classic output.
+- Subcircuit Header & Cache Keying:
+  - Subcircuit default appearance header fill in CircuitAppearance.java remaps dynamically for both
+    DARK (#383838) and LIGHT (#E4E6EA), while remaining classic black for PRINT.
+  - ComponentGlyphCache incorporates the palette kind in the cache key.
+- WCAG 2.1 Contrast Tokens:
+  - ContrastTokensTest verifies all token pairs pass their target ratios (wire 1 >= 3.0:1 on canvas,
+    wire 1 vs wire 0 luminance ratio >= 1.8:1, text and labels >= 4.5:1).
+
 --------------------------------------------------------------------------------
 4. KEY SOURCE FILES & ROLES
 --------------------------------------------------------------------------------
 - com.cburch.logisim.comp.Palette:
-  Central theme color palette (DARK vs LIGHT), ThreadLocal paint scope, stroke
-  resolution, selection and halo tokens.
+  Three-palette architecture (DARK, LIGHT, PRINT), enterPrintScope() / withPrintScope(),
+  stroke resolution, neutral bus token (Decision D6), selection and halo tokens.
 - com.cburch.logisim.prefs.AppPreferences:
-  Preferences engine, theme detection, `ADAPT_COMPONENT_COLOR`, `getComponentColor()`.
+  Preferences engine, theme detection, `ADAPT_COMPONENT_COLOR`, `getComponentColor()`,
+  canvas scaling helpers.
 - com.cburch.logisim.gui.theme.ThemeManager:
   Asynchronous, non-blocking OS theme detection, EDT-safe atomic theme switching.
+- com.cburch.logisim.gui.theme.ModernDarkLaf & ModernLightLaf:
+  Theme definitions and centralized Chrome/Table UI tokens.
 - com.cburch.logisim.circuit.Simulator:
   Simulation engine, OS display refresh rate detection, high-frequency thresholding,
   EDT notification throttling, global pulse animation phase.
 - com.cburch.logisim.circuit.CircuitWires:
   Netlist connectivity, ValuedBus toggle tracking, animated high-speed pulse stream
   wire and junction rendering.
+- com.cburch.logisim.circuit.SplitterPainter:
+  Splitter spine and dot rendering using the Palette.bus() neutral bus token.
+- com.cburch.logisim.circuit.appear.CircuitAppearance:
+  Circuit appearance rendering with default shape dynamic remapping for DARK and LIGHT.
 - com.cburch.logisim.std.wiring.Clock:
   Clock component, high-frequency balanced wave stream rendering without binary strobing.
 - com.cburch.logisim.gui.main.Canvas:
-  Canvas viewport, inertial easing zoom engine, sub-pixel rendering hints.
+  Canvas viewport, unbounded 4-side panning, inertial zoom engine, sub-pixel rendering hints.
 - com.cburch.logisim.gui.main.CanvasPainter:
   Hardware-accelerated AffineTransform canvas scaling, frame animation advancement,
   grid coordination.
@@ -381,18 +448,23 @@ STAGE 19: High-Contrast Dark Theme Segment Display Off-Colors
   Modern round dot grid painter with major/minor dot hierarchy and atomic tile invalidation.
 - com.cburch.logisim.gui.main.ModernHeaderBar:
   Unified top header bar with simulation status/control pill, circuit switcher,
-  and zoom widget.
+  explicit 13 px SemiBold font token, painted 6 px Warning dot, and zoom widget.
 - com.cburch.logisim.gui.main.Frame:
-  Main window frame, permanent classic horizontal menu bar, tab containers.
+  Main window frame, permanent classic horizontal menu bar, transparent underline tab containers.
+- com.cburch.logisim.gui.main.Toolbox:
+  Two-row sidebar header (Project Header + Action Strip), segmented view toggle,
+  monochrome vector icons, and stateful appearance toggle.
 - com.cburch.logisim.gui.generic.ProjectExplorer:
   Dual-mode left panel (Refined List & Tile Grid), authoritative contrast typography,
   solid accent selection pills.
 - com.cburch.logisim.gui.generic.AttrTable:
-  Properties table, high-contrast attribute cells, structural gridlines, focus ring suppression.
+  Properties table, 30 px row height, horizontal-only subtle dividers, focus ring suppression,
+  and theme-change updateUI().
 - com.cburch.logisim.gui.main.ComponentGlyphCache:
-  Multi-resolution icon and thumbnail cache for library explorer and search.
-- com.cburch.logisim.gui.main.ExportImage & Print:
-  Image export (PNG, SVG, TikZ, JPG, GIF) and printing with forced light scope.
+  Multi-resolution icon and thumbnail cache for library explorer and search, keyed by scale
+  and palette kind.
+- com.cburch.logisim.gui.main.ExportImage & Print & PrintHandler:
+  Image export (PNG, SVG, TikZ, JPG, GIF) and printing with Palette.enterPrintScope().
 
 ================================================================================
 END OF LOGISIM-EVOLUTION+ CONTEXT DOCUMENT
