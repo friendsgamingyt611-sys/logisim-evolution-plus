@@ -53,10 +53,10 @@ import javax.swing.UIManager;
  */
 public class ModernHeaderBar extends JPanel implements LocaleListener {
 
-  private static final Color COLOR_RUNNING = new Color(51, 209, 122);  // #33d17a
+  private static final Color COLOR_RUNNING = new Color(51, 209, 122); // #33d17a
   private static final Color COLOR_PAUSED_DARK = new Color(229, 165, 10); // Amber
   private static final Color COLOR_PAUSED_LIGHT = new Color(184, 125, 0); // Contrast amber on white
-  private static final Color COLOR_HALTED = new Color(246, 97, 81);    // #f66151
+  private static final Color COLOR_HALTED = new Color(246, 97, 81); // #f66151
 
   private final Frame frame;
   private final Project project;
@@ -103,7 +103,8 @@ public class ModernHeaderBar extends JPanel implements LocaleListener {
   private void initStyle() {
     Color bg = AppPreferences.isDarkTheme() ? new Color(37, 37, 38) : new Color(243, 244, 246);
     setBackground(bg);
-    putClientProperty(FlatClientProperties.STYLE, "background: " + (AppPreferences.isDarkTheme() ? "#252526" : "#f3f4f6") + ";");
+    putClientProperty(FlatClientProperties.STYLE,
+        "background: " + (AppPreferences.isDarkTheme() ? "#252526" : "#f3f4f6") + ";");
     Color borderColor = AppPreferences.isDarkTheme() ? new Color(51, 51, 51) : new Color(208, 213, 221);
     setBorder(BorderFactory.createCompoundBorder(
         BorderFactory.createMatteBorder(0, 0, 1, 0, borderColor),
@@ -122,12 +123,14 @@ public class ModernHeaderBar extends JPanel implements LocaleListener {
 
     undoButton = createPillButton(new UndoIcon(), "Undo (Ctrl+Z)");
     undoButton.addActionListener(e -> {
-      if (project != null) project.undoAction();
+      if (project != null)
+        project.undoAction();
     });
 
     redoButton = createPillButton(new RedoIcon(), "Redo (Ctrl+Y)");
     redoButton.addActionListener(e -> {
-      if (project != null) project.redoAction();
+      if (project != null)
+        project.redoAction();
     });
 
     leftPanel.add(sidebarButton);
@@ -187,7 +190,8 @@ public class ModernHeaderBar extends JPanel implements LocaleListener {
     stepButton.setToolTipText("Single Step Propagation (F7)");
     stepButton.addActionListener(e -> {
       Simulator sim = project.getSimulator();
-      if (sim != null) sim.step();
+      if (sim != null)
+        sim.step();
     });
 
     resetButton = new JButton(new ResetIcon());
@@ -195,7 +199,8 @@ public class ModernHeaderBar extends JPanel implements LocaleListener {
     resetButton.setToolTipText("Reset Simulation (Ctrl+R)");
     resetButton.addActionListener(e -> {
       Simulator sim = project.getSimulator();
-      if (sim != null) sim.reset();
+      if (sim != null)
+        sim.reset();
     });
 
     freqButton = new JButton("16 Hz", new ChevronDownIcon());
@@ -305,7 +310,8 @@ public class ModernHeaderBar extends JPanel implements LocaleListener {
   }
 
   public void updateTitle() {
-    if (circuitPickerButton == null || project == null) return;
+    if (circuitPickerButton == null || project == null)
+      return;
     Circuit current = project.getCurrentCircuit();
     String name = (current != null) ? current.getName() : "main";
     boolean dirty = project.isFileDirty();
@@ -313,7 +319,8 @@ public class ModernHeaderBar extends JPanel implements LocaleListener {
   }
 
   public void updateSimControls() {
-    if (playPauseButton == null || project == null) return;
+    if (playPauseButton == null || project == null)
+      return;
     Simulator sim = project.getSimulator();
     if (sim != null) {
       boolean ticking = sim.isAutoTicking();
@@ -357,7 +364,8 @@ public class ModernHeaderBar extends JPanel implements LocaleListener {
   }
 
   public void updateUndoRedo() {
-    if (undoButton == null || redoButton == null || project == null) return;
+    if (undoButton == null || redoButton == null || project == null)
+      return;
     boolean canUndo = !project.getUndoActions().isEmpty();
     boolean canRedo = !project.getRedoActions().isEmpty();
     undoButton.setEnabled(canUndo);
@@ -387,7 +395,8 @@ public class ModernHeaderBar extends JPanel implements LocaleListener {
   private void showFrequencyMenu(JButton parent) {
     JPopupMenu menu = new JPopupMenu();
     Simulator sim = project.getSimulator();
-    if (sim == null) return;
+    if (sim == null)
+      return;
 
     // Clock Control Actions
     JMenuItem tickFullItem = new JMenuItem("Tick Clock Once (Ctrl+T)");
@@ -408,7 +417,7 @@ public class ModernHeaderBar extends JPanel implements LocaleListener {
     menu.add(new JSeparator());
 
     // Frequency Presets
-    double[] freqs = {0.25, 0.5, 1.0, 2.0, 4.0, 8.0, 16.0, 32.0, 64.0, 128.0, 256.0, 512.0, 1000.0, 2000.0, 4000.0};
+    double[] freqs = { 0.25, 0.5, 1.0, 2.0, 4.0, 8.0, 16.0, 32.0, 64.0, 128.0, 256.0, 512.0, 1000.0, 2000.0, 4000.0 };
     double currentHz = sim.getTickFrequency();
 
     for (double hz : freqs) {
@@ -539,20 +548,22 @@ public class ModernHeaderBar extends JPanel implements LocaleListener {
     JMenuItem item = new JMenuItem(label);
     if (!shortcut.isEmpty()) {
       if (shortcut.equals("Ctrl + +")) {
-        item.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_EQUALS, java.awt.event.KeyEvent.CTRL_DOWN_MASK));
+        item.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_EQUALS,
+            java.awt.event.KeyEvent.CTRL_DOWN_MASK));
       } else if (shortcut.equals("Ctrl + -")) {
-        item.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_MINUS, java.awt.event.KeyEvent.CTRL_DOWN_MASK));
+        item.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_MINUS,
+            java.awt.event.KeyEvent.CTRL_DOWN_MASK));
       } else if (shortcut.equals("Ctrl + 0")) {
-        item.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_0, java.awt.event.KeyEvent.CTRL_DOWN_MASK));
+        item.setAccelerator(
+            javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_0, java.awt.event.KeyEvent.CTRL_DOWN_MASK));
       } else if (shortcut.equals("Ctrl + Shift + F")) {
-        item.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_F, java.awt.event.KeyEvent.CTRL_DOWN_MASK | java.awt.event.KeyEvent.SHIFT_DOWN_MASK));
+        item.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_F,
+            java.awt.event.KeyEvent.CTRL_DOWN_MASK | java.awt.event.KeyEvent.SHIFT_DOWN_MASK));
       }
     }
     item.addActionListener(e -> action.run());
     menu.add(item);
   }
-
-
 
   @Override
   public void updateUI() {
