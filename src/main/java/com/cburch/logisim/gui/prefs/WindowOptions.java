@@ -94,6 +94,7 @@ class WindowOptions extends OptionsPanel {
         new PrefBoolean[] {
           new PrefBoolean(AppPreferences.AUTO_SYNC_THEME, S.getter("windowAutoSyncTheme")),
           new PrefBoolean(AppPreferences.SHOW_TICK_RATE, S.getter("windowTickRate")),
+          new PrefBoolean(AppPreferences.SMOOTH_ZOOM, S.getter("windowSmoothZoom")),
         };
 
     canvasPlacement =

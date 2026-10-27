@@ -29,7 +29,7 @@ public class GridPainter implements PropertyChangeListener {
   public static final String SHOW_GRID_PROPERTY = "showgrid";
 
   public static final int BASE_GRID_SIZE = 10;
-  private static final int MARGIN = 128; // Margin around viewport for pan reuse
+  private static final int MARGIN = 256; // Robust margin around viewport for pan reuse
   private static final int MAX_DOT_BUDGET = 100_000;
 
   private final Component destination;
@@ -181,7 +181,11 @@ public class GridPainter implements PropertyChangeListener {
     final var transform = (g2d != null) ? g2d.getTransform() : null;
     final var hiDpiScale = (transform != null) ? Math.max(1.0, transform.getScaleX()) : 1.0;
 
-    ensureRaster(clip, currentBg, hiDpiScale);
+    final var viewRect = (destination instanceof javax.swing.JComponent jc && jc.getVisibleRect().width > 0)
+        ? jc.getVisibleRect()
+        : clip;
+
+    ensureRaster(viewRect, currentBg, hiDpiScale);
 
     if (cachedRaster != null) {
       // Blit cached raster directly
@@ -198,13 +202,13 @@ public class GridPainter implements PropertyChangeListener {
   /**
    * Ensures the cached raster matches current viewport, zoom, colors, and fills it.
    */
-  private void ensureRaster(Rectangle clip, Color currentBg, double hiDpiScale) {
+  private void ensureRaster(Rectangle viewRect, Color currentBg, double hiDpiScale) {
     final var dark = AppPreferences.isDarkTheme();
     final var dotColor = AppPreferences.getGridMinorDotColor();
     final var majorDotColor = AppPreferences.getGridMajorDotColor();
 
-    final var neededW = (int) Math.ceil((clip.width + 2 * MARGIN) * hiDpiScale);
-    final var neededH = (int) Math.ceil((clip.height + 2 * MARGIN) * hiDpiScale);
+    final var neededW = (int) Math.ceil((viewRect.width + 2 * MARGIN) * hiDpiScale);
+    final var neededH = (int) Math.ceil((viewRect.height + 2 * MARGIN) * hiDpiScale);
 
     // Check if buffer reallocation is needed due to window resize
     if (cachedRaster == null || rasterWidth < neededW || rasterHeight < neededH) {
@@ -224,18 +228,18 @@ public class GridPainter implements PropertyChangeListener {
         && Objects.equals(cachedDotColor, dotColor)
         && Objects.equals(cachedMajorDotColor, majorDotColor)
         && (cachedHiDpiScale == hiDpiScale)
-        && (clip.x >= cachedViewportX)
-        && (clip.y >= cachedViewportY)
-        && (clip.x + clip.width <= cachedViewportX + userW)
-        && (clip.y + clip.height <= cachedViewportY + userH);
+        && (viewRect.x >= cachedViewportX)
+        && (viewRect.y >= cachedViewportY)
+        && (viewRect.x + viewRect.width <= cachedViewportX + userW)
+        && (viewRect.y + viewRect.height <= cachedViewportY + userH);
 
     if (canReusePan) {
       return; // Reusing cached raster directly via integer offset!
     }
 
     // Regenerate raster centered around the current viewport
-    cachedViewportX = clip.x - MARGIN;
-    cachedViewportY = clip.y - MARGIN;
+    cachedViewportX = viewRect.x - MARGIN;
+    cachedViewportY = viewRect.y - MARGIN;
     cachedZoom = zoomFactor;
     cachedDark = dark;
     cachedBgColor = currentBg;

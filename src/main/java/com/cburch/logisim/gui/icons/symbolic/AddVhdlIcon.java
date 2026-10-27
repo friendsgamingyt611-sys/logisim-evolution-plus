@@ -2,11 +2,11 @@ package com.cburch.logisim.gui.icons.symbolic;
 
 import java.awt.Color;
 import java.awt.Font;
+import java.awt.FontMetrics;
 import java.awt.Graphics2D;
-import java.awt.geom.RoundRectangle2D;
 
 /**
- * Modern vector VHDL Entity icon with chip package and clean label.
+ * Modern vector VHDL Entity icon with crisp two-line stacked VH/DL typography.
  */
 public class AddVhdlIcon extends SymbolicIcon {
 
@@ -24,31 +24,24 @@ public class AddVhdlIcon extends SymbolicIcon {
   @Override
   protected void paintSymbolic(Graphics2D g2, int size, Color color) {
     float s = size;
-    g2.setStroke(createStroke(1.2f));
+    int fontSize = (int) Math.round(s * 0.44f);
+    Font font = new Font(Font.SANS_SERIF, Font.BOLD, fontSize);
+    g2.setFont(font);
+    FontMetrics fm = g2.getFontMetrics();
 
-    // Chip boundary
-    float pad = s * 0.15f;
-    float w = s - pad * 2;
-    float h = s - pad * 2;
-    g2.draw(new RoundRectangle2D.Float(pad, pad, w, h, s * 0.15f, s * 0.15f));
+    String top = "VH";
+    String bot = "DL";
 
-    // Pins on left and right
-    float pLen = s * 0.12f;
-    g2.drawLine((int) 0, (int) (s * 0.35f), (int) pad, (int) (s * 0.35f));
-    g2.drawLine((int) 0, (int) (s * 0.65f), (int) pad, (int) (s * 0.65f));
-    g2.drawLine((int) (s - pad), (int) (s * 0.35f), (int) s, (int) (s * 0.35f));
-    g2.drawLine((int) (s - pad), (int) (s * 0.65f), (int) s, (int) (s * 0.65f));
+    int wTop = fm.stringWidth(top);
+    int wBot = fm.stringWidth(bot);
 
-    // Clean vector 'H' (Hardware Entity) in chip center
-    float cx = s * 0.5f;
-    float hw = s * 0.14f;
-    float hh = s * 0.18f;
-    g2.setStroke(createStroke(1.3f));
-    // left leg
-    g2.drawLine((int) (cx - hw), (int) (s * 0.5f - hh), (int) (cx - hw), (int) (s * 0.5f + hh));
-    // right leg
-    g2.drawLine((int) (cx + hw), (int) (s * 0.5f - hh), (int) (cx + hw), (int) (s * 0.5f + hh));
-    // crossbar
-    g2.drawLine((int) (cx - hw), (int) (s * 0.5f), (int) (cx + hw), (int) (s * 0.5f));
+    int xTop = Math.max(0, (int) Math.round((s - wTop) / 2.0));
+    int xBot = Math.max(0, (int) Math.round((s - wBot) / 2.0));
+
+    int yTop = (int) Math.round(s * 0.46f);
+    int yBot = (int) Math.round(s * 0.92f);
+
+    g2.drawString(top, xTop, yTop);
+    g2.drawString(bot, xBot, yBot);
   }
 }

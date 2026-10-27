@@ -605,6 +605,9 @@ public class AppPreferences {
   public static final PrefMonitor<Boolean> USE_HEADER_BAR =
       create(new PrefMonitorBoolean("useHeaderBar", true));
 
+  public static final PrefMonitor<Boolean> SMOOTH_ZOOM =
+      create(new PrefMonitorBoolean("smoothZoom", false));
+
   public static final String EXPLORER_VIEW_LIST = "list";
   public static final String EXPLORER_VIEW_TILES = "tiles";
   public static final PrefMonitor<String> EXPLORER_VIEW =

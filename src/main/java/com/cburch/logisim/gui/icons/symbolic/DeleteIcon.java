@@ -21,10 +21,10 @@ public class DeleteIcon extends SymbolicIcon {
 
   @Override
   protected void paintSymbolic(Graphics2D g2, int size, Color color) {
-    g2.setStroke(createStroke(1.8f));
+    g2.setStroke(createStroke(3.2f));
     float s = size;
-    float p1 = s * 0.28f;
-    float p2 = s * 0.72f;
+    float p1 = s * 0.20f;
+    float p2 = s * 0.80f;
 
     g2.drawLine((int) p1, (int) p1, (int) p2, (int) p2);
     g2.drawLine((int) p2, (int) p1, (int) p1, (int) p2);

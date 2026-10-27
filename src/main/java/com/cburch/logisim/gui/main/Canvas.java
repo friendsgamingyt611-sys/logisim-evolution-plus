@@ -291,12 +291,25 @@ public class Canvas extends JPanel implements LocaleListener, CanvasPaneContents
     final var bounds = (g != null)
             ? proj.getCurrentCircuit().getBounds(getGraphics())
             : proj.getCurrentCircuit().getBounds();
-    var height = 0;
-    var width = 0;
-    if (bounds != null && viewport != null) {
-      width = bounds.getX() + bounds.getWidth() + viewport.getWidth();
-      height = bounds.getY() + bounds.getHeight() + viewport.getHeight();
-    }
+    final var zoom = getZoomFactor();
+    final var curScrollX = (canvasPane != null) ? canvasPane.getHorizontalScrollBar().getValue() : 0;
+    final var curScrollY = (canvasPane != null) ? canvasPane.getVerticalScrollBar().getValue() : 0;
+    final var vpW = (viewport != null && viewport.getWidth() > 0) ? viewport.getWidth() : 800;
+    final var vpH = (viewport != null && viewport.getHeight() > 0) ? viewport.getHeight() : 600;
+
+    final var compRight = (bounds != null) ? Math.max(0, bounds.getX() + bounds.getWidth()) : 0;
+    final var compBottom = (bounds != null) ? Math.max(0, bounds.getY() + bounds.getHeight()) : 0;
+
+    final var viewRight = (int) Math.ceil((curScrollX + vpW) / zoom);
+    final var viewBottom = (int) Math.ceil((curScrollY + vpH) / zoom);
+
+    final var baseW = Math.max(compRight, viewRight) + (int) Math.ceil(vpW / zoom);
+    final var baseH = Math.max(compBottom, viewBottom) + (int) Math.ceil(vpH / zoom);
+
+    // Provide a generous virtual workspace margin (1500px) so engineers never hit an artificial wall
+    final var width = baseW + 1500;
+    final var height = baseH + 1500;
+
     final var dim = (canvasPane == null)
             ? new Dimension(width, height)
             : canvasPane.supportPreferredSize(width, height);
@@ -696,6 +709,14 @@ public class Canvas extends JPanel implements LocaleListener, CanvasPaneContents
   @Override
   public void adjustmentValueChanged(AdjustmentEvent e) {
     updateArrows();
+    if (canvasPane != null) {
+      final var hBar = canvasPane.getHorizontalScrollBar();
+      final var vBar = canvasPane.getVerticalScrollBar();
+      if ((hBar.getValue() + hBar.getVisibleAmount() + 500 >= hBar.getMaximum())
+          || (vBar.getValue() + vBar.getVisibleAmount() + 500 >= vBar.getMaximum())) {
+        computeSize(false);
+      }
+    }
   }
 
   private void doZoom(Point mouseLocation, boolean zoomIn) {
@@ -743,6 +764,11 @@ public class Canvas extends JPanel implements LocaleListener, CanvasPaneContents
           MouseWheelListener {
 
     boolean menuOn = false;
+    boolean isMiddlePanning = false;
+    int panStartX = 0;
+    int panStartY = 0;
+    int panScrollStartX = 0;
+    int panScrollStartY = 0;
 
     private Tool getToolFor(MouseEvent e) {
       if (menuOn) {
@@ -815,6 +841,13 @@ public class Canvas extends JPanel implements LocaleListener, CanvasPaneContents
 
     @Override
     public void mouseDragged(MouseEvent e) {
+      if (isMiddlePanning && canvasPane != null) {
+        final var dx = e.getXOnScreen() - panStartX;
+        final var dy = e.getYOnScreen() - panStartY;
+        canvasPane.getHorizontalScrollBar().setValue(panScrollStartX - dx);
+        canvasPane.getVerticalScrollBar().setValue(panScrollStartY - dy);
+        return;
+      }
       if (dragTool != null) {
         dragTool.mouseDragged(Canvas.this, getGraphics(), e);
         final var zoomModel = proj.getFrame().getZoomModel();
@@ -868,6 +901,21 @@ public class Canvas extends JPanel implements LocaleListener, CanvasPaneContents
     @Override
     public void mousePressed(MouseEvent e) {
       int button = e.getButton();
+      if (button == MouseEvent.BUTTON2) {
+        if (e.getClickCount() == 2) {
+          center();
+          setCursor(proj.getTool().getCursor());
+        } else if (canvasPane != null) {
+          isMiddlePanning = true;
+          panStartX = e.getXOnScreen();
+          panStartY = e.getYOnScreen();
+          panScrollStartX = canvasPane.getHorizontalScrollBar().getValue();
+          panScrollStartY = canvasPane.getVerticalScrollBar().getValue();
+          setCursor(java.awt.Cursor.getPredefinedCursor(java.awt.Cursor.MOVE_CURSOR));
+        }
+        return;
+      }
+
       if (button >= 4 && button <= 7) {
         if (canvasPane != null) {
           final var bar = canvasPane.getHorizontalScrollBar();
@@ -910,14 +958,21 @@ public class Canvas extends JPanel implements LocaleListener, CanvasPaneContents
 
     @Override
     public void mouseReleased(MouseEvent e) {
+      if (e.getButton() == MouseEvent.BUTTON2) {
+        if (isMiddlePanning) {
+          isMiddlePanning = false;
+          final var tool = proj.getTool();
+          setCursor((tool != null) ? tool.getCursor() : java.awt.Cursor.getDefaultCursor());
+        }
+        return;
+      }
       if ((e.getButton() == MouseEvent.BUTTON1
               && viewport.zoomButtonVisible
               && autoZoomButtonClicked(
                   viewport.getSize(),
                   e.getX() * getZoomFactor() - getHorizontalScrollBar(),
                   e.getY() * getZoomFactor() - getVerticalScrollBar())
-              && viewport.zoomButtonColor != DEFAULT_ZOOM_BUTTON_COLOR)
-          || e.getButton() == MouseEvent.BUTTON2 && e.getClickCount() == 2) {
+              && viewport.zoomButtonColor != DEFAULT_ZOOM_BUTTON_COLOR)) {
         center();
         setCursor(proj.getTool().getCursor());
       }
@@ -948,41 +1003,45 @@ public class Canvas extends JPanel implements LocaleListener, CanvasPaneContents
       } else if (mwe.isShiftDown()) {
         canvasPane.getHorizontalScrollBar().setValue(scrollValue(canvasPane.getHorizontalScrollBar(), mwe.getWheelRotation()));
       } else {
-        // Continuous zoom centered on mouse with inertial easing transition
         repairMouseEvent(mwe);
-        final var zoomModel = proj.getFrame().getZoomModel();
-        if (zoomModel != null) {
-          final var opts = zoomModel.getZoomOptions();
-          final var min = opts.get(0) / 100.0;
-          final var max = opts.get(opts.size() - 1) / 100.0;
-          final var currentZoom = zoomModel.getZoomFactor();
-          if (targetZoomFactor < 0 || zoomEasingTimer == null || !zoomEasingTimer.isRunning()) {
-            targetZoomFactor = currentZoom;
-          }
-          final double base = 1.05; // ~5% per rotation unit
-          final double rotation = mwe.getPreciseWheelRotation();
-          final double factor = Math.pow(base, -rotation);
-          targetZoomFactor = Math.max(min, Math.min(max, targetZoomFactor * factor));
-          zoomAnchorX = mwe.getX();
-          zoomAnchorY = mwe.getY();
+        if (!AppPreferences.SMOOTH_ZOOM.getBoolean()) {
+          doZoom(mwe.getPoint(), mwe.getWheelRotation() < 0);
+        } else {
+          // Continuous zoom centered on mouse with inertial easing transition
+          final var zoomModel = proj.getFrame().getZoomModel();
+          if (zoomModel != null) {
+            final var opts = zoomModel.getZoomOptions();
+            final var min = opts.get(0) / 100.0;
+            final var max = opts.get(opts.size() - 1) / 100.0;
+            final var currentZoom = zoomModel.getZoomFactor();
+            if (targetZoomFactor < 0 || zoomEasingTimer == null || !zoomEasingTimer.isRunning()) {
+              targetZoomFactor = currentZoom;
+            }
+            final double base = 1.05; // ~5% per rotation unit
+            final double rotation = mwe.getPreciseWheelRotation();
+            final double factor = Math.pow(base, -rotation);
+            targetZoomFactor = Math.max(min, Math.min(max, targetZoomFactor * factor));
+            zoomAnchorX = mwe.getX();
+            zoomAnchorY = mwe.getY();
 
-          if (zoomEasingTimer == null) {
-            zoomEasingTimer = new javax.swing.Timer(16, e -> {
-              final var cur = zoomModel.getZoomFactor();
-              final double diff = targetZoomFactor - cur;
-              if (Math.abs(diff) < 0.002) {
-                zoomModel.setZoomFactor(targetZoomFactor, zoomAnchorX, zoomAnchorY);
-                targetZoomFactor = -1.0;
-                zoomEasingTimer.stop();
-              } else {
-                final double nextZoom = cur + diff * 0.25;
-                zoomModel.setZoomFactor(nextZoom, zoomAnchorX, zoomAnchorY);
-              }
-            });
-            zoomEasingTimer.setRepeats(true);
-          }
-          if (!zoomEasingTimer.isRunning()) {
-            zoomEasingTimer.start();
+            if (zoomEasingTimer == null) {
+              zoomEasingTimer = new javax.swing.Timer(16, e -> {
+                final var cur = zoomModel.getZoomFactor();
+                final double diff = targetZoomFactor - cur;
+                if (Math.abs(diff) < 0.002) {
+                  zoomModel.setZoomFactor(targetZoomFactor, zoomAnchorX, zoomAnchorY);
+                  targetZoomFactor = -1.0;
+                  zoomEasingTimer.stop();
+                } else {
+                  final double nextZoom = cur + diff * 0.25;
+                  zoomModel.setZoomFactor(nextZoom, zoomAnchorX, zoomAnchorY);
+                }
+              });
+              zoomEasingTimer.setRepeats(true);
+            }
+            if (!zoomEasingTimer.isRunning()) {
+              zoomEasingTimer.start();
+            }
           }
         }
       }
