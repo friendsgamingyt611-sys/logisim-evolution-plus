@@ -1,12 +1,3 @@
-/*
- * Logisim-evolution - digital logic design tool and simulator
- * Copyright by the Logisim-evolution developers
- *
- * https://github.com/logisim-evolution/
- *
- * This is free software released under GNU GPLv3 license
- */
-
 package com.cburch.logisim.gui.main;
 
 import com.cburch.logisim.circuit.Circuit;
@@ -17,7 +8,6 @@ import com.cburch.logisim.prefs.AppPreferences;
 import com.cburch.logisim.tools.AddTool;
 import com.cburch.logisim.tools.Tool;
 import com.cburch.logisim.vhdl.base.VhdlEntity;
-
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
@@ -27,36 +17,45 @@ import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.util.List;
+import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.UIManager;
 
+/**
+ * Modern circuits list section in the redesigned left explorer.
+ * Displays circuits with semantic hierarchy: 14% tint + 3px accent bar for active circuit,
+ * solid accent for armed tool, and unified section header styling.
+ */
 public class CircuitsList extends JPanel implements ExplorerModel.Listener {
 
   private static final long serialVersionUID = 1L;
   private final ExplorerModel model;
-  private final JPanel itemsPanel;
   private final JLabel headerLabel;
-  private AddTool hoveredTool = null;
+  private final JPanel itemsPanel;
+  private Tool hoveredTool = null;
 
   public CircuitsList(ExplorerModel model) {
     super(new BorderLayout());
     this.model = model;
     setOpaque(false);
 
-    // Section header
+    // Section header with subtle rule above
     final var headerBox = new JPanel(new BorderLayout());
     headerBox.setOpaque(false);
-    headerBox.setBorder(javax.swing.BorderFactory.createEmptyBorder(6, 12, 2, 12));
+    Color borderSubtle = UIManager.getColor("Surface.borderSubtle");
+    if (borderSubtle == null) {
+      borderSubtle = AppPreferences.isDarkTheme() ? new Color(0x39, 0x3C, 0x42) : new Color(0xD5, 0xDA, 0xE2);
+    }
+    headerBox.setBorder(BorderFactory.createCompoundBorder(
+        BorderFactory.createMatteBorder(1, 0, 0, 0, borderSubtle),
+        BorderFactory.createEmptyBorder(6, 12, 4, 12)));
 
     headerLabel = new JLabel("CIRCUITS");
     headerLabel.setFont(new Font(Font.SANS_SERIF, Font.BOLD, AppPreferences.getScaled(11)));
-    Color fgMuted = UIManager.getColor("Label.disabledForeground");
-    if (fgMuted == null) fgMuted = new Color(154, 153, 150);
-    headerLabel.setForeground(fgMuted);
+    headerLabel.setForeground(getMutedHeaderColor());
     headerBox.add(headerLabel, BorderLayout.WEST);
 
     add(headerBox, BorderLayout.NORTH);
@@ -64,7 +63,7 @@ public class CircuitsList extends JPanel implements ExplorerModel.Listener {
     itemsPanel = new JPanel();
     itemsPanel.setLayout(new BoxLayout(itemsPanel, BoxLayout.Y_AXIS));
     itemsPanel.setOpaque(false);
-    itemsPanel.setBorder(javax.swing.BorderFactory.createEmptyBorder(2, 6, 6, 6));
+    itemsPanel.setBorder(BorderFactory.createEmptyBorder(2, 6, 6, 6));
 
     add(itemsPanel, BorderLayout.CENTER);
 
@@ -73,11 +72,21 @@ public class CircuitsList extends JPanel implements ExplorerModel.Listener {
     refresh();
   }
 
+  private Color getMutedHeaderColor() {
+    Color fgMuted = UIManager.getColor("Surface.mutedText");
+    if (fgMuted == null) fgMuted = UIManager.getColor("Chrome.mutedText");
+    if (fgMuted == null) {
+      fgMuted = AppPreferences.isDarkTheme() ? new Color(0x9E, 0x9E, 0x9E) : new Color(0x5A, 0x5D, 0x66);
+    }
+    return fgMuted;
+  }
+
   private void updateBorder() {
-    Color divColor = AppPreferences.isDarkTheme()
-        ? new Color(255, 255, 255, 28)
-        : new Color(0, 0, 0, 24);
-    setBorder(javax.swing.BorderFactory.createMatteBorder(0, 0, 1, 0, divColor));
+    Color divColor = UIManager.getColor("Surface.borderSubtle");
+    if (divColor == null) {
+      divColor = AppPreferences.isDarkTheme() ? new Color(0x39, 0x3C, 0x42) : new Color(0xD5, 0xDA, 0xE2);
+    }
+    setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, divColor));
   }
 
   @Override
@@ -85,9 +94,7 @@ public class CircuitsList extends JPanel implements ExplorerModel.Listener {
     super.updateUI();
     updateBorder();
     if (headerLabel != null) {
-      Color fgMuted = UIManager.getColor("Label.disabledForeground");
-      if (fgMuted == null) fgMuted = new Color(154, 153, 150);
-      headerLabel.setForeground(fgMuted);
+      headerLabel.setForeground(getMutedHeaderColor());
     }
     if (model != null) {
       refresh();
@@ -125,7 +132,6 @@ public class CircuitsList extends JPanel implements ExplorerModel.Listener {
 
   @Override
   public void filterChanged(String query) {
-    // Circuits stay visible or filter based on query
     if (query == null || query.isBlank()) {
       for (final var comp : itemsPanel.getComponents()) {
         comp.setVisible(true);
@@ -151,6 +157,7 @@ public class CircuitsList extends JPanel implements ExplorerModel.Listener {
     private static final long serialVersionUID = 1L;
     private final AddTool tool;
     private final CircuitGlyphIcon icon;
+    private final JLabel label;
 
     CircuitRow(AddTool tool) {
       super(new BorderLayout());
@@ -162,29 +169,16 @@ public class CircuitsList extends JPanel implements ExplorerModel.Listener {
       setMaximumSize(new Dimension(Integer.MAX_VALUE, rowH));
 
       final var isActive = model.isCircuitActive(tool);
+      final var isArmed = (model.getArmedTool() == tool);
       icon = new CircuitGlyphIcon(isActive);
 
-      final var label = new JLabel(tool.getDisplayName());
+      label = new JLabel(tool.getDisplayName());
       label.setFont(new Font(Font.SANS_SERIF, isActive ? Font.BOLD : Font.PLAIN, AppPreferences.getScaled(12)));
       label.setIcon(icon);
       label.setIconTextGap(AppPreferences.getScaled(8));
-      label.setBorder(javax.swing.BorderFactory.createEmptyBorder(0, 8, 0, 8));
+      label.setBorder(BorderFactory.createEmptyBorder(0, 10, 0, 8));
 
-      Color fgMain = UIManager.getColor("Label.foreground");
-      if (fgMain == null) fgMain = new Color(245, 245, 245);
-      Color fgMuted = UIManager.getColor("Label.disabledForeground");
-      if (fgMuted == null) fgMuted = new Color(154, 153, 150);
-      Color accent = UIManager.getColor("Component.accentColor");
-      if (accent == null) accent = new Color(53, 132, 228);
-
-      if (isActive) {
-        icon.setColor(Color.WHITE);
-        label.setForeground(Color.WHITE);
-      } else {
-        icon.setColor(fgMuted);
-        label.setForeground(fgMain);
-      }
-
+      updateRowColors(isActive, isArmed);
       add(label, BorderLayout.CENTER);
 
       addMouseListener(new MouseAdapter() {
@@ -239,6 +233,30 @@ public class CircuitsList extends JPanel implements ExplorerModel.Listener {
       });
     }
 
+    private void updateRowColors(boolean isActive, boolean isArmed) {
+      Color fgMain = UIManager.getColor("Label.foreground");
+      if (fgMain == null) fgMain = AppPreferences.isDarkTheme() ? new Color(245, 245, 245) : new Color(38, 40, 44);
+      Color fgMuted = getMutedHeaderColor();
+      Color accent = UIManager.getColor("Component.accentColor");
+      if (accent == null) accent = new Color(53, 132, 228);
+
+      if (isArmed) {
+        // Armed tool: solid accent fill -> white text
+        icon.setColor(Color.WHITE);
+        label.setForeground(Color.WHITE);
+        label.setFont(label.getFont().deriveFont(Font.BOLD));
+      } else if (isActive) {
+        // Current circuit: 14% accent tint -> semibold text with normal/accent color (not solid white)
+        icon.setColor(accent);
+        label.setForeground(fgMain);
+        label.setFont(label.getFont().deriveFont(Font.BOLD));
+      } else {
+        icon.setColor(fgMuted);
+        label.setForeground(fgMain);
+        label.setFont(label.getFont().deriveFont(Font.PLAIN));
+      }
+    }
+
     @Override
     protected void paintComponent(Graphics g) {
       final var g2 = (Graphics2D) g.create();
@@ -256,23 +274,33 @@ public class CircuitsList extends JPanel implements ExplorerModel.Listener {
       final var isHovered = (hoveredTool == tool);
       final var isArmed = (model.getArmedTool() == tool);
 
-      if (isActive) {
-        // Clean full-row selection background for active circuit
+      updateRowColors(isActive, isArmed);
+
+      if (isArmed) {
+        // Armed tool gets the solid accent fill
         g2.setColor(accent);
         g2.fillRoundRect(marginX, 1, w - 2 * marginX, h - 2, arc, arc);
+      } else if (isActive) {
+        // Current circuit gets accent 14% tint + 3px left bar + semibold
+        Color tint = new Color(accent.getRed(), accent.getGreen(), accent.getBlue(), (int) (255 * 0.14f));
+        g2.setColor(tint);
+        g2.fillRoundRect(marginX, 1, w - 2 * marginX, h - 2, arc, arc);
 
-        // Active simulation indicator badge on the right with subtle white glow
+        // 3px solid accent left bar
+        int barW = AppPreferences.getScaled(3);
+        int barH = h - AppPreferences.getScaled(8);
+        int barY = (h - barH) / 2;
+        g2.setColor(accent);
+        g2.fillRoundRect(marginX + 1, barY, barW, barH, 2, 2);
+
+        // Active simulation indicator badge on right
         int dotR = AppPreferences.getScaled(3);
         int dotX = w - marginX - AppPreferences.getScaled(14);
         int dotY = (h - dotR * 2) / 2;
-        g2.setColor(new Color(255, 255, 255, 90));
+        g2.setColor(new Color(46, 209, 115, 60));
         g2.fillOval(dotX - 2, dotY - 2, dotR * 2 + 4, dotR * 2 + 4);
         g2.setColor(new Color(46, 209, 115));
         g2.fillOval(dotX, dotY, dotR * 2, dotR * 2);
-      } else if (isArmed) {
-        // 18% accent fill for armed tool
-        g2.setColor(new Color(accent.getRed(), accent.getGreen(), accent.getBlue(), (int) (255 * 0.18f)));
-        g2.fillRoundRect(marginX, 1, w - 2 * marginX, h - 2, arc, arc);
       } else if (isHovered) {
         Color hoverBg = AppPreferences.isDarkTheme()
             ? new Color(255, 255, 255, 14)

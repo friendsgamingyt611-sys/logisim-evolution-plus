@@ -329,7 +329,32 @@ public class Toolbox extends JPanel implements ExplorerModel.Listener, ProjectLi
     final var treeScroll = new JScrollPane(toolbox);
     treeScroll.setBorder(BorderFactory.createEmptyBorder());
     treeScroll.putClientProperty(FlatClientProperties.STYLE, "border: 0,0,0,0;");
-    listCard.add(treeScroll, BorderLayout.CENTER);
+
+    final var treeContainer = new JPanel(new BorderLayout());
+    treeContainer.setOpaque(false);
+
+    final var libHeaderBox = new JPanel(new BorderLayout());
+    libHeaderBox.setOpaque(false);
+    Color borderSubtle = UIManager.getColor("Surface.borderSubtle");
+    if (borderSubtle == null) {
+      borderSubtle = AppPreferences.isDarkTheme() ? new Color(0x39, 0x3C, 0x42) : new Color(0xD5, 0xDA, 0xE2);
+    }
+    libHeaderBox.setBorder(BorderFactory.createCompoundBorder(
+        BorderFactory.createMatteBorder(1, 0, 0, 0, borderSubtle),
+        BorderFactory.createEmptyBorder(6, 12, 4, 12)));
+
+    final var libHeaderLabel = new JLabel("LIBRARIES");
+    libHeaderLabel.setFont(new Font(Font.SANS_SERIF, Font.BOLD, AppPreferences.getScaled(11)));
+    Color libMuted = UIManager.getColor("Surface.mutedText");
+    if (libMuted == null) libMuted = UIManager.getColor("Chrome.mutedText");
+    if (libMuted == null) libMuted = AppPreferences.isDarkTheme() ? new Color(0x9E, 0x9E, 0x9E) : new Color(0x5A, 0x5D, 0x66);
+    libHeaderLabel.setForeground(libMuted);
+    libHeaderBox.add(libHeaderLabel, BorderLayout.WEST);
+
+    treeContainer.add(libHeaderBox, BorderLayout.NORTH);
+    treeContainer.add(treeScroll, BorderLayout.CENTER);
+
+    listCard.add(treeContainer, BorderLayout.CENTER);
 
     cardsPanel.add(listCard, AppPreferences.EXPLORER_VIEW_LIST);
 
@@ -433,7 +458,7 @@ public class Toolbox extends JPanel implements ExplorerModel.Listener, ProjectLi
     btn.setToolTipText(defaultTip);
     btn.putClientProperty(FlatClientProperties.BUTTON_TYPE, FlatClientProperties.BUTTON_TYPE_TOOLBAR_BUTTON);
     btn.putClientProperty(FlatClientProperties.STYLE,
-        "arc: 6; margin: 4,4,4,4; focusWidth: 2; focusColor: #3584e480; selectedBackground: null; selectedBorderColor: #1c71d8; selectedBorderWidth: 1.5;");
+        "arc: 6; margin: 4,4,4,4; focusWidth: 2; focusColor: #3584e480; selectedBackground: null; selectedBorderColor: #1c71d8; borderWidth: 1;");
     int btnSize = AppPreferences.getScaled(34);
     btn.setPreferredSize(new Dimension(btnSize, btnSize));
     btn.setMinimumSize(new Dimension(btnSize, btnSize));

@@ -31,12 +31,26 @@ public class HorizontalSplitPane extends JPanel {
     private boolean dragging = false;
     private int curValue;
 
+    private boolean hovered = false;
+
     Dragbar() {
       addMouseListener(this);
       addMouseMotionListener(this);
     }
 
     abstract int getDragValue(MouseEvent e);
+
+    @Override
+    public void mouseEntered(MouseEvent e) {
+      hovered = true;
+      repaint();
+    }
+
+    @Override
+    public void mouseExited(MouseEvent e) {
+      hovered = false;
+      repaint();
+    }
 
     @Override
     public void mouseDragged(MouseEvent e) {
@@ -73,18 +87,24 @@ public class HorizontalSplitPane extends JPanel {
             RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
       }
-      Color dividerColor = AppPreferences.isDarkTheme() ? new Color(51, 51, 51) : new Color(208, 213, 221);
-      g.setColor(dividerColor);
+
+      Color borderStrong = javax.swing.UIManager.getColor("Surface.borderStrong");
+      if (borderStrong == null) {
+        borderStrong = AppPreferences.isDarkTheme() ? new Color(0x14, 0x15, 0x17) : new Color(0xBC, 0xC3, 0xCD);
+      }
+      Color accent = javax.swing.UIManager.getColor("Component.accentColor");
+      if (accent == null) {
+        accent = new Color(0x1C, 0x71, 0xD8);
+      }
+
+      Color lineColor = (hovered || dragging) ? accent : borderStrong;
+      g.setColor(lineColor);
       if (getWidth() < getHeight()) {
         int x = getWidth() / 2;
         g.drawLine(x, 0, x, getHeight());
       } else {
         int y = getHeight() / 2;
         g.drawLine(0, y, getWidth(), y);
-      }
-      if (dragging) {
-        g.setColor(DRAG_COLOR);
-        g.fillRect(0, 0, getWidth(), getHeight());
       }
     }
 
@@ -138,7 +158,7 @@ public class HorizontalSplitPane extends JPanel {
 
       comp0.setBounds(in.left, in.top, maxWidth, split);
       comp1.setBounds(in.left, in.top + split, maxWidth, maxHeight - split);
-      dragbar.setBounds(in.left, in.top + split - DRAG_TOLERANCE, maxWidth, 2 * DRAG_TOLERANCE);
+      dragbar.setBounds(in.left, in.top + split - DRAG_OFFSET, maxWidth, DRAG_SIZE);
     }
 
     @Override
@@ -168,7 +188,9 @@ public class HorizontalSplitPane extends JPanel {
 
   private static final long serialVersionUID = 1L;
 
-  static final int DRAG_TOLERANCE = 3;
+  public static final int DRAG_OFFSET = 2;
+  public static final int DRAG_SIZE = 5;
+  static final int DRAG_TOLERANCE = 2;
 
   private static final Color DRAG_COLOR = new Color(0, 0, 0, 128);
 

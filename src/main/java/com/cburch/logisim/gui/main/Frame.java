@@ -738,6 +738,10 @@ public class Frame extends LFrame.MainWindow implements LocaleListener {
     return mainRegion;
   }
 
+  public JTabbedPane getTopTab() {
+    return topTab;
+  }
+
   private void placeToolbar() {
     final var loc = AppPreferences.TOOLBAR_PLACEMENT.get();
     rightPanel.remove(toolbar);

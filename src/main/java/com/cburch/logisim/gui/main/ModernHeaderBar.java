@@ -108,14 +108,20 @@ public class ModernHeaderBar extends JPanel implements LocaleListener, ProjectLi
   }
 
   private void initStyle() {
-    Color bg = UIManager.getColor("Chrome.barBackground");
+    Color bg = UIManager.getColor("Surface.chrome");
     if (bg == null) {
-      bg = AppPreferences.isDarkTheme() ? new Color(37, 37, 38) : new Color(243, 244, 246);
+      bg = UIManager.getColor("Chrome.barBackground");
+    }
+    if (bg == null) {
+      bg = AppPreferences.isDarkTheme() ? new Color(0x30, 0x33, 0x38) : new Color(0xE6, 0xE9, 0xEE);
     }
     setBackground(bg);
-    Color borderColor = UIManager.getColor("Chrome.borderColor");
+    Color borderColor = UIManager.getColor("Surface.borderStrong");
     if (borderColor == null) {
-      borderColor = AppPreferences.isDarkTheme() ? new Color(51, 51, 51) : new Color(208, 213, 221);
+      borderColor = UIManager.getColor("Chrome.borderColor");
+    }
+    if (borderColor == null) {
+      borderColor = AppPreferences.isDarkTheme() ? new Color(0x14, 0x15, 0x17) : new Color(0xBC, 0xC3, 0xCD);
     }
     setBorder(BorderFactory.createCompoundBorder(
         BorderFactory.createMatteBorder(0, 0, 1, 0, borderColor),
@@ -198,7 +204,7 @@ public class ModernHeaderBar extends JPanel implements LocaleListener, ProjectLi
     JPanel simPill = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 0));
     simPill.setOpaque(false);
     simPill.putClientProperty(FlatClientProperties.STYLE,
-        "arc: 999; background: $Button.background; border: 1,1,1,1,$Component.borderColor,1,999;");
+        "arc: 999; background: $Group.background; border: 1,1,1,1,$Chrome.subtleBorderColor,1,999;");
 
     simStatusLabel = new JLabel("● Paused");
     simStatusLabel.setFont(simStatusLabel.getFont().deriveFont(Font.BOLD, (float) AppPreferences.getScaled(11)));
@@ -252,7 +258,7 @@ public class ModernHeaderBar extends JPanel implements LocaleListener, ProjectLi
     // Zoom Popover Button
     zoomButton = new JButton("100%", new ChevronDownIcon());
     zoomButton.setHorizontalTextPosition(SwingConstants.LEFT);
-    zoomButton.putClientProperty(FlatClientProperties.STYLE, "arc: 999; margin: 4,10,4,8;");
+    zoomButton.putClientProperty(FlatClientProperties.STYLE, "arc: 999; margin: 4,10,4,8; background: $Group.background;");
     zoomButton.setToolTipText("Zoom Factor");
     zoomButton.addActionListener(e -> showZoomMenu(zoomButton));
 
@@ -269,7 +275,7 @@ public class ModernHeaderBar extends JPanel implements LocaleListener, ProjectLi
     JButton btn = new JButton(icon);
     btn.setToolTipText(tooltip);
     btn.putClientProperty(FlatClientProperties.BUTTON_TYPE, FlatClientProperties.BUTTON_TYPE_ROUND_RECT);
-    btn.putClientProperty(FlatClientProperties.STYLE, "arc: 999; margin: 4,8,4,8;");
+    btn.putClientProperty(FlatClientProperties.STYLE, "arc: 999; margin: 4,8,4,8; background: $Group.background;");
     return btn;
   }
 

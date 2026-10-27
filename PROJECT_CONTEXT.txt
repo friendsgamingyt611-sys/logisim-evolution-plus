@@ -414,6 +414,54 @@ STAGE 22: Three-Palette Architecture & Byte-Identical Print Exports
   - ContrastTokensTest verifies all token pairs pass their target ratios (wire 1 >= 3.0:1 on canvas,
     wire 1 vs wire 0 luminance ratio >= 1.8:1, text and labels >= 4.5:1).
 
+STAGE 23: Move Up/Down Action Enablement & Order Persistence (Commit 10f8610)
+- Canonical ProjectCircuitActions: Centralized canMoveUp(Project, Circuit) and canMoveDown(Project, Circuit)
+  in ProjectCircuitActions.java, with doMoveUp() and doMoveDown() dispatching LogisimFileActions.moveCircuit.
+- EventSourceWeakSupport Listener Registration: Bound EnableListener directly to MenuListener in Toolbox.java
+  and MainMenuListener.java to guarantee synchronous re-computation on circuit selection and file changes.
+- Order Persistence & Non-Destructive Inversion: Saved .circ files preserve user circuit reordering with
+  exact structural integrity and clean undo/redo support.
+
+STAGE 24: Undo/Redo Engine Audit & Lifecycle Memory Leak Fix (Commit 69bdc96)
+- Action-Named Tooltips: ModernHeaderBar Undo and Redo buttons dynamically display action names
+  (e.g., "Undo Add Component (Ctrl+Z)", "Redo Move Circuit (Ctrl+Y)").
+- EventSourceWeakSupport GC Lifecycle Fix: Converted ModernHeaderBar anonymous listeners to strong
+  ProjectListener reference on the component lifecycle, preventing premature garbage collection.
+- File Dirty State Tracking: Corrected Project.java isFileDirty() logic to (undoMods != 0) || forcedDirty,
+  accurately reflecting saved state when reverting past the save point.
+
+STAGE 25: Action Strip Semantic Icons Redesign (Commit 51d83b8)
+- Trademark Roots Preserved:
+  - Add Circuit: Classic bold plus cross (+) with modern vertical gradient (#28B463 to #196F3D light;
+    luminous #76F0A4 to #42DC80 dark).
+  - Add VHDL Entity: Classic stacked VH over DL bold sans-serif lettering with vertical gradient.
+  - Edit Appearance: Package outline with full vector pencil body, sharpened triangular tip, lead point,
+    eraser cap, and warm golden amber gradient (#FFC048 to #FF9F1A dark, #F39C12 to #C25A00 light).
+  - Move Up/Down: Bold arrows ending in short base bar (#58A6FF dark, #1C71D8 light).
+  - Remove: Trash can outline with lid and handle in semantic coral red (#FF6B6B dark, #C01C28 light).
+- Dual-Disabled Semantics: Disabled state applies both 40% opacity AND full desaturation to neutral gray.
+
+STAGE 26: Surface Layering, Selection Containment, & Splitter Dynamics (Commit pending)
+- Seven Tonal Surface Tiers: Centralized Surface tokens in ModernLightLaf and ModernDarkLaf:
+  - Surface.canvas: #FFFFFF (Light), #1F1F1F (Dark)
+  - Surface.well: #FFFFFF (Light), #25282C (Dark)
+  - Surface.panel: #F5F6F8 (Light), #2A2D32 (Dark)
+  - Surface.chrome: #EAECF0 (Light), #32353B (Dark)
+  - Surface.group: #DFE2E6 (Light), #3B3E45 (Dark)
+  - Surface.borderStrong: #C8CCD2 (Light), #4D515A (Dark)
+  - Surface.borderSubtle: #E2E5EA (Light), #383B41 (Dark)
+  - Surface.mutedText: #5A5D66 (Light), #ACACAC (Dark - tuned to pass WCAG AA >= 4.5:1 across all surfaces)
+- Selection Separation & Visual Containment:
+  - Active/Current circuit: 14% accent tint fill + 3px solid accent left edge bar + semibold text.
+  - Armed tool in toolbar: Solid accent fill + white text.
+  - Distinct visual roles ensure active circuit and armed tool are never both solid blue.
+- Section Headers & Subtle Dividers: "CIRCUITS" and "LIBRARIES" use unified Surface.mutedText with
+  a 1px subtle divider rule above each section.
+- Splitter Dynamics: HorizontalSplitPane and VerticalSplitPane Dragbar updated with 5px hit area
+  (DRAG_OFFSET = 2, DRAG_SIZE = 5), 1px Surface.borderStrong resting line, and accent color on hover/drag.
+- Properties Table Containment: Label column rendered in Surface.panel tone, Value column in
+  Surface.well tone, with subtle cell dividers and empty viewport area matching Surface.panel.
+
 --------------------------------------------------------------------------------
 4. KEY SOURCE FILES & ROLES
 --------------------------------------------------------------------------------
@@ -426,7 +474,8 @@ STAGE 22: Three-Palette Architecture & Byte-Identical Print Exports
 - com.cburch.logisim.gui.theme.ThemeManager:
   Asynchronous, non-blocking OS theme detection, EDT-safe atomic theme switching.
 - com.cburch.logisim.gui.theme.ModernDarkLaf & ModernLightLaf:
-  Theme definitions and centralized Chrome/Table UI tokens.
+  Theme definitions, 7 surface tiers (canvas, well, panel, chrome, group, borderStrong, borderSubtle),
+  centralized Chrome/Table UI tokens, and WCAG AA verified muted text.
 - com.cburch.logisim.circuit.Simulator:
   Simulation engine, OS display refresh rate detection, high-frequency thresholding,
   EDT notification throttling, global pulse animation phase.
@@ -447,19 +496,19 @@ STAGE 22: Three-Palette Architecture & Byte-Identical Print Exports
 - com.cburch.logisim.gui.generic.GridPainter:
   Modern round dot grid painter with major/minor dot hierarchy and atomic tile invalidation.
 - com.cburch.logisim.gui.main.ModernHeaderBar:
-  Unified top header bar with simulation status/control pill, circuit switcher,
-  explicit 13 px SemiBold font token, painted 6 px Warning dot, and zoom widget.
+  Unified top header bar bound to Surface.chrome, simulation status/control pill, circuit switcher,
+  undo/redo buttons with action tooltips and strong ProjectListener lifecycle.
 - com.cburch.logisim.gui.main.Frame:
   Main window frame, permanent classic horizontal menu bar, transparent underline tab containers.
 - com.cburch.logisim.gui.main.Toolbox:
-  Two-row sidebar header (Project Header + Action Strip), segmented view toggle,
-  monochrome vector icons, and stateful appearance toggle.
-- com.cburch.logisim.gui.generic.ProjectExplorer:
-  Dual-mode left panel (Refined List & Tile Grid), authoritative contrast typography,
-  solid accent selection pills.
+  Two-row sidebar header, Action Strip with semantic trademark icons, section headers,
+  and stateful appearance toggle.
+- com.cburch.logisim.gui.main.CircuitsList:
+  Circuit list with 14% accent tint and 3px solid accent left indicator for current circuit.
 - com.cburch.logisim.gui.generic.AttrTable:
-  Properties table, 30 px row height, horizontal-only subtle dividers, focus ring suppression,
-  and theme-change updateUI().
+  Properties table with dual-tone panel/well columns, subtle dividers, and panel viewport background.
+- com.cburch.logisim.util.HorizontalSplitPane & VerticalSplitPane:
+  5px hit area splitter with 1px borderStrong resting line and dynamic accent line on hover/drag.
 - com.cburch.logisim.gui.main.ComponentGlyphCache:
   Multi-resolution icon and thumbnail cache for library explorer and search, keyed by scale
   and palette kind.

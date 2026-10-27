@@ -43,6 +43,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
+import javax.swing.UIManager;
 import javax.swing.event.CellEditorListener;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.TableModelEvent;
@@ -75,16 +76,49 @@ public class AttrTable extends JPanel implements LocaleListener {
     title.setHorizontalAlignment(SwingConstants.CENTER);
     title.setVerticalAlignment(SwingConstants.CENTER);
     tableModel = new TableModelAdapter(parent, NULL_ATTR_MODEL);
-    table = new JTable(tableModel);
+    table = new JTable(tableModel) {
+      private static final long serialVersionUID = 1L;
+
+      @Override
+      public Component prepareRenderer(javax.swing.table.TableCellRenderer renderer, int row, int column) {
+        Component c = super.prepareRenderer(renderer, row, column);
+        if (!isRowSelected(row)) {
+          Color panelTone = UIManager.getColor("Surface.panel");
+          if (panelTone == null) {
+            panelTone = AppPreferences.isDarkTheme() ? new Color(0x27, 0x29, 0x2D) : new Color(0xF3, 0xF5, 0xF8);
+          }
+          Color wellTone = UIManager.getColor("Surface.well");
+          if (wellTone == null) {
+            wellTone = AppPreferences.isDarkTheme() ? new Color(0x22, 0x24, 0x28) : Color.WHITE;
+          }
+
+          if (column == 0) {
+            c.setBackground(panelTone);
+            Color fg = UIManager.getColor("Label.foreground");
+            if (fg != null) c.setForeground(fg);
+          } else {
+            c.setBackground(wellTone);
+          }
+        }
+        return c;
+      }
+    };
     table.setDefaultEditor(Object.class, editor);
     table.setTableHeader(null);
     table.setRowHeight(AppPreferences.getScaled(30));
-    Color gridColor = javax.swing.UIManager.getColor("Chrome.subtleBorderColor");
+
+    Color panelTone = UIManager.getColor("Surface.panel");
+    if (panelTone == null) {
+      panelTone = AppPreferences.isDarkTheme() ? new Color(0x27, 0x29, 0x2D) : new Color(0xF3, 0xF5, 0xF8);
+    }
+    table.setBackground(panelTone);
+
+    Color gridColor = UIManager.getColor("Surface.borderSubtle");
     if (gridColor == null) {
-      gridColor = javax.swing.UIManager.getColor("Table.gridColor");
+      gridColor = UIManager.getColor("Table.gridColor");
     }
     if (gridColor == null) {
-      gridColor = AppPreferences.isDarkTheme() ? new Color(46, 46, 46) : new Color(228, 231, 236);
+      gridColor = AppPreferences.isDarkTheme() ? new Color(0x39, 0x3C, 0x42) : new Color(0xD5, 0xDA, 0xE2);
     }
     table.setGridColor(gridColor);
     table.setShowHorizontalLines(true);
@@ -100,7 +134,10 @@ public class AttrTable extends JPanel implements LocaleListener {
     table.setDefaultRenderer(String.class, new HdlColorRenderer());
 
     final var propPanel = new JPanel(new BorderLayout(0, 0));
+    propPanel.setBackground(panelTone);
     final var tableScroll = new JScrollPane(table);
+    tableScroll.setBackground(panelTone);
+    tableScroll.getViewport().setBackground(panelTone);
     tableScroll.putClientProperty(com.formdev.flatlaf.FlatClientProperties.STYLE, "focusWidth: 0; innerFocusWidth: 0;");
 
     propPanel.add(title, BorderLayout.PAGE_START);
@@ -116,10 +153,15 @@ public class AttrTable extends JPanel implements LocaleListener {
   public void updateUI() {
     super.updateUI();
     if (table != null) {
-      table.setRowHeight(AppPreferences.getScaled(30));
-      Color gridColor = javax.swing.UIManager.getColor("Chrome.subtleBorderColor");
+      Color panelTone = UIManager.getColor("Surface.panel");
+      if (panelTone == null) {
+        panelTone = AppPreferences.isDarkTheme() ? new Color(0x27, 0x29, 0x2D) : new Color(0xF3, 0xF5, 0xF8);
+      }
+      table.setBackground(panelTone);
+
+      Color gridColor = UIManager.getColor("Surface.borderSubtle");
       if (gridColor == null) {
-        gridColor = javax.swing.UIManager.getColor("Table.gridColor");
+        gridColor = UIManager.getColor("Table.gridColor");
       }
       if (gridColor != null) {
         table.setGridColor(gridColor);

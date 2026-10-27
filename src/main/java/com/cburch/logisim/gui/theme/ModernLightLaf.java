@@ -38,15 +38,52 @@ public class ModernLightLaf extends FlatLightLaf {
   public UIDefaults getDefaults() {
     final var defaults = super.getDefaults();
 
+    // 7 Tonal Tiers (Stage 26)
+    Color canvas = new Color(0xFF, 0xFF, 0xFF);
+    Color well = new Color(0xFF, 0xFF, 0xFF);
+    Color panel = new Color(0xF3, 0xF5, 0xF8);
+    Color chrome = new Color(0xE6, 0xE9, 0xEE);
+    Color group = new Color(0xF8, 0xF9, 0xFB);
+    Color borderStrong = new Color(0xBC, 0xC3, 0xCD);
+    Color borderSubtle = new Color(0xD5, 0xDA, 0xE2);
+    Color mutedText = new Color(0x5A, 0x5D, 0x66);
+
+    defaults.put("Surface.canvas", canvas);
+    defaults.put("Surface.well", well);
+    defaults.put("Surface.panel", panel);
+    defaults.put("Surface.chrome", chrome);
+    defaults.put("Surface.group", group);
+    defaults.put("Surface.borderStrong", borderStrong);
+    defaults.put("Surface.borderSubtle", borderSubtle);
+    defaults.put("Surface.mutedText", mutedText);
+
     // Chrome and surface tokens
-    defaults.put("Chrome.barBackground", new Color(0xF3, 0xF4, 0xF6));
-    defaults.put("Chrome.tabTrack", new Color(0xFA, 0xFA, 0xFA));
-    defaults.put("Chrome.tabBackground", new Color(0xFA, 0xFA, 0xFA));
-    defaults.put("Chrome.cardBackground", Color.WHITE);
-    defaults.put("Chrome.borderColor", new Color(0xD0, 0xD5, 0xDD));
-    defaults.put("Chrome.subtleBorderColor", new Color(0xE4, 0xE7, 0xEC));
-    defaults.put("Chrome.mutedText", new Color(0x6A, 0x6A, 0x6F));
+    defaults.put("Chrome.barBackground", chrome);
+    defaults.put("Chrome.tabTrack", chrome);
+    defaults.put("Chrome.tabBackground", chrome);
+    defaults.put("Chrome.cardBackground", well);
+    defaults.put("Chrome.borderColor", borderStrong);
+    defaults.put("Chrome.subtleBorderColor", borderSubtle);
+    defaults.put("Chrome.mutedText", mutedText);
     defaults.put("Chrome.warning", new Color(0xB8, 0x7D, 0x00));
+    defaults.put("Group.background", group);
+
+    // Component surface bindings
+    defaults.put("MenuBar.background", chrome);
+    defaults.put("MenuBar.borderColor", borderStrong);
+    defaults.put("ToolBar.background", chrome);
+    defaults.put("ToolBar.borderColor", borderStrong);
+    defaults.put("Panel.background", panel);
+
+    // Well surfaces
+    defaults.put("TextField.background", well);
+    defaults.put("Tree.background", well);
+    defaults.put("Table.background", well);
+    defaults.put("ScrollPane.background", well);
+    defaults.put("Viewport.background", well);
+
+    // Splitters
+    defaults.put("SplitPane.dividerSize", 5);
 
     // Semantic action icon tokens
     defaults.put("Action.create", new Color(0x1E, 0x8E, 0x4E));
@@ -57,10 +94,14 @@ public class ModernLightLaf extends FlatLightLaf {
     // Underline tabbed pane styling
     defaults.put("TabbedPane.tabType", "underline");
     defaults.put("TabbedPane.underlineColor", new Color(0x1C, 0x71, 0xD8));
+    defaults.put("TabbedPane.underlineHeight", 2);
+    defaults.put("TabbedPane.background", chrome);
+    defaults.put("TabbedPane.selectedBackground", panel);
+    defaults.put("TabbedPane.contentAreaColor", panel);
     defaults.put("TabbedPane.showContentSeparators", true);
 
     // Properties table defaults
-    defaults.put("Table.gridColor", new Color(0xE4, 0xE7, 0xEC));
+    defaults.put("Table.gridColor", borderSubtle);
     defaults.put("Table.showHorizontalLines", true);
     defaults.put("Table.showVerticalLines", false);
 

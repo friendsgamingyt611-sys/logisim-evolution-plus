@@ -179,6 +179,51 @@ public class ContrastTokensTest {
     assertAndPrintContrast("Dark Destroy on Group", darkDestroy, darkGroup, 3.0);
   }
 
+  @Test
+  void testSurfaceTiersContrast() {
+    // Light mode surfaces
+    final Color lightPanel = new Color(0xF3, 0xF5, 0xF8);
+    final Color lightChrome = new Color(0xE6, 0xE9, 0xEE);
+    final Color lightGroup = new Color(0xF8, 0xF9, 0xFB);
+    final Color lightWell = new Color(0xFF, 0xFF, 0xFF);
+
+    // Light text tokens
+    final Color lightText = new Color(0x26, 0x28, 0x2C);
+    final Color lightMuted = new Color(0x5A, 0x5D, 0x66);
+
+    System.out.println("=== WCAG 2.1 Contrast Ratios for LIGHT Surface Tier Text Tokens ===");
+    assertAndPrintContrast("Light Text on Panel", lightText, lightPanel, 4.5);
+    assertAndPrintContrast("Light Text on Chrome", lightText, lightChrome, 4.5);
+    assertAndPrintContrast("Light Text on Group", lightText, lightGroup, 4.5);
+    assertAndPrintContrast("Light Text on Well", lightText, lightWell, 4.5);
+
+    assertAndPrintContrast("Light Muted Text on Panel", lightMuted, lightPanel, 4.5);
+    assertAndPrintContrast("Light Muted Text on Chrome", lightMuted, lightChrome, 4.5);
+    assertAndPrintContrast("Light Muted Text on Group", lightMuted, lightGroup, 4.5);
+    assertAndPrintContrast("Light Muted Text on Well", lightMuted, lightWell, 4.5);
+
+    // Dark mode surfaces
+    final Color darkPanel = new Color(0x27, 0x29, 0x2D);
+    final Color darkChrome = new Color(0x30, 0x33, 0x38);
+    final Color darkGroup = new Color(0x3B, 0x3E, 0x45);
+    final Color darkWell = new Color(0x22, 0x24, 0x28);
+
+    // Dark text tokens
+    final Color darkText = new Color(0xF5, 0xF5, 0xF5);
+    final Color darkMuted = new Color(0xAC, 0xAC, 0xAC);
+
+    System.out.println("=== WCAG 2.1 Contrast Ratios for DARK Surface Tier Text Tokens ===");
+    assertAndPrintContrast("Dark Text on Panel", darkText, darkPanel, 4.5);
+    assertAndPrintContrast("Dark Text on Chrome", darkText, darkChrome, 4.5);
+    assertAndPrintContrast("Dark Text on Group", darkText, darkGroup, 4.5);
+    assertAndPrintContrast("Dark Text on Well", darkText, darkWell, 4.5);
+
+    assertAndPrintContrast("Dark Muted Text on Panel", darkMuted, darkPanel, 4.5);
+    assertAndPrintContrast("Dark Muted Text on Chrome", darkMuted, darkChrome, 4.5);
+    assertAndPrintContrast("Dark Muted Text on Group", darkMuted, darkGroup, 4.5);
+    assertAndPrintContrast("Dark Muted Text on Well", darkMuted, darkWell, 4.5);
+  }
+
   private static void assertAndPrintContrast(String label, Color fg, Color bg, double minRatio) {
     double cr = getContrastRatio(fg, bg);
     System.out.printf("%-35s : %.2f:1%n", label, cr);
