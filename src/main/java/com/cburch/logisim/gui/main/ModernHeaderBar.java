@@ -51,11 +51,14 @@ import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 
+import com.cburch.logisim.proj.ProjectListener;
+import com.cburch.logisim.proj.ProjectEvent;
+
 /**
  * Modern HeaderBar for Logisim-Evolution.
  * Unified control center for workspace state, simulation, zoom, and navigation.
  */
-public class ModernHeaderBar extends JPanel implements LocaleListener {
+public class ModernHeaderBar extends JPanel implements LocaleListener, ProjectListener {
 
   private static final Color COLOR_RUNNING = new Color(51, 209, 122); // #33d17a
   private static final Color COLOR_PAUSED_DARK = new Color(229, 165, 10); // Amber
@@ -311,17 +314,7 @@ public class ModernHeaderBar extends JPanel implements LocaleListener {
       });
     }
 
-    project.addProjectListener(new ProjectListener() {
-      @Override
-      public void projectChanged(ProjectEvent event) {
-        int act = event.getAction();
-        if (act == ProjectEvent.ACTION_SET_CURRENT
-            || act == ProjectEvent.ACTION_SET_FILE
-            || act == ProjectEvent.ACTION_SET_STATE) {
-          SwingUtilities.invokeLater(ModernHeaderBar.this::updateState);
-        }
-      }
-    });
+    project.addProjectListener(this);
 
     Circuit circ = project.getCurrentCircuit();
     if (circ != null) {
@@ -397,10 +390,23 @@ public class ModernHeaderBar extends JPanel implements LocaleListener {
   public void updateUndoRedo() {
     if (undoButton == null || redoButton == null || project == null)
       return;
-    boolean canUndo = !project.getUndoActions().isEmpty();
-    boolean canRedo = !project.getRedoActions().isEmpty();
+    final var last = project.getLastAction();
+    final boolean canUndo = (last != null);
     undoButton.setEnabled(canUndo);
+    if (canUndo) {
+      undoButton.setToolTipText("Undo " + last.getName() + " · Ctrl+Z");
+    } else {
+      undoButton.setToolTipText("Nothing to undo · Ctrl+Z");
+    }
+
+    final var next = project.getCanRedo() ? project.getLastRedoAction() : null;
+    final boolean canRedo = (next != null);
     redoButton.setEnabled(canRedo);
+    if (canRedo) {
+      redoButton.setToolTipText("Redo " + next.getName() + " · Ctrl+Y");
+    } else {
+      redoButton.setToolTipText("Nothing to redo · Ctrl+Y");
+    }
   }
 
   public void setZoomText(String text) {
@@ -603,6 +609,37 @@ public class ModernHeaderBar extends JPanel implements LocaleListener {
       initStyle();
       updateState();
     }
+  }
+
+  @Override
+  public void projectChanged(ProjectEvent event) {
+    int act = event.getAction();
+    if (act == ProjectEvent.ACTION_SET_CURRENT
+        || act == ProjectEvent.ACTION_SET_FILE
+        || act == ProjectEvent.ACTION_SET_STATE) {
+      if (SwingUtilities.isEventDispatchThread()) {
+        updateState();
+      } else {
+        SwingUtilities.invokeLater(this::updateState);
+      }
+    } else if (act == ProjectEvent.ACTION_COMPLETE
+        || act == ProjectEvent.ACTION_MERGE
+        || act == ProjectEvent.UNDO_COMPLETE
+        || act == ProjectEvent.REDO_COMPLETE) {
+      if (SwingUtilities.isEventDispatchThread()) {
+        updateUndoRedo();
+      } else {
+        SwingUtilities.invokeLater(this::updateUndoRedo);
+      }
+    }
+  }
+
+  public JButton getUndoButton() {
+    return undoButton;
+  }
+
+  public JButton getRedoButton() {
+    return redoButton;
   }
 
   @Override

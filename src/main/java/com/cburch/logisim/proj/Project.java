@@ -421,7 +421,7 @@ public class Project {
   }
 
   public boolean isFileDirty() {
-    return (undoMods > 0) || forcedDirty;
+    return (undoMods != 0) || forcedDirty;
   }
 
   // We track whether this project is the empty project opened
