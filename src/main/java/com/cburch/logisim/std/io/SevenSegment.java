@@ -13,6 +13,7 @@ import static com.cburch.logisim.std.Strings.S;
 
 import com.cburch.logisim.circuit.appear.DynamicElement;
 import com.cburch.logisim.circuit.appear.DynamicElementProvider;
+import com.cburch.logisim.comp.Palette;
 import com.cburch.logisim.data.Attribute;
 import com.cburch.logisim.data.AttributeSet;
 import com.cburch.logisim.data.Attributes;
@@ -57,12 +58,30 @@ public class SevenSegment extends InstanceFactory implements DynamicElementProvi
 
     final var g = painter.getGraphics();
     final var onColor = painter.getAttributeValue(IoLibrary.ATTR_ON_COLOR);
-    final var offColor = painter.getAttributeValue(IoLibrary.ATTR_OFF_COLOR);
+    var offColor = painter.getAttributeValue(IoLibrary.ATTR_OFF_COLOR);
     final var bgColor = painter.getAttributeValue(IoLibrary.ATTR_BACKGROUND);
-    if (painter.shouldDrawColor() && bgColor.getAlpha() != 0) {
-      g.setColor(bgColor);
-      g.fillRect(bds.getX(), bds.getY(), bds.getWidth(), bds.getHeight());
-      g.setColor(Color.BLACK);
+
+    final var isDarkTheme = !Palette.isForceLight() && Palette.current().isDark();
+    if (isDarkTheme) {
+      if (offColor.equals(DEFAULT_OFF) || (offColor.getRGB() & 0x00FFFFFF) == 0xDCDCDC) {
+        offColor = new Color(0x3A, 0x3A, 0x3A);
+      }
+      if (painter.shouldDrawColor()) {
+        if (bgColor.getAlpha() != 0) {
+          g.setColor(bgColor);
+          g.fillRect(bds.getX(), bds.getY(), bds.getWidth(), bds.getHeight());
+        } else {
+          g.setColor(new Color(0x26, 0x26, 0x26));
+          g.fillRect(bds.getX(), bds.getY(), bds.getWidth(), bds.getHeight());
+        }
+        g.setColor(Color.BLACK);
+      }
+    } else {
+      if (painter.shouldDrawColor() && bgColor.getAlpha() != 0) {
+        g.setColor(bgColor);
+        g.fillRect(bds.getX(), bds.getY(), bds.getWidth(), bds.getHeight());
+        g.setColor(Color.BLACK);
+      }
     }
     painter.drawBounds();
     g.setColor(Color.DARK_GRAY);

@@ -13,6 +13,7 @@ import static com.cburch.logisim.std.Strings.S;
 
 import com.cburch.logisim.circuit.CircuitState;
 import com.cburch.logisim.circuit.appear.DynamicElement;
+import com.cburch.logisim.comp.Palette;
 import com.cburch.logisim.data.Attribute;
 import com.cburch.logisim.data.Attributes;
 import com.cburch.logisim.data.Bounds;
@@ -72,7 +73,7 @@ public class SevenSegmentShape extends DynamicElement {
 
   @Override
   public void paintDynamic(Graphics g, CircuitState state) {
-    final var offColor = path.leaf().getAttributeSet().getValue(IoLibrary.ATTR_OFF_COLOR);
+    var offColor = path.leaf().getAttributeSet().getValue(IoLibrary.ATTR_OFF_COLOR);
     final var onColor = path.leaf().getAttributeSet().getValue(IoLibrary.ATTR_ON_COLOR);
     final var bgColor = path.leaf().getAttributeSet().getValue(IoLibrary.ATTR_BACKGROUND);
     final var x = bounds.getX();
@@ -80,11 +81,24 @@ public class SevenSegmentShape extends DynamicElement {
     final var w = bounds.getWidth();
     final var h = bounds.getHeight();
     GraphicsUtil.switchToWidth(g, 1);
-    if (bgColor.getAlpha() != 0) {
+
+    final var isDarkTheme = !Palette.isForceLight() && Palette.current().isDark();
+    if (isDarkTheme) {
+      if (offColor.equals(SevenSegment.DEFAULT_OFF) || (offColor.getRGB() & 0x00FFFFFF) == 0xDCDCDC) {
+        offColor = new Color(0x3A, 0x3A, 0x3A);
+      }
+      if (bgColor.getAlpha() != 0) {
+        g.setColor(bgColor);
+        g.fillRect(x, y, w, h);
+      } else {
+        g.setColor(new Color(0x26, 0x26, 0x26));
+        g.fillRect(x, y, w, h);
+      }
+    } else if (bgColor.getAlpha() != 0) {
       g.setColor(bgColor);
       g.fillRect(x, y, w, h);
     }
-    g.setColor(Color.BLACK);
+    g.setColor(isDarkTheme ? new Color(0x55, 0x55, 0x55) : Color.BLACK);
     g.drawRect(x, y, w, h);
     g.setColor(Color.DARK_GRAY);
     var summ = 0;
