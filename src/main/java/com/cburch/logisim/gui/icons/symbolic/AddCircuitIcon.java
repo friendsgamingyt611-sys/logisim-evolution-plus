@@ -8,8 +8,15 @@ import java.awt.Graphics2D;
  */
 public class AddCircuitIcon extends SymbolicIcon {
 
+  private static final Color SEMANTIC_GREEN = new Color(0x2E, 0xD1, 0x73);
+
   public AddCircuitIcon() {
     super(16);
+  }
+
+  @Override
+  public Color getSemanticColor() {
+    return SEMANTIC_GREEN;
   }
 
   @Override

@@ -149,10 +149,10 @@ public class Toolbox extends JPanel implements ExplorerModel.Listener, ProjectLi
     actionsBox.setOpaque(false);
 
     btnAddCircuit = createActionButton(new AddCircuitIcon(), "projectAddCircuitTip", "Add Circuit", LogisimMenuBar.ADD_CIRCUIT);
-    btnAddCircuit.putClientProperty(FlatClientProperties.STYLE, "arc: 4; margin: 2,2,2,2; hoverForeground: #2ec27e;");
+    btnAddCircuit.putClientProperty(FlatClientProperties.STYLE, "arc: 4; margin: 2,2,2,2; hoverForeground: #2ed173;");
 
     btnAddVhdl = createActionButton(new AddVhdlIcon(), "projectAddVhdlItem", "Add HDL Entity...", LogisimMenuBar.ADD_VHDL);
-    btnAddVhdl.putClientProperty(FlatClientProperties.STYLE, "arc: 4; margin: 2,2,2,2; hoverForeground: #3584e4;");
+    btnAddVhdl.putClientProperty(FlatClientProperties.STYLE, "arc: 4; margin: 2,2,2,2; hoverForeground: #2ed173;");
 
     btnMoveUp = createActionButton(new MoveUpIcon(), "projectMoveCircuitUpTip", "Move Circuit Up", LogisimMenuBar.MOVE_CIRCUIT_UP);
     btnMoveUp.putClientProperty(FlatClientProperties.STYLE, "arc: 4; margin: 2,2,2,2; hoverForeground: #3584e4;");
@@ -161,7 +161,7 @@ public class Toolbox extends JPanel implements ExplorerModel.Listener, ProjectLi
     btnMoveDown.putClientProperty(FlatClientProperties.STYLE, "arc: 4; margin: 2,2,2,2; hoverForeground: #3584e4;");
 
     btnAppearance = createActionButton(new AppearanceIcon(), "projectEditAppearanceTip", "Edit Circuit Appearance", LogisimMenuBar.TOGGLE_APPEARANCE);
-    btnAppearance.putClientProperty(FlatClientProperties.STYLE, "arc: 4; margin: 2,2,2,2; hoverForeground: #3584e4;");
+    btnAppearance.putClientProperty(FlatClientProperties.STYLE, "arc: 4; margin: 2,2,2,2; hoverForeground: #9a9996;");
 
     btnDelete = createActionButton(new DeleteIcon(), "projectRemoveCircuitTip", "Remove Circuit", LogisimMenuBar.REMOVE_CIRCUIT);
     btnDelete.putClientProperty(FlatClientProperties.STYLE, "arc: 4; margin: 2,2,2,2; hoverForeground: #e01b24;");

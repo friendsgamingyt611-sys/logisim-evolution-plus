@@ -8,8 +8,15 @@ import java.awt.Graphics2D;
  */
 public class DeleteIcon extends SymbolicIcon {
 
+  private static final Color SEMANTIC_RED = new Color(0xE0, 0x1B, 0x24);
+
   public DeleteIcon() {
     super(16);
+  }
+
+  @Override
+  public Color getSemanticColor() {
+    return SEMANTIC_RED;
   }
 
   @Override

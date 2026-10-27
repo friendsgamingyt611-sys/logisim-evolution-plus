@@ -178,8 +178,8 @@ public class CircuitsList extends JPanel implements ExplorerModel.Listener {
       if (accent == null) accent = new Color(53, 132, 228);
 
       if (isActive) {
-        icon.setColor(accent);
-        label.setForeground(fgMain);
+        icon.setColor(Color.WHITE);
+        label.setForeground(Color.WHITE);
       } else {
         icon.setColor(fgMuted);
         label.setForeground(fgMain);
@@ -256,7 +256,20 @@ public class CircuitsList extends JPanel implements ExplorerModel.Listener {
       final var isHovered = (hoveredTool == tool);
       final var isArmed = (model.getArmedTool() == tool);
 
-      if (isArmed) {
+      if (isActive) {
+        // Clean full-row selection background for active circuit
+        g2.setColor(accent);
+        g2.fillRoundRect(marginX, 1, w - 2 * marginX, h - 2, arc, arc);
+
+        // Active simulation indicator badge on the right with subtle white glow
+        int dotR = AppPreferences.getScaled(3);
+        int dotX = w - marginX - AppPreferences.getScaled(14);
+        int dotY = (h - dotR * 2) / 2;
+        g2.setColor(new Color(255, 255, 255, 90));
+        g2.fillOval(dotX - 2, dotY - 2, dotR * 2 + 4, dotR * 2 + 4);
+        g2.setColor(new Color(46, 209, 115));
+        g2.fillOval(dotX, dotY, dotR * 2, dotR * 2);
+      } else if (isArmed) {
         // 18% accent fill for armed tool
         g2.setColor(new Color(accent.getRed(), accent.getGreen(), accent.getBlue(), (int) (255 * 0.18f)));
         g2.fillRoundRect(marginX, 1, w - 2 * marginX, h - 2, arc, arc);
@@ -266,21 +279,6 @@ public class CircuitsList extends JPanel implements ExplorerModel.Listener {
             : new Color(0, 0, 0, 12);
         g2.setColor(hoverBg);
         g2.fillRoundRect(marginX, 1, w - 2 * marginX, h - 2, arc, arc);
-      }
-
-      if (isActive) {
-        // Current circuit: 3px left bar
-        g2.setColor(accent);
-        g2.fillRoundRect(marginX, 2, AppPreferences.getScaled(3), h - 4, 2, 2);
-
-        // Active simulation indicator badge on the right
-        int dotR = AppPreferences.getScaled(3);
-        int dotX = w - marginX - AppPreferences.getScaled(14);
-        int dotY = (h - dotR * 2) / 2;
-        g2.setColor(new Color(46, 194, 126, 60));
-        g2.fillOval(dotX - 2, dotY - 2, dotR * 2 + 4, dotR * 2 + 4);
-        g2.setColor(new Color(46, 194, 126));
-        g2.fillOval(dotX, dotY, dotR * 2, dotR * 2);
       }
 
       g2.dispose();

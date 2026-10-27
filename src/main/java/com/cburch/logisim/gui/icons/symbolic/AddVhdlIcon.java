@@ -10,8 +10,15 @@ import java.awt.geom.RoundRectangle2D;
  */
 public class AddVhdlIcon extends SymbolicIcon {
 
+  private static final Color SEMANTIC_GREEN = new Color(0x2E, 0xD1, 0x73);
+
   public AddVhdlIcon() {
     super(16);
+  }
+
+  @Override
+  public Color getSemanticColor() {
+    return SEMANTIC_GREEN;
   }
 
   @Override

@@ -9,8 +9,15 @@ import java.awt.geom.Path2D;
  */
 public class MoveUpIcon extends SymbolicIcon {
 
+  private static final Color SEMANTIC_BLUE = new Color(0x35, 0x84, 0xE4);
+
   public MoveUpIcon() {
     super(16);
+  }
+
+  @Override
+  public Color getSemanticColor() {
+    return SEMANTIC_BLUE;
   }
 
   @Override

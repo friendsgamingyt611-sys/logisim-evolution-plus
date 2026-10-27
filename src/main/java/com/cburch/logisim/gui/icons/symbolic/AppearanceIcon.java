@@ -9,8 +9,16 @@ import java.awt.geom.RoundRectangle2D;
  */
 public class AppearanceIcon extends SymbolicIcon {
 
+  private static final Color NEUTRAL_DARK = new Color(0xD0, 0xCD, 0xC7);
+  private static final Color NEUTRAL_LIGHT = new Color(0x5E, 0x5C, 0x64);
+
   public AppearanceIcon() {
     super(16);
+  }
+
+  @Override
+  public Color getSemanticColor() {
+    return com.cburch.logisim.prefs.AppPreferences.isDarkTheme() ? NEUTRAL_DARK : NEUTRAL_LIGHT;
   }
 
   @Override
