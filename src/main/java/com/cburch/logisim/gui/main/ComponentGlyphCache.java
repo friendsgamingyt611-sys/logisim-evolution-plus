@@ -66,9 +66,9 @@ public class ComponentGlyphCache {
     final var name = tool.getDisplayName();
     final var isDark = AppPreferences.isDarkTheme();
     final var adapt = AppPreferences.isAdaptComponentColor();
-    final var forceLight = com.cburch.logisim.comp.Palette.isForceLight();
+    final var paletteKind = com.cburch.logisim.comp.Palette.current().getClass().getSimpleName();
     final var scale = AppPreferences.getScaled(1.0f);
-    final var cacheKey = name + "@" + targetSize + "@" + (int) (scale * 100) + "@" + isDark + "@" + adapt + "@" + forceLight;
+    final var cacheKey = name + "@" + targetSize + "@" + (int) (scale * 100) + "@" + isDark + "@" + adapt + "@" + paletteKind;
 
     var cached = cache.get(cacheKey);
     if (cached != null) {

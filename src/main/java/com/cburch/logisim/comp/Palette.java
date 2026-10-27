@@ -65,11 +65,16 @@ public interface Palette {
 
   Palette DARK = new DarkPalette();
   Palette LIGHT = new LightPalette();
+  Palette PRINT = new PrintPalette();
 
-  ThreadLocal<Integer> FORCE_LIGHT_DEPTH = ThreadLocal.withInitial(() -> 0);
+  ThreadLocal<Integer> FORCE_PRINT_DEPTH = ThreadLocal.withInitial(() -> 0);
+
+  static boolean isForcePrint() {
+    return FORCE_PRINT_DEPTH.get() > 0;
+  }
 
   static boolean isForceLight() {
-    return FORCE_LIGHT_DEPTH.get() > 0;
+    return isForcePrint();
   }
 
   @FunctionalInterface
@@ -78,38 +83,49 @@ public interface Palette {
     void close();
   }
 
-  static Scope enterLightScope() {
-    FORCE_LIGHT_DEPTH.set(FORCE_LIGHT_DEPTH.get() + 1);
+  static Scope enterPrintScope() {
+    FORCE_PRINT_DEPTH.set(FORCE_PRINT_DEPTH.get() + 1);
     return () -> {
-      final var depth = FORCE_LIGHT_DEPTH.get() - 1;
+      final var depth = FORCE_PRINT_DEPTH.get() - 1;
       if (depth <= 0) {
-        FORCE_LIGHT_DEPTH.remove();
+        FORCE_PRINT_DEPTH.remove();
       } else {
-        FORCE_LIGHT_DEPTH.set(depth);
+        FORCE_PRINT_DEPTH.set(depth);
       }
     };
   }
 
-  static void withLightScope(Runnable r) {
-    try (var ignored = enterLightScope()) {
+  static Scope enterLightScope() {
+    return enterPrintScope();
+  }
+
+  static void withPrintScope(Runnable r) {
+    try (var ignored = enterPrintScope()) {
       r.run();
     }
   }
 
+  static void withLightScope(Runnable r) {
+    withPrintScope(r);
+  }
+
   static Palette current() {
-    return (isForceLight() || !AppPreferences.isDarkTheme()) ? LIGHT : DARK;
+    if (isForcePrint()) {
+      return PRINT;
+    }
+    return AppPreferences.isDarkTheme() ? DARK : LIGHT;
   }
 
   static Palette of(ComponentDrawContext context) {
-    if (isForceLight() || (context != null && context.isPrintView())) {
-      return LIGHT;
+    if (isForcePrint() || (context != null && context.isPrintView())) {
+      return PRINT;
     }
     return current();
   }
 
   static Palette of(InstancePainter painter) {
-    if (isForceLight() || (painter != null && painter.isPrintView())) {
-      return LIGHT;
+    if (isForcePrint() || (painter != null && painter.isPrintView())) {
+      return PRINT;
     }
     if (painter != null) {
       return painter.getPalette();
@@ -125,6 +141,7 @@ public interface Palette {
     private static final Color ERROR = new Color(0xFF6B5E);
     private static final Color MISMATCH = new Color(0xF0A030);
     private static final Color LABEL = new Color(0x7AA7FF);
+    private static final Color BUS = new Color(0xB4, 0xBC, 0xC8); // Decision D6: neutral cool grey
     private static final Color FILL = new Color(0x262626);
     private static final Color BG = new Color(0x1F1F1F);
     private static final Color NIL = new Color(0x888888);
@@ -185,7 +202,7 @@ public interface Palette {
     @Override
     public Color bus() {
       final var custom = AppPreferences.BUS_COLOR.get();
-      return (custom != 0) ? new Color(custom) : stroke();
+      return (custom != 0) ? new Color(custom) : BUS;
     }
 
     @Override
@@ -210,7 +227,7 @@ public interface Palette {
       }
       if (v.isFullyDefined()) {
         final var custom = AppPreferences.BUS_COLOR.get();
-        return (custom != 0) ? new Color(custom) : LABEL;
+        return (custom != 0) ? new Color(custom) : BUS;
       }
       return MISMATCH;
     }
@@ -289,6 +306,177 @@ public interface Palette {
   }
 
   class LightPalette implements Palette {
+    private static final Color STROKE = new Color(0x26, 0x28, 0x2C);
+    private static final Color BG = new Color(0xFC, 0xFC, 0xFC);
+    private static final Color WIRE_0 = new Color(0x0F, 0x6B, 0x3D);
+    private static final Color WIRE_1 = new Color(0x26, 0xA2, 0x69);
+    private static final Color UNKNOWN = new Color(0x1C, 0x71, 0xD8);
+    private static final Color ERROR = new Color(0xC0, 0x1C, 0x28);
+    private static final Color MISMATCH = new Color(0xC6, 0x46, 0x00);
+    private static final Color BUS = new Color(0x3D, 0x44, 0x52); // Decision D6: neutral cool grey
+    private static final Color LABEL = new Color(0x1A, 0x5F, 0xB4);
+    private static final Color FILL = Color.WHITE;
+    private static final Color NIL = new Color(0x6E, 0x77, 0x81);
+    private static final Color HALO = new Color(0x91, 0x41, 0xAC);
+    private static final Color ACCENT = new Color(0x1C, 0x71, 0xD8);
+    private static final Color SELECTION_FILL = new Color(0x1C, 0x71, 0xD8, 36); // 14% alpha
+    private static final Color HEADER_FILL = new Color(0xE4, 0xE6, 0xEA);
+    private static final Color HEADER_TEXT = new Color(0x26, 0x28, 0x2C);
+    private static final Color SWITCH_BODY = new Color(0xE4, 0xE6, 0xEA);
+    private static final Color SWITCH_ACTUATOR_ON = new Color(0x3D, 0x44, 0x52);
+    private static final Color SWITCH_ACTUATOR_OFF = new Color(0x9A, 0x99, 0x96);
+    private static final Color RAISED_SURFACE = new Color(0xF0, 0xF2, 0xF5);
+
+    @Override
+    public boolean isDark() {
+      return false;
+    }
+
+    @Override
+    public Color stroke() {
+      if (!AppPreferences.isAdaptComponentColor()) {
+        return new Color(AppPreferences.COMPONENT_COLOR.get());
+      }
+      return STROKE;
+    }
+
+    @Override
+    public Color bus() {
+      final var custom = AppPreferences.BUS_COLOR.get();
+      return (custom != 0) ? new Color(custom) : BUS;
+    }
+
+    @Override
+    public Color valueColor(Value v) {
+      if (v == null) return UNKNOWN;
+      if (v.isErrorValue()) {
+        final var custom = AppPreferences.ERROR_COLOR.get();
+        return (custom != 0x00C00000) ? new Color(custom) : ERROR;
+      }
+      if (v.getWidth() == 0) return NIL;
+      if (v.getWidth() == 1) {
+        if (v == Value.UNKNOWN) {
+          final var custom = AppPreferences.UNKNOWN_COLOR.get();
+          return (custom != 0x002828FF) ? new Color(custom) : UNKNOWN;
+        } else if (v == Value.TRUE) {
+          final var custom = AppPreferences.TRUE_COLOR.get();
+          return (custom != 0x0000D200) ? new Color(custom) : WIRE_1;
+        } else if (v == Value.FALSE) {
+          final var custom = AppPreferences.FALSE_COLOR.get();
+          return (custom != 0x00006400) ? new Color(custom) : WIRE_0;
+        }
+      }
+      if (v.isFullyDefined()) {
+        final var custom = AppPreferences.BUS_COLOR.get();
+        return (custom != 0) ? new Color(custom) : BUS;
+      }
+      return MISMATCH;
+    }
+
+    @Override
+    public Color label() {
+      return LABEL;
+    }
+
+    @Override
+    public Color pinOutline() {
+      return stroke();
+    }
+
+    @Override
+    public Color fill() {
+      return FILL;
+    }
+
+    @Override
+    public Color blueIndex() {
+      return LABEL;
+    }
+
+    @Override
+    public Color background() {
+      return BG;
+    }
+
+    @Override
+    public Color nil() {
+      final var custom = AppPreferences.NIL_COLOR.get();
+      return (custom != 0x808080) ? new Color(custom) : NIL;
+    }
+
+    @Override
+    public Color widthError() {
+      final var custom = AppPreferences.WIDTH_ERROR_COLOR.get();
+      return (custom != 0xFF7B00) ? new Color(custom) : MISMATCH;
+    }
+
+    @Override
+    public Color switchBody() {
+      return SWITCH_BODY;
+    }
+
+    @Override
+    public Color switchOutline() {
+      return stroke();
+    }
+
+    @Override
+    public Color switchChannel(boolean on) {
+      return on ? WIRE_1 : Color.WHITE;
+    }
+
+    @Override
+    public Color switchActuator(boolean on) {
+      return on ? SWITCH_ACTUATOR_ON : SWITCH_ACTUATOR_OFF;
+    }
+
+    @Override
+    public Color switchLabel() {
+      return stroke();
+    }
+
+    @Override
+    public Color headerFill() {
+      return HEADER_FILL;
+    }
+
+    @Override
+    public Color headerText() {
+      return HEADER_TEXT;
+    }
+
+    @Override
+    public Color accent() {
+      return ACCENT;
+    }
+
+    @Override
+    public Color selectionHalo() {
+      return HALO;
+    }
+
+    @Override
+    public Color selectionMarqueeBorder() {
+      return ACCENT;
+    }
+
+    @Override
+    public Color selectionMarqueeFill() {
+      return SELECTION_FILL;
+    }
+
+    @Override
+    public Color probeFill() {
+      return BG;
+    }
+
+    @Override
+    public Color raisedSurface() {
+      return RAISED_SURFACE;
+    }
+  }
+
+  class PrintPalette implements Palette {
     private static final Color STROKE = Color.BLACK;
     private static final Color ERROR = new Color(0xC00000);
     private static final Color MISMATCH = new Color(0xFF7B00);

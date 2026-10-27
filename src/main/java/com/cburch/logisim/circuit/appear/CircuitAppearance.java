@@ -330,8 +330,8 @@ public class CircuitAppearance extends Drawing implements AttributeListener {
           dynEl.paintDynamic(dup, state);
           if (shape instanceof DynamicElementWithPoker dynElWithPoker)
             dynElWithPoker.setAnchor(offset);
-        } else if (isDefault && isDark) {
-          paintDefaultShapeDark(dup, shape, palette);
+        } else if (isDefault && palette != Palette.PRINT) {
+          paintDefaultShape(dup, shape, palette);
         } else {
           shape.paint(dup, null);
         }
@@ -344,7 +344,7 @@ public class CircuitAppearance extends Drawing implements AttributeListener {
     }
   }
 
-  private void paintDefaultShapeDark(Graphics g, CanvasObject shape, Palette palette) {
+  private void paintDefaultShape(Graphics g, CanvasObject shape, Palette palette) {
     if (shape instanceof Rectangle rect) {
       final var clone = (Rectangle) rect.clone();
       final var paintType = clone.getValue(DrawAttr.PAINT_TYPE);

@@ -132,7 +132,7 @@ public class Print {
     public int print(Graphics base, PageFormat format, int pageIndex) {
       if (pageIndex >= circuits.size()) return Printable.NO_SUCH_PAGE;
 
-      try (var ignored = Palette.enterLightScope()) {
+      try (var ignored = Palette.enterPrintScope()) {
         var circ = circuits.get(pageIndex);
         final var circState = proj.getCircuitState(circ);
         final var g = base.create();

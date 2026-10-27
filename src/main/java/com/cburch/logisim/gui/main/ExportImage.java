@@ -262,7 +262,7 @@ public class ExportImage {
 
     @Override
     public void run() {
-      try (var ignored = Palette.enterLightScope()) {
+      try (var ignored = Palette.enterPrintScope()) {
         for (final var circ : circuits) {
           export(circ);
         }

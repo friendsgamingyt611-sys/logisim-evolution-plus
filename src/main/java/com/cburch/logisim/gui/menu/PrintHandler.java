@@ -70,7 +70,7 @@ public abstract class PrintHandler implements Printable {
 
   @Override
   public int print(Graphics pg, PageFormat pf, int pageNum) {
-    try (var ignored = Palette.enterLightScope()) {
+    try (var ignored = Palette.enterPrintScope()) {
       final var imWidth = pf.getImageableWidth();
       final var imHeight = pf.getImageableHeight();
       final var g = (Graphics2D) pg;
@@ -151,7 +151,7 @@ public abstract class PrintHandler implements Printable {
     final var base = (fmt == ExportImage.FORMAT_TIKZ || fmt == ExportImage.FORMAT_SVG) ? new TikZWriter() : img.getGraphics();
     final var gr = base.create();
 
-    try (var ignored = Palette.enterLightScope()) {
+    try (var ignored = Palette.enterPrintScope()) {
       if (!(gr instanceof Graphics2D g2d)) {
         showErr("couldNotCreateImage");
         return;
