@@ -627,19 +627,20 @@ public class AppPreferences {
   public static final int DEFAULT_ZOOMED_DOT_COLOR = 0xFFCCCCCC;
 
   public static final int DARK_CANVAS_BG_COLOR = 0xFF1F1F1F;
-  public static final int DARK_GRID_MINOR_DOT_COLOR = 0xFF444444;
-  public static final int DARK_GRID_MAJOR_DOT_COLOR = 0xFF606060;
+  public static final int DARK_GRID_MINOR_DOT_COLOR = 0xFF3D3D3D;
+  public static final int DARK_GRID_MAJOR_DOT_COLOR = 0xFF5A5A5A;
 
-  public static final int LIGHT_CANVAS_BG_COLOR = 0xFFFCFCFB;
-  public static final int LIGHT_GRID_MINOR_DOT_COLOR = 0xFFD8D8D8;
-  public static final int LIGHT_GRID_MAJOR_DOT_COLOR = 0xFF808080;
+  public static final int LIGHT_CANVAS_BG_COLOR = 0xFFFFFFFF;
+  public static final int LIGHT_GRID_MINOR_DOT_COLOR = 0xFFDCDCDC;
+  public static final int LIGHT_GRID_MAJOR_DOT_COLOR = 0xFFC8C8C8;
 
   public static boolean isCanvasBgDefault(int val) {
     return val == DEFAULT_CANVAS_BG_COLOR
         || val == 0xFFFFFFFF
         || val == -1
         || val == DARK_CANVAS_BG_COLOR
-        || val == LIGHT_CANVAS_BG_COLOR;
+        || val == LIGHT_CANVAS_BG_COLOR
+        || val == 0xFFFCFCFB;
   }
 
   public static boolean isGridBgDefault(int val) {
@@ -647,7 +648,8 @@ public class AppPreferences {
         || val == 0xFFFFFFFF
         || val == -1
         || val == DARK_CANVAS_BG_COLOR
-        || val == LIGHT_CANVAS_BG_COLOR;
+        || val == LIGHT_CANVAS_BG_COLOR
+        || val == 0xFFFCFCFB;
   }
 
   public static Color getCanvasBgColor() {
@@ -668,7 +670,7 @@ public class AppPreferences {
 
   public static Color getGridMinorDotColor() {
     final var val = GRID_DOT_COLOR.get();
-    if (val == DEFAULT_GRID_DOT_COLOR || val == 0xFF777777 || val == DARK_GRID_MINOR_DOT_COLOR || val == LIGHT_GRID_MINOR_DOT_COLOR) {
+    if (val == DEFAULT_GRID_DOT_COLOR || val == 0xFF777777 || val == DARK_GRID_MINOR_DOT_COLOR || val == LIGHT_GRID_MINOR_DOT_COLOR || val == 0xFF444444 || val == 0xFFD8D8D8) {
       return isDarkTheme() ? new Color(DARK_GRID_MINOR_DOT_COLOR) : new Color(LIGHT_GRID_MINOR_DOT_COLOR);
     }
     return new Color(val);
@@ -676,7 +678,7 @@ public class AppPreferences {
 
   public static Color getGridMajorDotColor() {
     final var val = GRID_ZOOMED_DOT_COLOR.get();
-    if (val == DEFAULT_ZOOMED_DOT_COLOR || val == 0xFFCCCCCC || val == DARK_GRID_MAJOR_DOT_COLOR || val == LIGHT_GRID_MAJOR_DOT_COLOR) {
+    if (val == DEFAULT_ZOOMED_DOT_COLOR || val == 0xFFCCCCCC || val == DARK_GRID_MAJOR_DOT_COLOR || val == LIGHT_GRID_MAJOR_DOT_COLOR || val == 0xFF606060 || val == 0xFF808080) {
       return isDarkTheme() ? new Color(DARK_GRID_MAJOR_DOT_COLOR) : new Color(LIGHT_GRID_MAJOR_DOT_COLOR);
     }
     return new Color(val);

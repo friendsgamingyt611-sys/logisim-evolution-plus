@@ -136,16 +136,16 @@ public interface Palette {
 
   class DarkPalette implements Palette {
     private static final Color STROKE = new Color(0xE6E6E6);
-    private static final Color WIRE_0 = new Color(0x2E9D62);
-    private static final Color WIRE_1 = new Color(0x4BE38A);
+    private static final Color WIRE_0 = new Color(0x1B8458);
+    private static final Color WIRE_1 = new Color(0x55F08A);
     private static final Color UNKNOWN = new Color(0x5B9BFF);
     private static final Color ERROR = new Color(0xFF6B5E);
     private static final Color MISMATCH = new Color(0xF0A030);
     private static final Color LABEL = new Color(0x7AA7FF);
-    private static final Color BUS = new Color(0xB4, 0xBC, 0xC8); // Decision D6: neutral cool grey
-    private static final Color FILL = new Color(0x262626);
+    private static final Color BUS = new Color(0x9F, 0xA9, 0xB8); // Variation B neutral cool grey
+    private static final Color FILL = new Color(0x25, 0x28, 0x2C);
     private static final Color BG = new Color(0x1F1F1F);
-    private static final Color NIL = new Color(0x888888);
+    private static final Color NIL = new Color(0x7C, 0x82, 0x8C);
     private static final Color SWITCH_RECESSED = new Color(0x141414);
     private static final Color SWITCH_ACTUATOR_ON = new Color(0xF0F0F0);
     private static final Color SWITCH_ACTUATOR_OFF = new Color(0x9E9E9E);
@@ -293,25 +293,25 @@ public interface Palette {
 
   class LightPalette implements Palette {
     private static final Color STROKE = new Color(0x26, 0x28, 0x2C);
-    private static final Color BG = new Color(0xFC, 0xFC, 0xFC);
-    private static final Color WIRE_0 = new Color(0x0F, 0x6B, 0x3D);
-    private static final Color WIRE_1 = new Color(0x26, 0xA2, 0x69);
+    private static final Color BG = new Color(0xFF, 0xFF, 0xFF);
+    private static final Color WIRE_0 = new Color(0x0B, 0x4A, 0x2C);
+    private static final Color WIRE_1 = new Color(0x16, 0xA0, 0x5A);
     private static final Color UNKNOWN = new Color(0x1C, 0x71, 0xD8);
     private static final Color ERROR = new Color(0xC0, 0x1C, 0x28);
-    private static final Color MISMATCH = new Color(0xC6, 0x46, 0x00);
-    private static final Color BUS = new Color(0x3D, 0x44, 0x52); // Decision D6: neutral cool grey
+    private static final Color MISMATCH = new Color(0xB3, 0x5C, 0x00);
+    private static final Color BUS = new Color(0x4A, 0x53, 0x61); // Variation B neutral cool grey
     private static final Color LABEL = new Color(0x1A, 0x5F, 0xB4);
     private static final Color FILL = Color.WHITE;
-    private static final Color NIL = new Color(0x6E, 0x77, 0x81);
+    private static final Color NIL = new Color(0x8A, 0x90, 0x99);
     private static final Color HALO = new Color(0x91, 0x41, 0xAC);
     private static final Color ACCENT = new Color(0x1C, 0x71, 0xD8);
     private static final Color SELECTION_FILL = new Color(0x1C, 0x71, 0xD8, 36); // 14% alpha
     private static final Color HEADER_FILL = new Color(0xE4, 0xE6, 0xEA);
     private static final Color HEADER_TEXT = new Color(0x26, 0x28, 0x2C);
     private static final Color SWITCH_BODY = new Color(0xE4, 0xE6, 0xEA);
-    private static final Color SWITCH_ACTUATOR_ON = new Color(0x3D, 0x44, 0x52);
-    private static final Color SWITCH_ACTUATOR_OFF = new Color(0x9A, 0x99, 0x96);
-    private static final Color RAISED_SURFACE = new Color(0xF0, 0xF2, 0xF5);
+    private static final Color SWITCH_ACTUATOR_ON = new Color(0x4A, 0x53, 0x61);
+    private static final Color SWITCH_ACTUATOR_OFF = new Color(0x8A, 0x90, 0x99);
+    private static final Color RAISED_SURFACE = new Color(0xF2, 0xF3, 0xF5);
 
     @Override
     public boolean isDark() {

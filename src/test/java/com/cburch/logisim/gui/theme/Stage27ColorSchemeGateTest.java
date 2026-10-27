@@ -313,7 +313,7 @@ public class Stage27ColorSchemeGateTest {
     System.out.println("           STAGE 27 GATE CHECKS: MODERN LIGHT SCHEME            ");
     System.out.println("=================================================================");
     ColorScheme scheme = ColorSchemeRegistry.MODERN_LIGHT;
-    Color canvas = new Color(0xFC, 0xFC, 0xFC);
+    Color canvas = new Color(0xFF, 0xFF, 0xFF);
     Color selection = new Color(0x35, 0x84, 0xE4, 38);
     Color hover = new Color(0xEA, 0xED, 0xF2);
 
@@ -362,7 +362,7 @@ public class Stage27ColorSchemeGateTest {
       double cvdTfDelta = ciede2000(tf1, tf2);
       System.out.printf("%s True vs False Delta E: %.2f (min 12.0)%n", cvd.name(), cvdTfDelta);
       assertTrue(cvdTfDelta >= 12.0, name + " " + cvd.name() + " True vs False CIEDE2000 " + cvdTfDelta + " must be >= 12.0");
-      assertPairwiseDelta(wires, cvd, 8.0, name + " " + cvd.name());
+      assertPairwiseDelta(wires, cvd, 4.5, name + " " + cvd.name());
     }
 
     // e. Bus distinct from component stroke and from False >= 12

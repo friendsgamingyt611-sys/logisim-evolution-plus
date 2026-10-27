@@ -42,22 +42,22 @@ public class Stage22AcceptanceTest {
   @Test
   void testPaletteTokensAndDecisionD6() {
     AppPreferences.COLOR_SCHEME.set(ColorSchemeRegistry.SCHEME_MODERN);
-    // 1. Dark Palette: neutral cool grey bus (#B8C0CC), blue unknown (#5B9BFF)
+    // 1. Dark Palette: neutral cool grey bus (#9FA9B8), blue unknown (#5B9BFF)
     Palette dark = Palette.DARK;
-    assertEquals(new Color(0xB8, 0xC0, 0xCC), dark.bus(), "Dark bus must be neutral cool grey #B8C0CC");
+    assertEquals(new Color(0x9F, 0xA9, 0xB8), dark.bus(), "Dark bus must be neutral cool grey #9FA9B8");
     Value busVal = Value.createKnown(BitWidth.create(8), 0xAA);
-    assertEquals(new Color(0xB8, 0xC0, 0xCC), dark.valueColor(busVal), "Dark multi-bit bus value must be #B8C0CC");
+    assertEquals(new Color(0x9F, 0xA9, 0xB8), dark.valueColor(busVal), "Dark multi-bit bus value must be #9FA9B8");
     assertEquals(new Color(0x5B, 0x9B, 0xFF), dark.valueColor(Value.UNKNOWN), "Dark unknown must be blue #5B9BFF");
     assertFalse(dark.bus().equals(dark.valueColor(Value.UNKNOWN)), "Dark bus and unknown must never be the same color");
 
-    // 2. Light Palette: modern tokens
+    // 2. Light Palette: modern Variation B tokens
     Palette light = Palette.LIGHT;
-    assertEquals(new Color(0x4A, 0x56, 0x66), light.bus(), "Light bus must be slate blue-gray #4A5666");
-    assertEquals(new Color(0x4A, 0x56, 0x66), light.valueColor(busVal), "Light multi-bit bus value must be #4A5666");
+    assertEquals(new Color(0x4A, 0x53, 0x61), light.bus(), "Light bus must be slate blue-gray #4A5361");
+    assertEquals(new Color(0x4A, 0x53, 0x61), light.valueColor(busVal), "Light multi-bit bus value must be #4A5361");
     assertEquals(new Color(0x1C, 0x71, 0xD8), light.valueColor(Value.UNKNOWN), "Light unknown must be blue #1C71D8");
-    assertEquals(new Color(0xFC, 0xFC, 0xFC), light.background(), "Light canvas background must be #FCFCFC");
+    assertEquals(new Color(0xFF, 0xFF, 0xFF), light.background(), "Light canvas background must be #FFFFFF");
     assertEquals(new Color(0x26, 0x28, 0x2C), light.stroke(), "Light stroke must be #26282C");
-    assertEquals(new Color(0x04, 0x38, 0x20), light.valueColor(Value.FALSE), "Light wire 0 must be #043820");
+    assertEquals(new Color(0x0B, 0x4A, 0x2C), light.valueColor(Value.FALSE), "Light wire 0 must be #0B4A2C");
     assertEquals(new Color(0x16, 0xA0, 0x5A), light.valueColor(Value.TRUE), "Light wire 1 must be #16A05A");
     assertEquals(new Color(0xC0, 0x1C, 0x28), light.valueColor(Value.createError(BitWidth.ONE)), "Light error must be #C01C28");
     assertEquals(new Color(0xE4, 0xE6, 0xEA), light.headerFill(), "Light subcircuit header fill must be #E4E6EA");

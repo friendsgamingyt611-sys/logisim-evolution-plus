@@ -16,18 +16,18 @@ public class ColorSchemeRegistry {
   public static final String DISPLAY_COLORBLIND = "Color-blind";
   public static final String DISPLAY_CUSTOM = "Custom";
 
-  // --- 1. MODERN SCHEME ---
+  // --- 1. MODERN SCHEME (Variation B) ---
   public static final ColorScheme MODERN_LIGHT =
       new ColorScheme(
           "Modern Light",
           ColorScheme.fromHex("#16A05A"), // True (1)
-          ColorScheme.fromHex("#043820"), // False (0)
+          ColorScheme.fromHex("#0B4A2C"), // False (0)
           ColorScheme.fromHex("#1C71D8"), // Unknown
           ColorScheme.fromHex("#C01C28"), // Error
-          ColorScheme.fromHex("#B86B00"), // Mismatch (warm golden amber)
-          ColorScheme.fromHex("#4A5666"), // Bus (slate blue-gray)
-          ColorScheme.fromHex("#828892"), // Unconnected
-          ColorScheme.fromHex("#9141AC"), // Wire/bus stroke (GNOME Orchid)
+          ColorScheme.fromHex("#B35C00"), // Mismatch
+          ColorScheme.fromHex("#4A5361"), // Bus
+          ColorScheme.fromHex("#8A9099"), // Unconnected
+          ColorScheme.fromHex("#26282C"), // Wire/component stroke
           ColorScheme.fromHex("#550000"), // Caption
           ColorScheme.fromHex("#FFFF00"), // Highlight
           ColorScheme.fromHex("#FFE6D2"), // Background
@@ -38,13 +38,13 @@ public class ColorSchemeRegistry {
       new ColorScheme(
           "Modern Dark",
           ColorScheme.fromHex("#55F08A"), // True (1)
-          ColorScheme.fromHex("#157A4E"), // False (0)
+          ColorScheme.fromHex("#1B8458"), // False (0)
           ColorScheme.fromHex("#5B9BFF"), // Unknown
-          ColorScheme.fromHex("#FF6554"), // Error
-          ColorScheme.fromHex("#F5A728"), // Mismatch (gold/amber)
-          ColorScheme.fromHex("#B8C0CC"), // Bus (cool grey)
-          ColorScheme.fromHex("#767C86"), // Unconnected
-          ColorScheme.fromHex("#C061CB"), // Wire/bus stroke (GNOME Orchid)
+          ColorScheme.fromHex("#FF6B5E"), // Error
+          ColorScheme.fromHex("#F0A030"), // Mismatch
+          ColorScheme.fromHex("#9FA9B8"), // Bus
+          ColorScheme.fromHex("#7C828C"), // Unconnected
+          ColorScheme.fromHex("#E6E6E6"), // Wire/component stroke
           ColorScheme.fromHex("#FFB4A9"), // Caption
           ColorScheme.fromHex("#FFE082"), // Highlight
           ColorScheme.fromHex("#3C2A20"), // Background

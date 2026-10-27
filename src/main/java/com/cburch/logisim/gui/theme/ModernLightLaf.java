@@ -38,21 +38,23 @@ public class ModernLightLaf extends FlatLightLaf {
   public UIDefaults getDefaults() {
     final var defaults = super.getDefaults();
 
-    // 7 Tonal Tiers (Stage 26)
-    Color canvas = new Color(0xFF, 0xFF, 0xFF);
-    Color well = new Color(0xFF, 0xFF, 0xFF);
-    Color panel = new Color(0xF3, 0xF5, 0xF8);
-    Color chrome = new Color(0xE6, 0xE9, 0xEE);
-    Color group = new Color(0xF8, 0xF9, 0xFB);
-    Color borderStrong = new Color(0xBC, 0xC3, 0xCD);
-    Color borderSubtle = new Color(0xD5, 0xDA, 0xE2);
-    Color mutedText = new Color(0x5A, 0x5D, 0x66);
+    // 7 Tonal Tiers (Stage 28 Variation B)
+    Color canvas = new Color(0xFF, 0xFF, 0xFF); // #ffffff
+    Color well = new Color(0xFF, 0xFF, 0xFF); // #ffffff
+    Color panel = new Color(0xF2, 0xF3, 0xF5); // #f2f3f5
+    Color chrome = new Color(0xE4, 0xE6, 0xEA); // #e4e6ea
+    Color group = new Color(0xFF, 0xFF, 0xFF); // #ffffff
+    Color groupBorder = new Color(0xC0, 0xC5, 0xCE); // #c0c5ce (gb)
+    Color borderStrong = new Color(0xC4, 0xC8, 0xD0); // #c4c8d0 (bs)
+    Color borderSubtle = new Color(0xDA, 0xDD, 0xE3); // #dadde3 (bsub)
+    Color mutedText = new Color(0x54, 0x5A, 0x64); // #545a64 (muted)
 
     defaults.put("Surface.canvas", canvas);
     defaults.put("Surface.well", well);
     defaults.put("Surface.panel", panel);
     defaults.put("Surface.chrome", chrome);
     defaults.put("Surface.group", group);
+    defaults.put("Surface.groupBorder", groupBorder);
     defaults.put("Surface.borderStrong", borderStrong);
     defaults.put("Surface.borderSubtle", borderSubtle);
     defaults.put("Surface.mutedText", mutedText);
@@ -67,6 +69,8 @@ public class ModernLightLaf extends FlatLightLaf {
     defaults.put("Chrome.mutedText", mutedText);
     defaults.put("Chrome.warning", new Color(0xB8, 0x7D, 0x00));
     defaults.put("Group.background", group);
+    defaults.put("Group.borderColor", groupBorder);
+    defaults.put("Button.borderColor", groupBorder);
 
     // Component surface bindings
     defaults.put("MenuBar.background", chrome);
@@ -85,11 +89,11 @@ public class ModernLightLaf extends FlatLightLaf {
     // Splitters
     defaults.put("SplitPane.dividerSize", 5);
 
-    // Semantic action icon tokens
-    defaults.put("Action.create", new Color(0x1E, 0x8E, 0x4E));
-    defaults.put("Action.move", new Color(0x1C, 0x71, 0xD8));
-    defaults.put("Action.edit", new Color(0xC2, 0x5A, 0x00));
-    defaults.put("Action.destroy", new Color(0xC0, 0x1C, 0x28));
+    // Semantic action icon tokens (Variation B)
+    defaults.put("Action.create", new Color(0x1E, 0x8E, 0x4E)); // #1e8e4e
+    defaults.put("Action.move", new Color(0x1C, 0x71, 0xD8));   // #1c71d8
+    defaults.put("Action.edit", new Color(0xC2, 0x5A, 0x00));   // #c25a00
+    defaults.put("Action.destroy", new Color(0xC0, 0x1C, 0x28)); // #c01c28
 
     // Underline tabbed pane styling
     defaults.put("TabbedPane.tabType", "underline");

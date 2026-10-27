@@ -121,7 +121,7 @@ public class ModernHeaderBar extends JPanel implements LocaleListener, ProjectLi
       borderColor = UIManager.getColor("Chrome.borderColor");
     }
     if (borderColor == null) {
-      borderColor = AppPreferences.isDarkTheme() ? new Color(0x14, 0x15, 0x17) : new Color(0xBC, 0xC3, 0xCD);
+      borderColor = AppPreferences.isDarkTheme() ? new Color(0x4D, 0x51, 0x5A) : new Color(0xC4, 0xC8, 0xD0);
     }
     setBorder(BorderFactory.createCompoundBorder(
         BorderFactory.createMatteBorder(0, 0, 1, 0, borderColor),
