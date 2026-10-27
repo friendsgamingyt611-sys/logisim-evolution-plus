@@ -28,6 +28,9 @@ public class ColorChooserButton extends JButton implements PropertyChangeListene
 
   private final PrefMonitor<Integer> myMonitor;
   private final Frame frame;
+  private Color displayColor = null;
+  private boolean readOnly = false;
+  private java.util.function.Consumer<ColorChooserButton> onEditRequested = null;
 
   public ColorChooserButton(Frame frame, PrefMonitor<Integer> pref) {
     super();
@@ -42,6 +45,25 @@ public class ColorChooserButton extends JButton implements PropertyChangeListene
     addActionListener(this);
   }
 
+  public void setDisplayColor(Color c) {
+    this.displayColor = c;
+    repaint();
+  }
+
+  public void setReadOnly(boolean readOnly) {
+    this.readOnly = readOnly;
+  }
+
+  public void setOnEditRequested(java.util.function.Consumer<ColorChooserButton> callback) {
+    this.onEditRequested = callback;
+  }
+
+  public void triggerEditDialog() {
+    if (getIcon() instanceof ColorIcon i) {
+      i.update(frame);
+    }
+  }
+
   @Override
   public void propertyChange(PropertyChangeEvent evt) {
     if (myMonitor == AppPreferences.COMPONENT_COLOR) {
@@ -52,6 +74,12 @@ public class ColorChooserButton extends JButton implements PropertyChangeListene
 
   @Override
   public void actionPerformed(ActionEvent e) {
+    if (readOnly) {
+      if (onEditRequested != null) {
+        onEditRequested.accept(this);
+      }
+      return;
+    }
     final var but = (JButton) e.getSource();
     if (but.getIcon() instanceof ColorIcon i) {
       i.update(frame);
@@ -62,7 +90,9 @@ public class ColorChooserButton extends JButton implements PropertyChangeListene
     @Override
     protected void paintIcon(Graphics2D g2) {
       final Color c;
-      if (myMonitor == AppPreferences.COMPONENT_COLOR && AppPreferences.isAdaptComponentColor()) {
+      if (displayColor != null) {
+        c = displayColor;
+      } else if (myMonitor == AppPreferences.COMPONENT_COLOR && AppPreferences.isAdaptComponentColor()) {
         c = AppPreferences.getComponentColor();
       } else {
         c = new Color(myMonitor.get());
@@ -72,7 +102,7 @@ public class ColorChooserButton extends JButton implements PropertyChangeListene
     }
 
     public void update(Frame frame) {
-      var col = new Color(myMonitor.get());
+      var col = displayColor != null ? displayColor : new Color(myMonitor.get());
       final var newCol = ColorPickerDialog.showDialog(frame, col, false);
       if (newCol == null) return;
       if (!newCol.equals(col)) {

@@ -12,26 +12,49 @@ package com.cburch.logisim.gui.prefs;
 import static com.cburch.logisim.gui.Strings.S;
 
 import com.cburch.logisim.data.Value;
+import com.cburch.logisim.gui.theme.ColorScheme;
+import com.cburch.logisim.gui.theme.ColorSchemeRegistry;
 import com.cburch.logisim.prefs.AppPreferences;
 import com.cburch.logisim.prefs.PrefMonitor;
 import com.cburch.logisim.proj.Projects;
+import java.awt.BasicStroke;
 import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+import java.awt.RenderingHints;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.prefs.PreferenceChangeEvent;
 import java.util.prefs.PreferenceChangeListener;
+import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JRadioButton;
 import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
 
 public class SimOptions extends OptionsPanel {
 
   private static final long serialVersionUID = 1L;
-  private final MyColorListener mcol = new MyColorListener();
+
+  private final JLabel schemeTitle = new JLabel();
+  private final JComboBox<String> schemeDropdown = new JComboBox<>();
+  private final JRadioButton previewLightBtn = new JRadioButton("Light");
+  private final JRadioButton previewDarkBtn = new JRadioButton("Dark");
+  private final JButton editColorsButton = new JButton("Edit colors");
+  private final JButton resetModernButton = new JButton("Reset to Modern");
+  private final JLabel classicNoticeLabel = new JLabel();
+  private final WirePreviewStrip wirePreviewStrip = new WirePreviewStrip();
+
+  private boolean previewIsDark = AppPreferences.isDarkTheme();
+
   private final JLabel trueColorTitle = new JLabel();
   private final ColorChooserButton trueColor;
   private final JLabel trueCharTitle = new JLabel();
@@ -66,8 +89,7 @@ public class SimOptions extends OptionsPanel {
   private final ColorChooserButton clockFrequencyColor;
   private final JLabel clockFrequencyColorTitle = new JLabel();
   private final ColorChooserButton widthErrorBackgroundColor;
-  private final JButton defaultButton = new JButton();
-  private final JButton colorBlindButton = new JButton();
+
   private final JLabel kmap1ColorTitle = new JLabel();
   private final JLabel kmap2ColorTitle = new JLabel();
   private final JLabel kmap3ColorTitle = new JLabel();
@@ -105,16 +127,87 @@ public class SimOptions extends OptionsPanel {
   public SimOptions(PreferencesFrame window) {
     super(window);
     AppPreferences.getPrefs().addPreferenceChangeListener(new MyListener());
+    AppPreferences.COLOR_SCHEME.addPropertyChangeListener(evt -> {
+      SwingUtilities.invokeLater(() -> {
+        syncDropdownSelection();
+        updateSwatchesAndPreview();
+      });
+    });
 
     final var gbc = new GridBagConstraints();
     setLayout(new GridBagLayout());
     gbc.insets = new Insets(2, 4, 4, 2);
     gbc.anchor = GridBagConstraints.CENTER;
+    gbc.fill = GridBagConstraints.HORIZONTAL;
+
+    // --- Row 0: Color Scheme Selection ---
     gbc.gridx = 0;
     gbc.gridy = 0;
-    gbc.fill = GridBagConstraints.HORIZONTAL;
-    add(trueColorTitle, gbc);
+    gbc.gridwidth = 1;
+    schemeTitle.setText("Color Scheme:");
+    add(schemeTitle, gbc);
 
+    gbc.gridx++;
+    schemeDropdown.addItem(ColorSchemeRegistry.DISPLAY_MODERN);
+    schemeDropdown.addItem(ColorSchemeRegistry.DISPLAY_CLASSIC);
+    schemeDropdown.addItem(ColorSchemeRegistry.DISPLAY_COLORBLIND);
+    schemeDropdown.addItem(ColorSchemeRegistry.DISPLAY_CUSTOM);
+    syncDropdownSelection();
+    schemeDropdown.addActionListener(e -> onSchemeDropdownChanged());
+    add(schemeDropdown, gbc);
+
+    // Variant preview toggle
+    gbc.gridx++;
+    final var variantPanel = new JPanel();
+    final var group = new ButtonGroup();
+    group.add(previewLightBtn);
+    group.add(previewDarkBtn);
+    previewLightBtn.setSelected(!previewIsDark);
+    previewDarkBtn.setSelected(previewIsDark);
+    previewLightBtn.addActionListener(e -> {
+      previewIsDark = false;
+      updateSwatchesAndPreview();
+    });
+    previewDarkBtn.addActionListener(e -> {
+      previewIsDark = true;
+      updateSwatchesAndPreview();
+    });
+    variantPanel.add(previewLightBtn);
+    variantPanel.add(previewDarkBtn);
+    add(variantPanel, gbc);
+
+    gbc.gridx++;
+    final var btnPanel = new JPanel();
+    editColorsButton.addActionListener(e -> switchToCustomAndEdit(null));
+    resetModernButton.addActionListener(e -> {
+      AppPreferences.COLOR_SCHEME.set(ColorSchemeRegistry.SCHEME_MODERN);
+      syncDropdownSelection();
+      updateSwatchesAndPreview();
+      notifyCanvasesRepaint();
+    });
+    btnPanel.add(editColorsButton);
+    btnPanel.add(resetModernButton);
+    add(btnPanel, gbc);
+
+    // --- Row 1: Classic dark warning notice ---
+    gbc.gridx = 0;
+    gbc.gridy++;
+    gbc.gridwidth = 4;
+    classicNoticeLabel.setForeground(new Color(0xD9534F));
+    classicNoticeLabel.setText("Notice: Classic colors were designed for a white canvas and may be hard to read in dark mode.");
+    classicNoticeLabel.setVisible(false);
+    add(classicNoticeLabel, gbc);
+
+    // --- Row 2: Live Wire Preview Strip ---
+    gbc.gridy++;
+    add(wirePreviewStrip, gbc);
+
+    // --- Wire State Swatches ---
+    gbc.gridwidth = 1;
+
+    gbc.gridx = 0;
+    gbc.gridy++;
+    add(trueColorTitle, gbc);
     gbc.gridx++;
     trueColor = new ColorChooserButton(window, AppPreferences.TRUE_COLOR);
     add(trueColor, gbc);
@@ -218,7 +311,6 @@ public class SimOptions extends OptionsPanel {
     gbc.gridwidth = 4;
     add(kmapColorsTitle, gbc);
 
-    // FIXME: refactor this code
     gbc.gridy++;
     gbc.gridwidth = 1;
     add(kmap1ColorTitle, gbc);
@@ -315,18 +407,128 @@ public class SimOptions extends OptionsPanel {
     kmap16Color = new ColorChooserButton(window, AppPreferences.KMAP16_COLOR);
     add(kmap16Color, gbc);
 
-    gbc.gridx = 0;
-    gbc.gridy++;
-    gbc.gridwidth = 2;
-    defaultButton.setActionCommand("default");
-    defaultButton.addActionListener(mcol);
-    add(defaultButton, gbc);
-    gbc.gridx += 2;
-    colorBlindButton.setActionCommand("colorblind");
-    colorBlindButton.addActionListener(mcol);
-    add(colorBlindButton, gbc);
+    // Setup edit callbacks for wire swatches
+    ColorChooserButton[] swatches = {
+      trueColor, falseColor, unknownColor, errorColor, nilColor, busColor,
+      highlightColor, widthErrorColor, widthErrorCaptionColor, widthErrorHighlightColor,
+      widthErrorBackgroundColor, clockFrequencyColor
+    };
+    for (var b : swatches) {
+      b.setOnEditRequested(btn -> switchToCustomAndEdit(btn));
+    }
 
     localeChanged();
+    updateSwatchesAndPreview();
+  }
+
+  private boolean isUpdatingDropdown = false;
+
+  private void syncDropdownSelection() {
+    isUpdatingDropdown = true;
+    try {
+      String current = AppPreferences.COLOR_SCHEME.get();
+      if (ColorSchemeRegistry.SCHEME_CLASSIC.equalsIgnoreCase(current)) {
+        schemeDropdown.setSelectedItem(ColorSchemeRegistry.DISPLAY_CLASSIC);
+      } else if (ColorSchemeRegistry.SCHEME_COLORBLIND.equalsIgnoreCase(current)) {
+        schemeDropdown.setSelectedItem(ColorSchemeRegistry.DISPLAY_COLORBLIND);
+      } else if (ColorSchemeRegistry.SCHEME_CUSTOM.equalsIgnoreCase(current)) {
+        schemeDropdown.setSelectedItem(ColorSchemeRegistry.DISPLAY_CUSTOM);
+      } else {
+        schemeDropdown.setSelectedItem(ColorSchemeRegistry.DISPLAY_MODERN);
+      }
+    } finally {
+      isUpdatingDropdown = false;
+    }
+  }
+
+  private void onSchemeDropdownChanged() {
+    if (isUpdatingDropdown) {
+      return;
+    }
+    String selected = (String) schemeDropdown.getSelectedItem();
+    if (ColorSchemeRegistry.DISPLAY_CLASSIC.equals(selected)) {
+      AppPreferences.COLOR_SCHEME.set(ColorSchemeRegistry.SCHEME_CLASSIC);
+    } else if (ColorSchemeRegistry.DISPLAY_COLORBLIND.equals(selected)) {
+      AppPreferences.COLOR_SCHEME.set(ColorSchemeRegistry.SCHEME_COLORBLIND);
+    } else if (ColorSchemeRegistry.DISPLAY_CUSTOM.equals(selected)) {
+      AppPreferences.COLOR_SCHEME.set(ColorSchemeRegistry.SCHEME_CUSTOM);
+    } else {
+      AppPreferences.COLOR_SCHEME.set(ColorSchemeRegistry.SCHEME_MODERN);
+    }
+    updateSwatchesAndPreview();
+    notifyCanvasesRepaint();
+  }
+
+  private ColorScheme getPreviewScheme() {
+    String selected = (String) schemeDropdown.getSelectedItem();
+    String schemeId = ColorSchemeRegistry.SCHEME_MODERN;
+    if (ColorSchemeRegistry.DISPLAY_CLASSIC.equals(selected)) {
+      schemeId = ColorSchemeRegistry.SCHEME_CLASSIC;
+    } else if (ColorSchemeRegistry.DISPLAY_COLORBLIND.equals(selected)) {
+      schemeId = ColorSchemeRegistry.SCHEME_COLORBLIND;
+    } else if (ColorSchemeRegistry.DISPLAY_CUSTOM.equals(selected)) {
+      schemeId = ColorSchemeRegistry.SCHEME_CUSTOM;
+    }
+    return ColorSchemeRegistry.getColorScheme(schemeId, previewIsDark);
+  }
+
+  private void updateSwatchesAndPreview() {
+    ColorScheme scheme = getPreviewScheme();
+    String schemeId = AppPreferences.COLOR_SCHEME.get();
+    boolean isCustom = ColorSchemeRegistry.SCHEME_CUSTOM.equalsIgnoreCase(schemeId);
+
+    trueColor.setDisplayColor(isCustom ? null : scheme.trueColor());
+    falseColor.setDisplayColor(isCustom ? null : scheme.falseColor());
+    unknownColor.setDisplayColor(isCustom ? null : scheme.unknownColor());
+    errorColor.setDisplayColor(isCustom ? null : scheme.errorColor());
+    nilColor.setDisplayColor(isCustom ? null : scheme.unconnectedColor());
+    busColor.setDisplayColor(isCustom ? null : scheme.busColor());
+    highlightColor.setDisplayColor(isCustom ? null : scheme.strokeColor());
+    widthErrorColor.setDisplayColor(isCustom ? null : scheme.mismatchColor());
+    widthErrorCaptionColor.setDisplayColor(isCustom ? null : scheme.widthErrorCaptionColor());
+    widthErrorHighlightColor.setDisplayColor(isCustom ? null : scheme.widthErrorHighlightColor());
+    widthErrorBackgroundColor.setDisplayColor(isCustom ? null : scheme.widthErrorBackgroundColor());
+    clockFrequencyColor.setDisplayColor(isCustom ? null : scheme.clockFrequencyColor());
+
+    boolean readOnly = !isCustom;
+    ColorChooserButton[] swatches = {
+      trueColor, falseColor, unknownColor, errorColor, nilColor, busColor,
+      highlightColor, widthErrorColor, widthErrorCaptionColor, widthErrorHighlightColor,
+      widthErrorBackgroundColor, clockFrequencyColor
+    };
+    for (var b : swatches) {
+      b.setReadOnly(readOnly);
+    }
+
+    editColorsButton.setEnabled(!isCustom);
+    resetModernButton.setEnabled(!ColorSchemeRegistry.SCHEME_MODERN.equalsIgnoreCase(schemeId));
+
+    boolean isClassicDark = ColorSchemeRegistry.SCHEME_CLASSIC.equalsIgnoreCase(schemeId) && previewIsDark;
+    classicNoticeLabel.setVisible(isClassicDark);
+
+    wirePreviewStrip.repaint();
+    repaint();
+  }
+
+  private void switchToCustomAndEdit(ColorChooserButton target) {
+    ColorScheme current = getPreviewScheme();
+    ColorSchemeRegistry.copySchemeToCustom(current);
+    AppPreferences.COLOR_SCHEME.set(ColorSchemeRegistry.SCHEME_CUSTOM);
+    syncDropdownSelection();
+    updateSwatchesAndPreview();
+    notifyCanvasesRepaint();
+    if (target != null) {
+      target.triggerEditDialog();
+    }
+  }
+
+  private void notifyCanvasesRepaint() {
+    Value.updateColors();
+    for (final var proj : Projects.getOpenProjects()) {
+      if (proj.getFrame() != null && proj.getFrame().getCanvas() != null) {
+        proj.getFrame().getCanvas().repaint();
+      }
+    }
   }
 
   @Override
@@ -358,8 +560,6 @@ public class SimOptions extends OptionsPanel {
     widthErrorHighlightColorTitle.setText(S.get("simWidthErrorHighlightTitle"));
     widthErrorBackgroundColorTitle.setText(S.get("simWidthErrorBackgroundTitle"));
     clockFrequencyColorTitle.setText(S.get("simClockFrequencyTitle"));
-    defaultButton.setText(S.get("simDefaultColors"));
-    colorBlindButton.setText(S.get("simColorBlindColors"));
     kmap1ColorTitle.setText(S.get("simKmapColors", 1));
     kmap2ColorTitle.setText(S.get("simKmapColors", 2));
     kmap3ColorTitle.setText(S.get("simKmapColors", 3));
@@ -379,145 +579,73 @@ public class SimOptions extends OptionsPanel {
     kmapColorsTitle.setText(S.get("simKmapColorsTitle"));
   }
 
-  private void setDefaults() {
-    AppPreferences.TRUE_COLOR.set(0x0000D300);
-    AppPreferences.FALSE_COLOR.set(0x00006500);
-    AppPreferences.UNKNOWN_COLOR.set(0x002827FF);
-    AppPreferences.ERROR_COLOR.set(0x00C10000);
-    AppPreferences.NIL_COLOR.set(0x818181);
-    AppPreferences.BUS_COLOR.set(1);
-    AppPreferences.STROKE_COLOR.set(0xFE00FF);
-    AppPreferences.WIDTH_ERROR_COLOR.set(0xFF7A00);
-    AppPreferences.WIDTH_ERROR_CAPTION_COLOR.set(0x560000);
-    AppPreferences.WIDTH_ERROR_HIGHLIGHT_COLOR.set(0xFFFE00);
-    AppPreferences.WIDTH_ERROR_BACKGROUND_COLOR.set(0xFFE6D2);
-    AppPreferences.CLOCK_FREQUENCY_COLOR.set(0xFF00B4);
-    AppPreferences.KMAP1_COLOR.set(0x810000);
-    AppPreferences.KMAP2_COLOR.set(0xE7194B);
-    AppPreferences.KMAP3_COLOR.set(0xFABEBF);
-    AppPreferences.KMAP4_COLOR.set(0xAA6E29);
-    AppPreferences.KMAP5_COLOR.set(0xF58231);
-    AppPreferences.KMAP6_COLOR.set(0xFFD7B5);
-    AppPreferences.KMAP7_COLOR.set(0x818000);
-    AppPreferences.KMAP8_COLOR.set(0xFFFF1A);
-    AppPreferences.KMAP9_COLOR.set(0xD2F53D);
-    AppPreferences.KMAP10_COLOR.set(0x000081);
-    AppPreferences.KMAP11_COLOR.set(0x911EB5);
-    AppPreferences.KMAP12_COLOR.set(0x3CB5AF);
-    AppPreferences.KMAP13_COLOR.set(0x0082CC);
-    AppPreferences.KMAP14_COLOR.set(0xE7BEFF);
-    AppPreferences.KMAP15_COLOR.set(0xAAFFC4);
-    AppPreferences.KMAP16_COLOR.set(0xF032E7);
-    repaint();
-  }
-
-  private void setColorBlind() {
-    AppPreferences.TRUE_COLOR.set(0xF4EB42);
-    AppPreferences.FALSE_COLOR.set(0x203BE8);
-    AppPreferences.UNKNOWN_COLOR.set(0x01BC9D);
-    AppPreferences.ERROR_COLOR.set(0x00C10000);
-    AppPreferences.NIL_COLOR.set(0x818181);
-    AppPreferences.BUS_COLOR.set(1);
-    AppPreferences.STROKE_COLOR.set(0xBBBBBB);
-    AppPreferences.WIDTH_ERROR_COLOR.set(0xC413DB);
-    AppPreferences.WIDTH_ERROR_CAPTION_COLOR.set(0x560000);
-    AppPreferences.WIDTH_ERROR_HIGHLIGHT_COLOR.set(0xFFFE00);
-    AppPreferences.WIDTH_ERROR_BACKGROUND_COLOR.set(0xFFE6D2);
-    AppPreferences.CLOCK_FREQUENCY_COLOR.set(0xFF00B4); // FIXME: Calculate proper color!
-    AppPreferences.KMAP1_COLOR.set(0x490092);
-    AppPreferences.KMAP2_COLOR.set(0x920000);
-    AppPreferences.KMAP3_COLOR.set(0x004949);
-    AppPreferences.KMAP4_COLOR.set(0x006DDB);
-    AppPreferences.KMAP5_COLOR.set(0x924900);
-    AppPreferences.KMAP6_COLOR.set(0x009292);
-    AppPreferences.KMAP7_COLOR.set(0xB66DFF);
-    AppPreferences.KMAP8_COLOR.set(0xDBD100);
-    AppPreferences.KMAP9_COLOR.set(0xFF6DB6);
-    AppPreferences.KMAP10_COLOR.set(0x6DB6FF);
-    AppPreferences.KMAP11_COLOR.set(0x24FF24);
-    AppPreferences.KMAP12_COLOR.set(0xFFB677);
-    AppPreferences.KMAP13_COLOR.set(0xB6DBFF);
-    AppPreferences.KMAP14_COLOR.set(0xFFFF6D);
-    AppPreferences.KMAP15_COLOR.set(0x009292);
-    AppPreferences.KMAP16_COLOR.set(0xFFB677);
-    repaint();
-  }
-
-  private static class MyListener implements PreferenceChangeListener {
+  private class WirePreviewStrip extends JPanel {
+    public WirePreviewStrip() {
+      setPreferredSize(new Dimension(420, 36));
+      setMinimumSize(new Dimension(300, 36));
+    }
 
     @Override
-    public void preferenceChange(PreferenceChangeEvent evt) {
-      var update = false;
-      final var key = evt.getKey();
-      if (key.equals(AppPreferences.TRUE_COLOR.getIdentifier())) {
-        Value.trueColor = new Color(AppPreferences.TRUE_COLOR.get());
-        update = true;
-      } else if (key.equals(AppPreferences.TRUE_CHAR.getIdentifier())) {
-        Value.TRUECHAR = AppPreferences.TRUE_CHAR.get().charAt(0);
-        update = true;
-      } else if (key.equals(AppPreferences.FALSE_COLOR.getIdentifier())) {
-        Value.falseColor = new Color(AppPreferences.FALSE_COLOR.get());
-        update = true;
-      } else if (key.equals(AppPreferences.FALSE_CHAR.getIdentifier())) {
-        Value.FALSECHAR = AppPreferences.FALSE_CHAR.get().charAt(0);
-        update = true;
-      } else if (key.equals(AppPreferences.UNKNOWN_COLOR.getIdentifier())) {
-        Value.unknownColor = new Color(AppPreferences.UNKNOWN_COLOR.get());
-        update = true;
-      } else if (key.equals(AppPreferences.UNKNOWN_CHAR.getIdentifier())) {
-        Value.UNKNOWNCHAR = AppPreferences.UNKNOWN_CHAR.get().charAt(0);
-        update = true;
-      } else if (key.equals(AppPreferences.ERROR_COLOR.getIdentifier())) {
-        Value.errorColor = new Color(AppPreferences.ERROR_COLOR.get());
-        update = true;
-      } else if (key.equals(AppPreferences.ERROR_CHAR.getIdentifier())) {
-        Value.ERRORCHAR = AppPreferences.ERROR_CHAR.get().charAt(0);
-        update = true;
-      } else if (key.equals(AppPreferences.NIL_COLOR.getIdentifier())) {
-        Value.nilColor = new Color(AppPreferences.NIL_COLOR.get());
-        update = true;
-      } else if (key.equals(AppPreferences.DONTCARE_CHAR.getIdentifier())) {
-        Value.DONTCARECHAR = AppPreferences.DONTCARE_CHAR.get().charAt(0);
-        update = true;
-      } else if (key.equals(AppPreferences.BUS_COLOR.getIdentifier())) {
-        Value.multiColor = new Color(AppPreferences.BUS_COLOR.get());
-        update = true;
-      } else if (key.equals(AppPreferences.STROKE_COLOR.getIdentifier())) {
-        Value.strokeColor = new Color(AppPreferences.STROKE_COLOR.get());
-        update = true;
-      } else if (key.equals(AppPreferences.WIDTH_ERROR_COLOR.getIdentifier())) {
-        Value.widthErrorColor = new Color(AppPreferences.WIDTH_ERROR_COLOR.get());
-        update = true;
-      } else if (key.equals(AppPreferences.WIDTH_ERROR_CAPTION_COLOR.getIdentifier())) {
-        Value.widthErrorCaptionColor = new Color(AppPreferences.WIDTH_ERROR_CAPTION_COLOR.get());
-        update = true;
-      } else if (key.equals(AppPreferences.WIDTH_ERROR_HIGHLIGHT_COLOR.getIdentifier())) {
-        Value.widthErrorHighlightColor =
-            new Color(AppPreferences.WIDTH_ERROR_HIGHLIGHT_COLOR.get());
-        update = true;
-      } else if (key.equals(AppPreferences.WIDTH_ERROR_BACKGROUND_COLOR.getIdentifier())) {
-        Value.widthErrorCaptionBgcolor =
-            new Color(AppPreferences.WIDTH_ERROR_BACKGROUND_COLOR.get());
-        update = true;
-      } else if (key.equals(AppPreferences.CLOCK_FREQUENCY_COLOR.getIdentifier())) {
-        Value.clockFrequencyColor = new Color(AppPreferences.CLOCK_FREQUENCY_COLOR.get());
-        update = true;
+    protected void paintComponent(Graphics g) {
+      super.paintComponent(g);
+      var g2 = (Graphics2D) g.create();
+      g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+      g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+
+      boolean dark = previewIsDark;
+      Color canvasBg = dark ? new Color(0x1F, 0x1F, 0x1F) : Color.WHITE;
+      g2.setColor(canvasBg);
+      g2.fillRect(0, 0, getWidth(), getHeight());
+
+      g2.setColor(dark ? new Color(0x4D, 0x51, 0x5A) : new Color(0xC8, 0xCC, 0xD2));
+      g2.drawRect(0, 0, getWidth() - 1, getHeight() - 1);
+
+      ColorScheme scheme = getPreviewScheme();
+      Object[][] samples = {
+        {"0", scheme.falseColor(), 1},
+        {"1", scheme.trueColor(), 1},
+        {"U", scheme.unknownColor(), 1},
+        {"E", scheme.errorColor(), 1},
+        {"Mis", scheme.mismatchColor(), 1},
+        {"Bus", scheme.busColor(), 3},
+        {"Nil", scheme.unconnectedColor(), 1}
+      };
+
+      int count = samples.length;
+      int colWidth = getWidth() / count;
+      Font font = new Font("SansSerif", Font.PLAIN, 10);
+      g2.setFont(font);
+
+      for (int i = 0; i < count; i++) {
+        int x0 = i * colWidth;
+        String label = (String) samples[i][0];
+        Color color = (Color) samples[i][1];
+        int strokeWidth = (Integer) samples[i][2];
+
+        // Label
+        g2.setColor(dark ? new Color(0xAC, 0xAC, 0xAC) : new Color(0x5A, 0x5D, 0x66));
+        var fm = g2.getFontMetrics();
+        int labelW = fm.stringWidth(label);
+        g2.drawString(label, x0 + (colWidth - labelW) / 2, 12);
+
+        // Wire line
+        g2.setColor(color);
+        g2.setStroke(new BasicStroke(strokeWidth, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+        int y = 24;
+        g2.drawLine(x0 + 8, y, x0 + colWidth - 8, y);
       }
-      if (update) {
-        for (final var proj : Projects.getOpenProjects()) proj.getFrame().repaint();
-      }
+      g2.dispose();
     }
   }
 
-  private class MyColorListener implements ActionListener {
-
+  private class MyListener implements PreferenceChangeListener {
     @Override
-    public void actionPerformed(ActionEvent e) {
-      if (e.getActionCommand().equals("default")) {
-        setDefaults();
-      } else if (e.getActionCommand().equals("colorblind")) {
-        setColorBlind();
-      }
+    public void preferenceChange(PreferenceChangeEvent evt) {
+      SwingUtilities.invokeLater(() -> {
+        syncDropdownSelection();
+        updateSwatchesAndPreview();
+        notifyCanvasesRepaint();
+      });
     }
   }
 

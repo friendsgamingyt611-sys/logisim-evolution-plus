@@ -294,18 +294,43 @@ public final class Value {
   public static final Value NIL = new Value(0, 0, 0, 0);
   public static final int MAX_WIDTH = 64;
 
-  public static Color falseColor = new Color(AppPreferences.FALSE_COLOR.get());
-  public static Color trueColor = new Color(AppPreferences.TRUE_COLOR.get());
-  public static Color unknownColor = new Color(AppPreferences.UNKNOWN_COLOR.get());
-  public static Color errorColor = new Color(AppPreferences.ERROR_COLOR.get());
-  public static Color nilColor = new Color(AppPreferences.NIL_COLOR.get());
-  public static Color strokeColor = new Color(AppPreferences.STROKE_COLOR.get());
-  public static Color multiColor = new Color(AppPreferences.BUS_COLOR.get());
-  public static Color widthErrorColor = new Color(AppPreferences.WIDTH_ERROR_COLOR.get());
-  public static Color widthErrorCaptionColor = new Color(AppPreferences.WIDTH_ERROR_CAPTION_COLOR.get());
-  public static Color widthErrorHighlightColor = new Color(AppPreferences.WIDTH_ERROR_HIGHLIGHT_COLOR.get());
-  public static Color widthErrorCaptionBgcolor = new Color(AppPreferences.WIDTH_ERROR_BACKGROUND_COLOR.get());
-  public static Color clockFrequencyColor = new Color(AppPreferences.CLOCK_FREQUENCY_COLOR.get());
+  public static Color falseColor = com.cburch.logisim.gui.theme.ColorSchemeRegistry.getActiveScheme().falseColor();
+  public static Color trueColor = com.cburch.logisim.gui.theme.ColorSchemeRegistry.getActiveScheme().trueColor();
+  public static Color unknownColor = com.cburch.logisim.gui.theme.ColorSchemeRegistry.getActiveScheme().unknownColor();
+  public static Color errorColor = com.cburch.logisim.gui.theme.ColorSchemeRegistry.getActiveScheme().errorColor();
+  public static Color nilColor = com.cburch.logisim.gui.theme.ColorSchemeRegistry.getActiveScheme().unconnectedColor();
+  public static Color strokeColor = com.cburch.logisim.gui.theme.ColorSchemeRegistry.getActiveScheme().strokeColor();
+  public static Color multiColor = com.cburch.logisim.gui.theme.ColorSchemeRegistry.getActiveScheme().busColor();
+  public static Color widthErrorColor = com.cburch.logisim.gui.theme.ColorSchemeRegistry.getActiveScheme().mismatchColor();
+  public static Color widthErrorCaptionColor =
+      com.cburch.logisim.gui.theme.ColorSchemeRegistry.getActiveScheme().widthErrorCaptionColor();
+  public static Color widthErrorHighlightColor =
+      com.cburch.logisim.gui.theme.ColorSchemeRegistry.getActiveScheme().widthErrorHighlightColor();
+  public static Color widthErrorCaptionBgcolor =
+      com.cburch.logisim.gui.theme.ColorSchemeRegistry.getActiveScheme().widthErrorBackgroundColor();
+  public static Color clockFrequencyColor =
+      com.cburch.logisim.gui.theme.ColorSchemeRegistry.getActiveScheme().clockFrequencyColor();
+
+  public static void updateColors() {
+    final var scheme = com.cburch.logisim.gui.theme.ColorSchemeRegistry.getActiveScheme();
+    falseColor = scheme.falseColor();
+    trueColor = scheme.trueColor();
+    unknownColor = scheme.unknownColor();
+    errorColor = scheme.errorColor();
+    nilColor = scheme.unconnectedColor();
+    strokeColor = scheme.strokeColor();
+    multiColor = scheme.busColor();
+    widthErrorColor = scheme.mismatchColor();
+    widthErrorCaptionColor = scheme.widthErrorCaptionColor();
+    widthErrorHighlightColor = scheme.widthErrorHighlightColor();
+    widthErrorCaptionBgcolor = scheme.widthErrorBackgroundColor();
+    clockFrequencyColor = scheme.clockFrequencyColor();
+  }
+
+  static {
+    AppPreferences.COLOR_SCHEME.addPropertyChangeListener(e -> updateColors());
+    AppPreferences.LookAndFeel.addPropertyChangeListener(e -> updateColors());
+  }
 
   private static final Cache cache = new Cache();
 

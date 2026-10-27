@@ -66,6 +66,8 @@ public class Main {
         ModernLightLaf.installLafInfo();
         ModernDarkLaf.installLafInfo();
         
+        com.cburch.logisim.gui.theme.ColorSchemeRegistry.performMigrationIfNeeded();
+        
         var initialLaf = AppPreferences.LookAndFeel.get();
         if (AppPreferences.AUTO_SYNC_THEME.get()) {
           final var sysDark = ThemeManager.querySystemDarkNow();

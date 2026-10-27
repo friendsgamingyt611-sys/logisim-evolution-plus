@@ -81,6 +81,26 @@ public class PreferencesFrame extends LFrame.Dialog {
     frame.setVisible(true);
   }
 
+  public static PreferencesFrame getPreferencesFrame() {
+    if (MENU_MANAGER == null) {
+      initializeManager();
+    }
+    return (PreferencesFrame) MENU_MANAGER.getJFrame(true, null);
+  }
+
+  public JTabbedPane getTabbedPane() {
+    return tabbedPane;
+  }
+
+  public void setSimulationTab() {
+    for (int i = 0; i < panels.length; i++) {
+      if (panels[i] instanceof SimOptions) {
+        tabbedPane.setSelectedIndex(i);
+        break;
+      }
+    }
+  }
+
   public void setFpgaTab() {
     if (fpgaTabIdx < 0) return;
     tabbedPane.setSelectedIndex(fpgaTabIdx);
