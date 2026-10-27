@@ -2,7 +2,7 @@
 LOGISIM-EVOLUTION+ : COMPLETE PROJECT CONTEXT, INSTRUCTIONS & ARCHITECTURE
 ================================================================================
 
-Date: October 26, 2026
+Date: October 27, 2026
 Repository: friendsgamingyt611-sys/logisim-evolution-plus
 Working Directory: /home/devansh/logisim-evolution-plus
 
@@ -172,7 +172,7 @@ tonal execution to fit the GNOME / Libadwaita palette (e.g. GNOME HIG Orchid #C0
 dark attribute halos, preserving Color.MAGENTA in light mode and light scopes).
 
 --------------------------------------------------------------------------------
-COMPLETED STAGES SUMMARY (STAGES 1 - 6)
+COMPLETED STAGES SUMMARY (STAGES 1 - 16)
 --------------------------------------------------------------------------------
 
 STAGE 1: Central Context-Aware Stroke & Paint Scope (Commit 4d6433f)
@@ -201,31 +201,114 @@ STAGE 5: Libadwaita Selection, Halo, & Readout Harmonization (Commit c068e21)
 - Constants (Constant.java): #262626 body fill, #E6E6E6 multi-bit text.
 - Contrast verification: Halo against dark canvas = 4.58:1; Ghost = 5.85:1.
 
-STAGE 6: Anti-Aliasing Stroke Caps & Hints (Flag-Gated Experiment)
+STAGE 6: Anti-Aliasing Stroke Caps & Hints (Flag-Gated Experiment) (Commit 3e85d45)
 - Hidden preference: EXPERIMENTAL_ROUND_STROKES (default false).
 - Component-only BasicStroke.CAP_ROUND / JOIN_ROUND via GraphicsUtil.switchToWidth.
 - CircuitWires.java retains standard stroke caps (0 overshoot at connection dots).
 - RenderingHints.KEY_STROKE_CONTROL = VALUE_STROKE_PURE in ComponentDrawContext.
 - Zoom & overshoot evaluation verified at 100%, 200%, and 432%.
 
+STAGE 7: Light Mode Canvas Symmetry & Attribute Table Contrast (Commit 1d8821d)
+- Synchronous canvas background switching between #FFFFFF (Light) and #1F1F1F (Dark).
+- Fixed Attribute Table selection contrast and disabled-label contrast tokens.
+
+STAGE 8: High-DPI Icon Binding, X11 WM_CLASS, & Splash Banner (Commit c998d00)
+- Bound multi-resolution vector icon assets (16px to 256px) across window hierarchy.
+- Set Toolkit.awtAppClassName and X11 WM_CLASS, fixing OS dock fallback gear icons.
+- Restored official green XOR circle splash banner with crisp typography.
+
+STAGE 9: Evolved Left Panel, 6-Icon Toolbar, & Transparent Icons (Commit 4426611)
+- Modernized tree explorer with authoritative typography and high-contrast icons.
+- Streamlined primary action toolbar to a clean 6-tool strip.
+- Converted wiring icons (Splitter, Pin, Probe, Tunnel, PullResistor, Clock) to vector.
+
+STAGE 10: Instant Theme Switching, EDT Subprocess Ban, & Grid Sync (Commit 55fa57d)
+- Banned external Linux shell commands (busctl, gsettings) on EDT in ThemeManager.
+- Cached detector strategy and used background worker thread for 750ms polling.
+- Synchronous invalidateGrid() in GridPainter, eliminating stale-buffer white ghosting.
+
+STAGE 11: Authoritative Left Panel Contrast, VHDL Chip Icon, & Focus Fix (Commit 3a675ab)
+- High-contrast tree chevrons (#4A4A4A / #B8BFC6) and category icons (#1E1E1E / #EBEBEB).
+- Redesigned AddVhdlIcon to a clean vector chip outline with center logic core.
+- Added semantic hover cues on Toolbox buttons (+, ×, arrows).
+- Suppressed distracting FlatLaf focus ring on Properties table in AttrTable.
+
+STAGE 12: Wire Dragging Visibility & Translucent Marquee Fill (Commit c304bb1)
+- SelectTool interior filled with palette.selectionMarqueeFill() and 1px border.
+- WiringTool dragging wire stroke uses Palette.current().stroke() for full visibility.
+
+STAGE 13: Plexer Labels Restoration & Schematic Font Scaling (Commit ae5d06d)
+- Restored centered "MUX" and "DMX" labels on all wide plexers (including 2-to-1) in
+  crisp 10pt bold, with "0" index marker in 9pt plain without colliding.
+- Enforced baseline schematic font (SansSerif Plain 10), fractional metrics
+  (KEY_FRACTIONALMETRICS_ON), and text antialiasing across all canvas rendering.
+
+STAGE 14: Top Menu Bar Restoration (Commit 36ac57c)
+- Restored permanent horizontal top menu bar (File | Edit | Project | Simulate |
+  FPGA | Window | Help) on Frame.java.
+- Removed redundant hamburger menu button (☰) and popup from ModernHeaderBar.java.
+
+STAGE 15: Light Mode Selection Contrast & Surface Containment (Commit 80920be)
+- Replaced 18% pale blue tree selection pill with solid #3584E4 accent blue and
+  pure #FFFFFF white text, icons, and badges (>4.5:1 contrast).
+- Elevated toolbar background (#F3F4F6 Light / #252526 Dark) with 1px structural
+  bottom border (#D0D5DD Light / #333333 Dark) in Toolbar and ModernHeaderBar.
+- Crisp 1px structural splitter divider in HorizontalSplitPane.
+- Framed container tab headers (#EAECF0 Light / #282828 Dark) in Frame.
+- Crisp cell gridlines (#E4E7EC Light / #2E2E2E Dark) in AttrTable.
+
+STAGE 16: Smooth Zooming & High-Frequency Simulation Pulse Streams (Commit 9cff47d)
+- GPU-accelerated canvas zooming via AffineTransform matrix directly on Graphics2D.
+- Sub-pixel rendering hints (KEY_ANTIALIASING, KEY_INTERPOLATION_BILINEAR,
+  KEY_STROKE_PURE, KEY_TEXT_ANTIALIASING, KEY_FRACTIONALMETRICS_ON).
+- Inertial easing zoom engine (currentScale += (targetScale - currentScale) * 0.25
+  at 60 FPS in Canvas.java) for a weighted, native photo-viewer feel.
+- Dynamic OS refresh rate detection via GraphicsEnvironment in Simulator.java.
+- High-frequency thresholding (>= 128 Hz up to 4 kHz) with GUI notification
+  throttling in Simulator.java to eliminate EDT choking.
+- Active High-Speed Stream Mode rendering wires and clocks in glowing emerald
+  green (#33D17A) with animated cyan (#62A0EA) dashed stream overlay whose phase
+  offset increments per frame, eliminating binary strobing/flicker fatigue.
+
 --------------------------------------------------------------------------------
 4. KEY SOURCE FILES & ROLES
 --------------------------------------------------------------------------------
 - com.cburch.logisim.comp.Palette:
   Central theme color palette (DARK vs LIGHT), ThreadLocal paint scope, stroke
-  resolution.
+  resolution, selection and halo tokens.
 - com.cburch.logisim.prefs.AppPreferences:
   Preferences engine, theme detection, `ADAPT_COMPONENT_COLOR`, `getComponentColor()`.
+- com.cburch.logisim.gui.theme.ThemeManager:
+  Asynchronous, non-blocking OS theme detection, EDT-safe atomic theme switching.
+- com.cburch.logisim.circuit.Simulator:
+  Simulation engine, OS display refresh rate detection, high-frequency thresholding,
+  EDT notification throttling, global pulse animation phase.
+- com.cburch.logisim.circuit.CircuitWires:
+  Netlist connectivity, ValuedBus toggle tracking, animated high-speed pulse stream
+  wire and junction rendering.
+- com.cburch.logisim.std.wiring.Clock:
+  Clock component, high-frequency balanced wave stream rendering without binary strobing.
+- com.cburch.logisim.gui.main.Canvas:
+  Canvas viewport, inertial easing zoom engine, sub-pixel rendering hints.
 - com.cburch.logisim.gui.main.CanvasPainter:
-  Canvas rendering loop, viewport dispatch, component drawing coordinator.
+  Hardware-accelerated AffineTransform canvas scaling, frame animation advancement,
+  grid coordination.
 - com.cburch.logisim.gui.generic.GridPainter:
-  Modern round dot grid painter with major/minor dot hierarchy.
+  Modern round dot grid painter with major/minor dot hierarchy and atomic tile invalidation.
+- com.cburch.logisim.gui.main.ModernHeaderBar:
+  Unified top header bar with simulation status/control pill, circuit switcher,
+  and zoom widget.
+- com.cburch.logisim.gui.main.Frame:
+  Main window frame, permanent classic horizontal menu bar, tab containers.
+- com.cburch.logisim.gui.generic.ProjectExplorer:
+  Dual-mode left panel (Refined List & Tile Grid), authoritative contrast typography,
+  solid accent selection pills.
+- com.cburch.logisim.gui.generic.AttrTable:
+  Properties table, high-contrast attribute cells, structural gridlines, focus ring suppression.
 - com.cburch.logisim.gui.main.ComponentGlyphCache:
   Multi-resolution icon and thumbnail cache for library explorer and search.
 - com.cburch.logisim.gui.main.ExportImage & Print:
   Image export (PNG, SVG, TikZ, JPG, GIF) and printing with forced light scope.
-- com.cburch.logisim.gui.prefs.WindowOptions & ColorChooserButton:
-  Preferences window options UI, live color preview swatches, adapt checkbox.
 
 ================================================================================
 END OF LOGISIM-EVOLUTION+ CONTEXT DOCUMENT
