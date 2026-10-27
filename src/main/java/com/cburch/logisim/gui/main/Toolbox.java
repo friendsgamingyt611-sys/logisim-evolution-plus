@@ -11,6 +11,7 @@ package com.cburch.logisim.gui.main;
 
 import static com.cburch.logisim.gui.Strings.S;
 
+import com.cburch.logisim.circuit.Circuit;
 import com.cburch.logisim.file.LibraryEvent;
 import com.cburch.logisim.file.LibraryListener;
 import com.cburch.logisim.gui.generic.ProjectExplorer;
@@ -19,6 +20,8 @@ import com.cburch.logisim.gui.icons.symbolic.AddVhdlIcon;
 import com.cburch.logisim.gui.icons.symbolic.AppearanceIcon;
 import com.cburch.logisim.gui.icons.symbolic.CircuitGlyphIcon;
 import com.cburch.logisim.gui.icons.symbolic.DeleteIcon;
+import com.cburch.logisim.gui.icons.symbolic.GridToggleIcon;
+import com.cburch.logisim.gui.icons.symbolic.ListToggleIcon;
 import com.cburch.logisim.gui.icons.symbolic.MoveDownIcon;
 import com.cburch.logisim.gui.icons.symbolic.MoveUpIcon;
 import com.cburch.logisim.gui.menu.LogisimMenuBar;
@@ -30,7 +33,6 @@ import com.cburch.logisim.proj.ProjectEvent;
 import com.cburch.logisim.proj.ProjectListener;
 import com.cburch.logisim.tools.Tool;
 import com.formdev.flatlaf.FlatClientProperties;
-
 import java.awt.BorderLayout;
 import java.awt.CardLayout;
 import java.awt.Color;
@@ -41,29 +43,29 @@ import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 import javax.swing.AbstractAction;
+import javax.swing.AbstractButton;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
+import javax.swing.Icon;
 import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
-import javax.swing.JMenuItem;
 import javax.swing.JPanel;
-import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 import javax.swing.JToggleButton;
 import javax.swing.KeyStroke;
+import javax.swing.SwingConstants;
 import javax.swing.UIManager;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
 /**
- * Modern Left Panel (Toolbox / ExplorerPanel) hosting both Refined List and Symbol Tiles views.
+ * Modern Left Panel (Toolbox / ExplorerPanel) hosting two-row header, action strip,
+ * in-place search, and Refined List / Symbol Tiles views.
  */
 public class Toolbox extends JPanel implements ExplorerModel.Listener, ProjectListener, LibraryListener {
 
@@ -83,7 +85,7 @@ public class Toolbox extends JPanel implements ExplorerModel.Listener, ProjectLi
   private final JButton btnAddVhdl;
   private final JButton btnMoveUp;
   private final JButton btnMoveDown;
-  private final JButton btnAppearance;
+  private final JToggleButton btnAppearance;
   private final JButton btnDelete;
   private final JToggleButton btnTiles;
   private final JToggleButton btnList;
@@ -101,13 +103,14 @@ public class Toolbox extends JPanel implements ExplorerModel.Listener, ProjectLi
     this.menu = menu;
     this.model = new ExplorerModel(proj, frame);
 
-    // 1. Panel Header (40px)
-    final var headerPanel = new JPanel(new BorderLayout());
-    headerPanel.setPreferredSize(new Dimension(-1, AppPreferences.getScaled(40)));
-    headerPanel.setBorder(BorderFactory.createEmptyBorder(0, 10, 0, 10));
-    headerPanel.putClientProperty(FlatClientProperties.STYLE, "background: $Panel.background;");
+    // =========================================================================
+    // ROW 1: Project Header (40px)
+    // =========================================================================
+    final var projectHeaderPanel = new JPanel(new BorderLayout());
+    projectHeaderPanel.setPreferredSize(new Dimension(-1, AppPreferences.getScaled(40)));
+    projectHeaderPanel.setBorder(BorderFactory.createEmptyBorder(0, AppPreferences.getScaled(10), 0, AppPreferences.getScaled(10)));
+    projectHeaderPanel.putClientProperty(FlatClientProperties.STYLE, "background: $Panel.background;");
 
-    // Project Name + Dirty Dot
     final var titleBox = new JPanel();
     titleBox.setLayout(new BoxLayout(titleBox, BoxLayout.X_AXIS));
     titleBox.setOpaque(false);
@@ -123,8 +126,9 @@ public class Toolbox extends JPanel implements ExplorerModel.Listener, ProjectLi
         if (proj != null && proj.getLogisimFile() != null && proj.getLogisimFile().isDirty()) {
           final var g2 = (Graphics2D) g.create();
           g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-          Color warn = UIManager.getColor("Component.warningColor");
-          if (warn == null) warn = new Color(229, 165, 10);
+          Color warn = AppPreferences.isDarkTheme()
+              ? new Color(0xE5, 0xA5, 0x0A)
+              : new Color(0xB8, 0x7D, 0x00);
           g2.setColor(warn);
           int dotSize = AppPreferences.getScaled(6);
           int textW = getFontMetrics(getFont()).stringWidth(getText());
@@ -141,80 +145,106 @@ public class Toolbox extends JPanel implements ExplorerModel.Listener, ProjectLi
     projectTitleLabel.setFont(new Font(Font.SANS_SERIF, Font.BOLD, AppPreferences.getScaled(13)));
     updateProjectTitle();
     titleBox.add(projectTitleLabel);
-    headerPanel.add(titleBox, BorderLayout.WEST);
+    projectHeaderPanel.add(titleBox, BorderLayout.WEST);
 
-    // Header Right Actions: [6 circuit actions] [⊞ | ☰]
-    final var actionsBox = new JPanel();
-    actionsBox.setLayout(new BoxLayout(actionsBox, BoxLayout.X_AXIS));
-    actionsBox.setOpaque(false);
-
-    btnAddCircuit = createActionButton(new AddCircuitIcon(), "projectAddCircuitTip", "Add Circuit", LogisimMenuBar.ADD_CIRCUIT);
-    btnAddCircuit.putClientProperty(FlatClientProperties.STYLE, "arc: 4; margin: 2,2,2,2; hoverForeground: #2ed173;");
-
-    btnAddVhdl = createActionButton(new AddVhdlIcon(), "projectAddVhdlItem", "Add HDL Entity...", LogisimMenuBar.ADD_VHDL);
-    btnAddVhdl.putClientProperty(FlatClientProperties.STYLE, "arc: 4; margin: 2,2,2,2; hoverForeground: #2ed173;");
-
-    btnMoveUp = createActionButton(new MoveUpIcon(), "projectMoveCircuitUpTip", "Move Circuit Up", LogisimMenuBar.MOVE_CIRCUIT_UP);
-    btnMoveUp.putClientProperty(FlatClientProperties.STYLE, "arc: 4; margin: 2,2,2,2; hoverForeground: #3584e4;");
-
-    btnMoveDown = createActionButton(new MoveDownIcon(), "projectMoveCircuitDownTip", "Move Circuit Down", LogisimMenuBar.MOVE_CIRCUIT_DOWN);
-    btnMoveDown.putClientProperty(FlatClientProperties.STYLE, "arc: 4; margin: 2,2,2,2; hoverForeground: #3584e4;");
-
-    btnAppearance = createActionButton(new AppearanceIcon(), "projectEditAppearanceTip", "Edit Circuit Appearance", LogisimMenuBar.TOGGLE_APPEARANCE);
-    btnAppearance.putClientProperty(FlatClientProperties.STYLE, "arc: 4; margin: 2,2,2,2; hoverForeground: #9a9996;");
-
-    btnDelete = createActionButton(new DeleteIcon(), "projectRemoveCircuitTip", "Remove Circuit", LogisimMenuBar.REMOVE_CIRCUIT);
-    btnDelete.putClientProperty(FlatClientProperties.STYLE, "arc: 4; margin: 2,2,2,2; hoverForeground: #e01b24;");
-
-    actionsBox.add(btnAddCircuit);
-    actionsBox.add(Box.createHorizontalStrut(AppPreferences.getScaled(2)));
-    actionsBox.add(btnAddVhdl);
-    actionsBox.add(Box.createHorizontalStrut(AppPreferences.getScaled(2)));
-    actionsBox.add(btnMoveUp);
-    actionsBox.add(Box.createHorizontalStrut(AppPreferences.getScaled(2)));
-    actionsBox.add(btnMoveDown);
-    actionsBox.add(Box.createHorizontalStrut(AppPreferences.getScaled(2)));
-    actionsBox.add(btnAppearance);
-    actionsBox.add(Box.createHorizontalStrut(AppPreferences.getScaled(2)));
-    actionsBox.add(btnDelete);
-    actionsBox.add(Box.createHorizontalStrut(AppPreferences.getScaled(6)));
-
-    // Segmented Toggle: [⊞ | ☰]
+    // Segmented Toggle: [☰] (List) | [⊞] (Tiles) with 16px vector glyphs
     final var segBox = new JPanel();
     segBox.setLayout(new BoxLayout(segBox, BoxLayout.X_AXIS));
     segBox.putClientProperty(FlatClientProperties.STYLE, "arc: 6; border: 1,1,1,1,$Component.borderColor; background: $Panel.background;");
     final var viewGroup = new ButtonGroup();
 
-    btnTiles = new JToggleButton("⊞");
-    btnTiles.setToolTipText("Symbol Tiles (3-Column Cards)");
-    btnTiles.putClientProperty(FlatClientProperties.BUTTON_TYPE, FlatClientProperties.BUTTON_TYPE_TOOLBAR_BUTTON);
-    btnTiles.putClientProperty(FlatClientProperties.STYLE, "selectedBackground: $Component.accentColor; selectedForeground: #ffffff; arc: 4;");
-    btnTiles.setPreferredSize(new Dimension(AppPreferences.getScaled(28), AppPreferences.getScaled(24)));
-    btnTiles.addActionListener(e -> model.setViewMode(AppPreferences.EXPLORER_VIEW_TILES));
+    int segW = AppPreferences.getScaled(30);
+    int segH = AppPreferences.getScaled(28);
 
-    btnList = new JToggleButton("☰");
+    btnList = new JToggleButton(new ListToggleIcon());
     btnList.setToolTipText("Refined List (Chevron Tree)");
     btnList.putClientProperty(FlatClientProperties.BUTTON_TYPE, FlatClientProperties.BUTTON_TYPE_TOOLBAR_BUTTON);
     btnList.putClientProperty(FlatClientProperties.STYLE, "selectedBackground: $Component.accentColor; selectedForeground: #ffffff; arc: 4;");
-    btnList.setPreferredSize(new Dimension(AppPreferences.getScaled(28), AppPreferences.getScaled(24)));
+    btnList.setPreferredSize(new Dimension(segW, segH));
+    btnList.setMinimumSize(new Dimension(segW, segH));
+    btnList.setMaximumSize(new Dimension(segW, segH));
     btnList.addActionListener(e -> model.setViewMode(AppPreferences.EXPLORER_VIEW_LIST));
 
-    viewGroup.add(btnTiles);
+    btnTiles = new JToggleButton(new GridToggleIcon());
+    btnTiles.setToolTipText("Symbol Tiles (3-Column Cards)");
+    btnTiles.putClientProperty(FlatClientProperties.BUTTON_TYPE, FlatClientProperties.BUTTON_TYPE_TOOLBAR_BUTTON);
+    btnTiles.putClientProperty(FlatClientProperties.STYLE, "selectedBackground: $Component.accentColor; selectedForeground: #ffffff; arc: 4;");
+    btnTiles.setPreferredSize(new Dimension(segW, segH));
+    btnTiles.setMinimumSize(new Dimension(segW, segH));
+    btnTiles.setMaximumSize(new Dimension(segW, segH));
+    btnTiles.addActionListener(e -> model.setViewMode(AppPreferences.EXPLORER_VIEW_TILES));
+
     viewGroup.add(btnList);
+    viewGroup.add(btnTiles);
     if (AppPreferences.EXPLORER_VIEW_TILES.equals(model.getViewMode())) {
       btnTiles.setSelected(true);
     } else {
       btnList.setSelected(true);
     }
 
-    segBox.add(btnTiles);
     segBox.add(btnList);
-    actionsBox.add(segBox);
+    segBox.add(btnTiles);
+    projectHeaderPanel.add(segBox, BorderLayout.EAST);
 
-    headerPanel.add(actionsBox, BorderLayout.EAST);
-    add(headerPanel, BorderLayout.NORTH);
+    // =========================================================================
+    // ROW 2: Full-Width Action Strip (44px)
+    // =========================================================================
+    final var actionStrip = new JPanel();
+    actionStrip.setLayout(new BoxLayout(actionStrip, BoxLayout.X_AXIS));
+    actionStrip.setOpaque(false);
+    actionStrip.setPreferredSize(new Dimension(-1, AppPreferences.getScaled(44)));
+    actionStrip.setBorder(BorderFactory.createEmptyBorder(
+        AppPreferences.getScaled(5),
+        AppPreferences.getScaled(8),
+        AppPreferences.getScaled(5),
+        AppPreferences.getScaled(8)));
 
-    // 2. Search & Cards Area
+    btnAddCircuit = createActionButton(new AddCircuitIcon(20), "Add Circuit", LogisimMenuBar.ADD_CIRCUIT);
+    btnAddVhdl = createActionButton(new AddVhdlIcon(20), "Add HDL Entity...", LogisimMenuBar.ADD_VHDL);
+    btnMoveUp = createActionButton(new MoveUpIcon(20), "Move Circuit Up", LogisimMenuBar.MOVE_CIRCUIT_UP);
+    btnMoveDown = createActionButton(new MoveDownIcon(20), "Move Circuit Down", LogisimMenuBar.MOVE_CIRCUIT_DOWN);
+    btnAppearance = createToggleActionButton(new AppearanceIcon(20), "Edit Circuit Appearance", LogisimMenuBar.TOGGLE_APPEARANCE);
+
+    btnDelete = createActionButton(new DeleteIcon(20), "Remove Circuit", LogisimMenuBar.REMOVE_CIRCUIT);
+    btnDelete.putClientProperty(FlatClientProperties.STYLE,
+        "arc: 6; margin: 4,4,4,4; focusWidth: 2; focusColor: #3584e480; hoverForeground: #e01b24;");
+
+    // Group 1: Add Circuit, Add VHDL
+    actionStrip.add(btnAddCircuit);
+    actionStrip.add(Box.createHorizontalStrut(AppPreferences.getScaled(2)));
+    actionStrip.add(btnAddVhdl);
+
+    // Divider 1
+    actionStrip.add(createDivider());
+
+    // Group 2: Move Up, Move Down
+    actionStrip.add(btnMoveUp);
+    actionStrip.add(Box.createHorizontalStrut(AppPreferences.getScaled(2)));
+    actionStrip.add(btnMoveDown);
+
+    // Divider 2
+    actionStrip.add(createDivider());
+
+    // Group 3: Toggle Appearance
+    actionStrip.add(btnAppearance);
+
+    // Flexible Space
+    actionStrip.add(Box.createHorizontalGlue());
+
+    // Group 4: Delete alone at far right
+    actionStrip.add(btnDelete);
+
+    // Top Two-Row Header Container
+    final var topHeaderContainer = new JPanel();
+    topHeaderContainer.setLayout(new BoxLayout(topHeaderContainer, BoxLayout.Y_AXIS));
+    topHeaderContainer.setOpaque(false);
+    topHeaderContainer.add(projectHeaderPanel);
+    topHeaderContainer.add(actionStrip);
+    add(topHeaderContainer, BorderLayout.NORTH);
+
+    // =========================================================================
+    // SEARCH & CARDS AREA
+    // =========================================================================
     final var centerPanel = new JPanel(new BorderLayout());
     centerPanel.setOpaque(false);
 
@@ -248,9 +278,7 @@ public class Toolbox extends JPanel implements ExplorerModel.Listener, ProjectLi
     });
 
     clearSearchBtn = new JButton("✕");
-    clearSearchBtn.putClientProperty(FlatClientProperties.BUTTON_TYPE, FlatClientProperties.BUTTON_TYPE_TOOLBAR_BUTTON);
     clearSearchBtn.setVisible(false);
-    clearSearchBtn.addActionListener(e -> searchField.setText(""));
 
     searchField.getDocument().addDocumentListener(new DocumentListener() {
       @Override
@@ -279,7 +307,7 @@ public class Toolbox extends JPanel implements ExplorerModel.Listener, ProjectLi
     searchPanel.add(searchBox, BorderLayout.CENTER);
     centerPanel.add(searchPanel, BorderLayout.NORTH);
 
-    // 3. Card Container: List View vs Tile View
+    // Card Container: List View vs Tile View
     cardLayout = new CardLayout();
     cardsPanel = new JPanel(cardLayout);
     cardsPanel.setOpaque(false);
@@ -293,7 +321,7 @@ public class Toolbox extends JPanel implements ExplorerModel.Listener, ProjectLi
 
     toolbox = new ProjectExplorer(proj, false, false);
     toolbox.setListener(new ToolboxManip(proj, toolbox));
-    toolbox.setRootVisible(false); // Hide root so library categories are top-level
+    toolbox.setRootVisible(false);
     final var treeScroll = new JScrollPane(toolbox);
     treeScroll.setBorder(BorderFactory.createEmptyBorder());
     treeScroll.putClientProperty(FlatClientProperties.STYLE, "border: 0,0,0,0;");
@@ -308,11 +336,10 @@ public class Toolbox extends JPanel implements ExplorerModel.Listener, ProjectLi
     centerPanel.add(cardsPanel, BorderLayout.CENTER);
     add(centerPanel, BorderLayout.CENTER);
 
-    // Register shortcuts: '/' or 'Ctrl+K' focuses search
+    // Register shortcuts: '/' focuses search (Ctrl+K is reserved for Simulate ticks)
     final var imap = getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
     final var amap = getActionMap();
     imap.put(KeyStroke.getKeyStroke(KeyEvent.VK_SLASH, 0), "focusSearch");
-    imap.put(KeyStroke.getKeyStroke(KeyEvent.VK_K, ActionEvent.CTRL_MASK), "focusSearch");
     amap.put("focusSearch", new AbstractAction() {
       @Override
       public void actionPerformed(ActionEvent e) {
@@ -332,24 +359,54 @@ public class Toolbox extends JPanel implements ExplorerModel.Listener, ProjectLi
     updateActionButtons();
   }
 
-  private void updateProjectTitle() {
-    final var file = proj != null ? proj.getLogisimFile() : null;
-    final var name = (file != null) ? file.getName() : "Project";
-    projectTitleLabel.setText(name);
-    repaint();
+  public int getMeasuredStripWidth() {
+    return AppPreferences.getScaled(266);
   }
 
-  private JButton createActionButton(javax.swing.Icon icon, String tipKey, String defaultTip, LogisimMenuItem item) {
+  @Override
+  public Dimension getMinimumSize() {
+    return new Dimension(getMeasuredStripWidth(), super.getMinimumSize().height);
+  }
+
+  @Override
+  public Dimension getPreferredSize() {
+    Dimension d = super.getPreferredSize();
+    return new Dimension(Math.max(d.width, getMeasuredStripWidth()), d.height);
+  }
+
+  private static JComponent createDivider() {
+    final var div = new JPanel() {
+      @Override
+      protected void paintComponent(Graphics g) {
+        super.paintComponent(g);
+        final var g2 = (Graphics2D) g.create();
+        Color c = UIManager.getColor("Component.borderColor");
+        if (c == null) {
+          c = AppPreferences.isDarkTheme() ? new Color(0x30, 0x30, 0x30) : new Color(0xD0, 0xD5, 0xDD);
+        }
+        g2.setColor(c);
+        int midX = getWidth() / 2;
+        int padY = AppPreferences.getScaled(6);
+        g2.drawLine(midX, padY, midX, getHeight() - padY);
+        g2.dispose();
+      }
+    };
+    div.setOpaque(false);
+    int w = AppPreferences.getScaled(13);
+    int h = AppPreferences.getScaled(34);
+    div.setPreferredSize(new Dimension(w, h));
+    div.setMinimumSize(new Dimension(w, h));
+    div.setMaximumSize(new Dimension(w, h));
+    return div;
+  }
+
+  private JButton createActionButton(Icon icon, String defaultTip, LogisimMenuItem item) {
     final var btn = new JButton(icon);
-    String tip = null;
-    try {
-      tip = S.get(tipKey);
-    } catch (Exception ignored) {
-    }
-    btn.setToolTipText(tip != null && !tip.isEmpty() ? tip : defaultTip);
+    btn.setToolTipText(defaultTip);
     btn.putClientProperty(FlatClientProperties.BUTTON_TYPE, FlatClientProperties.BUTTON_TYPE_TOOLBAR_BUTTON);
-    btn.putClientProperty(FlatClientProperties.STYLE, "arc: 4; margin: 2,2,2,2;");
-    int btnSize = AppPreferences.getScaled(24);
+    btn.putClientProperty(FlatClientProperties.STYLE,
+        "arc: 6; margin: 4,4,4,4; focusWidth: 2; focusColor: #3584e480;");
+    int btnSize = AppPreferences.getScaled(34);
     btn.setPreferredSize(new Dimension(btnSize, btnSize));
     btn.setMinimumSize(new Dimension(btnSize, btnSize));
     btn.setMaximumSize(new Dimension(btnSize, btnSize));
@@ -361,13 +418,89 @@ public class Toolbox extends JPanel implements ExplorerModel.Listener, ProjectLi
     return btn;
   }
 
+  private JToggleButton createToggleActionButton(Icon icon, String defaultTip, LogisimMenuItem item) {
+    final var btn = new JToggleButton(icon);
+    btn.setToolTipText(defaultTip);
+    btn.putClientProperty(FlatClientProperties.BUTTON_TYPE, FlatClientProperties.BUTTON_TYPE_TOOLBAR_BUTTON);
+    btn.putClientProperty(FlatClientProperties.STYLE,
+        "arc: 6; margin: 4,4,4,4; focusWidth: 2; focusColor: #3584e480; selectedBackground: $Component.accentColor; selectedForeground: #ffffff;");
+    int btnSize = AppPreferences.getScaled(34);
+    btn.setPreferredSize(new Dimension(btnSize, btnSize));
+    btn.setMinimumSize(new Dimension(btnSize, btnSize));
+    btn.setMaximumSize(new Dimension(btnSize, btnSize));
+    btn.addActionListener(e -> {
+      if (menu != null && menu.isEnabled(item)) {
+        menu.doAction(item);
+      }
+    });
+    return btn;
+  }
+
+  private void updateProjectTitle() {
+    final var file = proj != null ? proj.getLogisimFile() : null;
+    final var name = (file != null) ? file.getName() : "Project";
+    projectTitleLabel.setText(name);
+    projectTitleLabel.setToolTipText(name);
+    repaint();
+  }
+
+  public void setEditorView(String view) {
+    if (btnAppearance != null) {
+      boolean isApp = Frame.EDIT_APPEARANCE.equals(view);
+      btnAppearance.setSelected(isApp);
+      btnAppearance.setToolTipText(isApp ? "Back to Circuit Layout" : "Edit Circuit Appearance");
+    }
+  }
+
   public void updateActionButtons() {
-    if (btnAddCircuit != null) btnAddCircuit.setEnabled(menu != null && menu.isEnabled(LogisimMenuBar.ADD_CIRCUIT));
-    if (btnAddVhdl != null) btnAddVhdl.setEnabled(menu != null && menu.isEnabled(LogisimMenuBar.ADD_VHDL));
-    if (btnMoveUp != null) btnMoveUp.setEnabled(menu != null && menu.isEnabled(LogisimMenuBar.MOVE_CIRCUIT_UP));
-    if (btnMoveDown != null) btnMoveDown.setEnabled(menu != null && menu.isEnabled(LogisimMenuBar.MOVE_CIRCUIT_DOWN));
-    if (btnAppearance != null) btnAppearance.setEnabled(menu != null && menu.isEnabled(LogisimMenuBar.TOGGLE_APPEARANCE));
-    if (btnDelete != null) btnDelete.setEnabled(menu != null && menu.isEnabled(LogisimMenuBar.REMOVE_CIRCUIT));
+    final var cur = (proj != null) ? proj.getCurrentCircuit() : null;
+    final var file = (proj != null) ? proj.getLogisimFile() : null;
+    final var curName = (cur != null) ? cur.getName() : "";
+    final var tools = (file != null) ? file.getTools() : null;
+    final var curIndex = (file != null && cur != null) ? file.indexOfCircuit(cur) : -1;
+    final var numCircuits = (tools != null) ? tools.size() : 0;
+
+    if (btnAddCircuit != null) {
+      btnAddCircuit.setEnabled(menu != null && menu.isEnabled(LogisimMenuBar.ADD_CIRCUIT));
+      btnAddCircuit.setToolTipText("Add Circuit");
+    }
+    if (btnAddVhdl != null) {
+      btnAddVhdl.setEnabled(menu != null && menu.isEnabled(LogisimMenuBar.ADD_VHDL));
+      btnAddVhdl.setToolTipText("Add HDL Entity...");
+    }
+    if (btnMoveUp != null) {
+      boolean canUp = menu != null && menu.isEnabled(LogisimMenuBar.MOVE_CIRCUIT_UP);
+      btnMoveUp.setEnabled(canUp);
+      if (canUp) {
+        btnMoveUp.setToolTipText("Move '" + curName + "' up · Shift+Ctrl+U");
+      } else {
+        btnMoveUp.setToolTipText("Already first");
+      }
+    }
+    if (btnMoveDown != null) {
+      boolean canDown = menu != null && menu.isEnabled(LogisimMenuBar.MOVE_CIRCUIT_DOWN);
+      btnMoveDown.setEnabled(canDown);
+      if (canDown) {
+        btnMoveDown.setToolTipText("Move '" + curName + "' down · Shift+Ctrl+D");
+      } else {
+        btnMoveDown.setToolTipText("Already last");
+      }
+    }
+    if (btnAppearance != null) {
+      boolean isApp = frame != null && Frame.EDIT_APPEARANCE.equals(frame.getEditorView());
+      btnAppearance.setSelected(isApp);
+      btnAppearance.setEnabled(menu != null && menu.isEnabled(LogisimMenuBar.TOGGLE_APPEARANCE));
+      btnAppearance.setToolTipText(isApp ? "Back to Circuit Layout" : "Edit Circuit Appearance");
+    }
+    if (btnDelete != null) {
+      boolean canDelete = menu != null && menu.isEnabled(LogisimMenuBar.REMOVE_CIRCUIT);
+      btnDelete.setEnabled(canDelete);
+      if (canDelete) {
+        btnDelete.setToolTipText("Remove Circuit");
+      } else {
+        btnDelete.setToolTipText("Can't remove the only circuit");
+      }
+    }
   }
 
   void setHaloedTool(Tool value) {
@@ -385,7 +518,7 @@ public class Toolbox extends JPanel implements ExplorerModel.Listener, ProjectLi
   public void toolArmed(Tool tool) {}
 
   @Override
-  public void circuitChanged(com.cburch.logisim.circuit.Circuit circuit) {
+  public void circuitChanged(Circuit circuit) {
     updateProjectTitle();
     updateActionButtons();
   }
@@ -418,7 +551,7 @@ public class Toolbox extends JPanel implements ExplorerModel.Listener, ProjectLi
     return btnMoveDown;
   }
 
-  public JButton getBtnAppearance() {
+  public JToggleButton getBtnAppearance() {
     return btnAppearance;
   }
 

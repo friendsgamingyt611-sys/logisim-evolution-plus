@@ -1,47 +1,64 @@
 package com.cburch.logisim.gui.icons.symbolic;
 
 import java.awt.Color;
-import java.awt.Font;
-import java.awt.FontMetrics;
+import java.awt.Component;
 import java.awt.Graphics2D;
+import java.awt.geom.Line2D;
+import java.awt.geom.Path2D;
 
 /**
- * Modern vector VHDL Entity icon with crisp two-line stacked VH/DL typography.
+ * Modern monochrome vector icon for Add HDL: Stage 11 DIP chip outline with a plus badge at lower-right.
  */
 public class AddVhdlIcon extends SymbolicIcon {
 
-  private static final Color SEMANTIC_GREEN = new Color(0x2E, 0xD1, 0x73);
-
   public AddVhdlIcon() {
-    super(16);
+    this(20);
+  }
+
+  public AddVhdlIcon(int baseSize) {
+    super(baseSize);
   }
 
   @Override
-  public Color getSemanticColor() {
-    return SEMANTIC_GREEN;
-  }
+  protected void paintSymbolic(Graphics2D g2, int size, Color color, Component c) {
+    float s = size / 20.0f;
+    g2.setStroke(createStroke(1.75f));
+    g2.setColor(color);
 
-  @Override
-  protected void paintSymbolic(Graphics2D g2, int size, Color color) {
-    float s = size;
-    int fontSize = (int) Math.round(s * 0.44f);
-    Font font = new Font(Font.SANS_SERIF, Font.BOLD, fontSize);
-    g2.setFont(font);
-    FontMetrics fm = g2.getFontMetrics();
+    float cx = 4.5f * s;
+    float cy = 2.5f * s;
+    float cw = 9.0f * s;
+    float ch = 12.0f * s;
 
-    String top = "VH";
-    String bot = "DL";
+    // DIP body with top notch
+    Path2D.Float body = new Path2D.Float();
+    body.moveTo(cx, cy + 1.5f * s);
+    body.quadTo(cx, cy, cx + 1.5f * s, cy);
+    body.lineTo(cx + 3.0f * s, cy);
+    // Top notch
+    body.curveTo(cx + 3.2f * s, cy + 1.8f * s, cx + 5.8f * s, cy + 1.8f * s, cx + 6.0f * s, cy);
+    body.lineTo(cx + cw - 1.5f * s, cy);
+    body.quadTo(cx + cw, cy, cx + cw, cy + 1.5f * s);
+    body.lineTo(cx + cw, cy + ch - 1.5f * s);
+    body.quadTo(cx + cw, cy + ch, cx + cw - 1.5f * s, cy + ch);
+    body.lineTo(cx + 1.5f * s, cy + ch);
+    body.quadTo(cx, cy + ch, cx, cy + ch - 1.5f * s);
+    body.closePath();
+    g2.draw(body);
 
-    int wTop = fm.stringWidth(top);
-    int wBot = fm.stringWidth(bot);
+    // Side pins
+    g2.draw(new Line2D.Float(1.5f * s, 5.0f * s, cx, 5.0f * s));
+    g2.draw(new Line2D.Float(1.5f * s, 8.5f * s, cx, 8.5f * s));
+    g2.draw(new Line2D.Float(1.5f * s, 12.0f * s, cx, 12.0f * s));
 
-    int xTop = Math.max(0, (int) Math.round((s - wTop) / 2.0));
-    int xBot = Math.max(0, (int) Math.round((s - wBot) / 2.0));
+    g2.draw(new Line2D.Float(cx + cw, 5.0f * s, 16.5f * s, 5.0f * s));
+    g2.draw(new Line2D.Float(cx + cw, 8.5f * s, 16.5f * s, 8.5f * s));
 
-    int yTop = (int) Math.round(s * 0.46f);
-    int yBot = (int) Math.round(s * 0.92f);
-
-    g2.drawString(top, xTop, yTop);
-    g2.drawString(bot, xBot, yBot);
+    // Lower right plus badge with 2px knockout gap
+    float badgeCx = 15.0f * s;
+    float badgeCy = 15.0f * s;
+    float badgeR = 4.4f * s;
+    float knockoutGap = 2.0f;
+    drawKnockoutBadge(g2, badgeCx, badgeCy, badgeR, knockoutGap, color, c);
   }
 }

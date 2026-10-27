@@ -75,6 +75,7 @@ class PrefMonitorDouble extends AbstractPrefMonitor<Double> {
   public void set(Double newValue) {
     final var newVal = newValue;
     if (value != newVal) {
+      value = newVal;
       AppPreferences.getPrefs().putDouble(getIdentifier(), newVal);
     }
   }

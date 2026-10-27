@@ -1,37 +1,60 @@
 package com.cburch.logisim.gui.icons.symbolic;
 
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Graphics2D;
+import java.awt.geom.Path2D;
+import java.awt.geom.RoundRectangle2D;
 
 /**
- * Modern vector Plus icon for adding a new circuit.
+ * Modern monochrome vector icon for Add Circuit: IC subcircuit box with a plus badge at lower-right.
  */
 public class AddCircuitIcon extends SymbolicIcon {
 
-  private static final Color SEMANTIC_GREEN = new Color(0x2E, 0xD1, 0x73);
-
   public AddCircuitIcon() {
-    super(16);
+    this(20);
+  }
+
+  public AddCircuitIcon(int baseSize) {
+    super(baseSize);
   }
 
   @Override
-  public Color getSemanticColor() {
-    return SEMANTIC_GREEN;
-  }
-
-  @Override
-  protected void paintSymbolic(Graphics2D g2, int size, Color color) {
+  protected void paintSymbolic(Graphics2D g2, int size, Color color, Component c) {
     float s = size;
-    float pad = s * 0.16f;
-    float thickness = s * 0.28f;
-    float mid = s * 0.50f;
-    float halfT = thickness / 2.0f;
-    float arc = s * 0.08f;
+    g2.setStroke(createStroke(1.75f));
+    g2.setColor(color);
 
-    // Draw bold, solid-filled green cross
-    g2.fill(new java.awt.geom.RoundRectangle2D.Float(
-        pad, mid - halfT, s - 2 * pad, thickness, arc, arc));
-    g2.fill(new java.awt.geom.RoundRectangle2D.Float(
-        mid - halfT, pad, thickness, s - 2 * pad, arc, arc));
+    // Box bounds
+    float x = s * 0.20f;
+    float y = s * 0.16f;
+    float w = s * 0.54f;
+    float h = s * 0.58f;
+    float arc = s * 0.12f;
+
+    // Subcircuit body
+    g2.draw(new RoundRectangle2D.Float(x, y, w, h, arc, arc));
+
+    // Internal logic gate chevron
+    Path2D.Float chevron = new Path2D.Float();
+    chevron.moveTo(x + w * 0.32f, y + h * 0.30f);
+    chevron.lineTo(x + w * 0.68f, y + h * 0.50f);
+    chevron.lineTo(x + w * 0.32f, y + h * 0.70f);
+    g2.draw(chevron);
+
+    // Left input pins
+    float pinLen = s * 0.12f;
+    g2.drawLine((int) (x - pinLen), (int) (y + h * 0.35f), (int) x, (int) (y + h * 0.35f));
+    g2.drawLine((int) (x - pinLen), (int) (y + h * 0.65f), (int) x, (int) (y + h * 0.65f));
+
+    // Right output pin (top only, leaving lower right for badge)
+    g2.drawLine((int) (x + w), (int) (y + h * 0.35f), (int) (x + w + pinLen), (int) (y + h * 0.35f));
+
+    // Lower right plus badge with 2px knockout gap
+    float badgeCx = s * 0.74f;
+    float badgeCy = s * 0.74f;
+    float badgeR = s * 0.22f;
+    float knockoutGap = 2.0f;
+    drawKnockoutBadge(g2, badgeCx, badgeCy, badgeR, knockoutGap, color, c);
   }
 }

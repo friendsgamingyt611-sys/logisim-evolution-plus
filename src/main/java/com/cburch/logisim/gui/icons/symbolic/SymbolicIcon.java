@@ -62,7 +62,7 @@ public abstract class SymbolicIcon implements Icon {
           fg = new Color(semantic.getRed(), semantic.getGreen(), semantic.getBlue(), 90);
         } else {
           Color disabled = UIManager.getColor("Button.disabledText");
-          fg = (disabled != null) ? disabled : new Color(128, 128, 128, 128);
+          fg = (disabled != null) ? disabled : new Color(128, 128, 128, 102);
         }
       } else if (semantic != null) {
         fg = semantic;
@@ -78,19 +78,49 @@ public abstract class SymbolicIcon implements Icon {
     g2.setColor(fg);
     g2.translate(x, y);
 
-    int size = getIconWidth();
-    paintSymbolic(g2, size, fg);
+    float scale = (float) getIconWidth() / (float) baseSize;
+    if (scale != 1.0f) {
+      g2.scale(scale, scale);
+    }
+
+    paintSymbolic(g2, baseSize, fg, c);
     g2.dispose();
   }
 
-  protected abstract void paintSymbolic(Graphics2D g2, int size, Color color);
-
-  protected float scale(float val) {
-    return AppPreferences.getScaled(val);
+  protected void paintSymbolic(Graphics2D g2, int size, Color color, Component c) {
+    paintSymbolic(g2, size, color);
   }
 
-  protected BasicStroke createStroke(float width) {
-    return new BasicStroke(
-        AppPreferences.getScaledStroke(width), BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND);
+  protected void paintSymbolic(Graphics2D g2, int size, Color color) {
+  }
+
+  public static BasicStroke createStroke(float width) {
+    return new BasicStroke(width, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND);
+  }
+
+  protected float scale(float val) {
+    return val;
+  }
+
+  protected void drawKnockoutBadge(Graphics2D g2, float cx, float cy, float badgeRadius, float knockoutGap, Color fg, Component c) {
+    Color bg = null;
+    if (c != null) {
+      bg = c.getBackground();
+    }
+    if (bg == null) {
+      bg = AppPreferences.isDarkTheme() ? new Color(0x2E, 0x2E, 0x2E) : Color.WHITE;
+    }
+
+    // 1. Fill knockout background circle
+    float kR = badgeRadius + knockoutGap;
+    g2.setColor(bg);
+    g2.fill(new java.awt.geom.Ellipse2D.Float(cx - kR, cy - kR, kR * 2, kR * 2));
+
+    // 2. Draw plus cross in badge
+    g2.setColor(fg);
+    g2.setStroke(createStroke(1.75f));
+    float arm = badgeRadius * 0.70f;
+    g2.draw(new java.awt.geom.Line2D.Float(cx - arm, cy, cx + arm, cy));
+    g2.draw(new java.awt.geom.Line2D.Float(cx, cy - arm, cx, cy + arm));
   }
 }

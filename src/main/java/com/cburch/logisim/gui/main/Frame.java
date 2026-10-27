@@ -655,7 +655,8 @@ public class Frame extends LFrame.MainWindow implements LocaleListener {
   }
 
   public String getEditorView() {
-    return (getHdlEditorView() != null ? EDIT_HDL : mainPanel.getView());
+    if (getHdlEditorView() != null) return EDIT_HDL;
+    return (mainPanel != null) ? mainPanel.getView() : EDIT_LAYOUT;
   }
 
   public void setEditorView(String view) {
@@ -689,6 +690,9 @@ public class Frame extends LFrame.MainWindow implements LocaleListener {
       viewAttributes(project.getTool(), true);
       mainPanel.setView(view);
       layoutCanvas.requestFocus();
+    }
+    if (toolbox != null) {
+      toolbox.setEditorView(view);
     }
   }
 
@@ -728,6 +732,14 @@ public class Frame extends LFrame.MainWindow implements LocaleListener {
 
   public ModernHeaderBar getModernHeaderBar() {
     return headerBar;
+  }
+
+  public Toolbox getToolbox() {
+    return toolbox;
+  }
+
+  public VerticalSplitPane getMainRegion() {
+    return mainRegion;
   }
 
   private void placeToolbar() {
@@ -833,7 +845,7 @@ public class Frame extends LFrame.MainWindow implements LocaleListener {
   }
 
   public HdlModel getHdlEditorView() {
-    return hdlEditor.getHdlModel();
+    return (hdlEditor != null) ? hdlEditor.getHdlModel() : null;
   }
 
   private void setHdlEditorView(HdlModel hdl) {
