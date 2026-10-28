@@ -8,15 +8,18 @@
 * **Screenshots**
   * [KDE](#kubuntu)
 
-## Project history ##
+## Gallery ##
 
-Images demonstrating Logisim-evolution in action, running on various platforms.
-(pictures are 1400x1200, PNG format):
+High-resolution screenshots demonstrating Logisim-evolution+ in action across Light and Dark appearances:
 
-## Kubuntu ##
+### Modern Light Appearance ###
 
-![Logisim-evolution](img/logisim-evolution-01.png)
+![Logisim-evolution+ Modern Light](img/logisim-evolution-01.png)
 
-![Logisim-evolution](img/logisim-evolution-02.png)
+### Component Properties & Layout ###
 
-![Logisim-evolution](img/logisim-evolution-03.png)
+![Logisim-evolution+ Properties Inspector](img/logisim-evolution-02.png)
+
+### Modern Dark Appearance ###
+
+![Logisim-evolution+ Modern Dark](img/logisim-evolution-03.png)

@@ -84,6 +84,7 @@ import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
+import javax.swing.SwingUtilities;
 import javax.swing.WindowConstants;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
@@ -138,7 +139,6 @@ public class Frame extends LFrame.MainWindow implements LocaleListener {
     super(project);
     this.project = project;
 
-    setBackground(Color.white);
     setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
     addWindowListener(new MyWindowListener());
 
@@ -200,9 +200,11 @@ public class Frame extends LFrame.MainWindow implements LocaleListener {
     // on the right and a split pane on the left containing the
     // explorer and attribute values.
     final var explPanel = new JPanel(new BorderLayout());
+    explPanel.setOpaque(false);
     explPanel.add(toolbox, BorderLayout.CENTER);
 
     final var simPanel = new JPanel(new BorderLayout());
+    simPanel.setOpaque(false);
     simPanel.add(simExplorer, BorderLayout.CENTER);
 
     topTab = new JTabbedPane();
@@ -267,6 +269,8 @@ public class Frame extends LFrame.MainWindow implements LocaleListener {
     }
     mainPanel.addChangeListener(myProjectListener);
     AppPreferences.TOOLBAR_PLACEMENT.addPropertyChangeListener(myProjectListener);
+    AppPreferences.LookAndFeel.addPropertyChangeListener(myProjectListener);
+    AppPreferences.COLOR_SCHEME.addPropertyChangeListener(myProjectListener);
     placeToolbar();
     installFileDropTargets();
 
@@ -742,6 +746,29 @@ public class Frame extends LFrame.MainWindow implements LocaleListener {
     return topTab;
   }
 
+  public void updateThemeUI() {
+    SwingUtilities.updateComponentTreeUI(this);
+    if (layoutCanvas != null) {
+      layoutCanvas.setBackground(AppPreferences.getCanvasBgColor());
+      layoutCanvas.invalidateGrid();
+      layoutCanvas.repaint();
+    }
+    if (headerBar != null) {
+      headerBar.updateUI();
+    }
+    if (toolbox != null) {
+      toolbox.updateUI();
+    }
+    if (attrTable != null) {
+      attrTable.updateUI();
+    }
+    if (regTabContent != null) {
+      regTabContent.updateUI();
+    }
+    validate();
+    repaint();
+  }
+
   private void placeToolbar() {
     final var loc = AppPreferences.TOOLBAR_PLACEMENT.get();
     rightPanel.remove(toolbar);
@@ -980,6 +1007,8 @@ public class Frame extends LFrame.MainWindow implements LocaleListener {
     public void propertyChange(PropertyChangeEvent event) {
       if (AppPreferences.TOOLBAR_PLACEMENT.isSource(event)) {
         placeToolbar();
+      } else if (AppPreferences.LookAndFeel.isSource(event) || AppPreferences.COLOR_SCHEME.isSource(event)) {
+        updateThemeUI();
       }
     }
 

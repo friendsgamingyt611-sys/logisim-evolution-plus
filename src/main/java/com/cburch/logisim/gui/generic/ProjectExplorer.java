@@ -209,6 +209,9 @@ public class ProjectExplorer extends JTree implements LocaleListener {
         super.installDefaults();
         setLeftChildIndent(AppPreferences.getScaled(16));
         setRightChildIndent(0);
+        if (tree != null) {
+          tree.setOpaque(false);
+        }
       }
 
       @Override
@@ -262,6 +265,7 @@ public class ProjectExplorer extends JTree implements LocaleListener {
         g2.dispose();
       }
     });
+    setOpaque(false);
   }
 
   @Override

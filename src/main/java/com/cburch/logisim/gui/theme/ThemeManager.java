@@ -317,12 +317,7 @@ public class ThemeManager {
         for (final var proj : Projects.getOpenProjects()) {
           final var frame = proj.getFrame();
           if (frame != null) {
-            if (frame.getCanvas() != null) {
-              frame.getCanvas().setBackground(AppPreferences.getCanvasBgColor());
-              frame.getCanvas().invalidateGrid();
-              frame.getCanvas().repaint();
-            }
-            frame.repaint();
+            frame.updateThemeUI();
           }
         }
       } catch (Throwable t) {

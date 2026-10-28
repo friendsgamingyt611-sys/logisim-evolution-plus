@@ -11,7 +11,11 @@ public class CircuitGlyphIcon extends SymbolicIcon {
   private boolean isCurrentCircuit;
 
   public CircuitGlyphIcon(boolean isCurrentCircuit) {
-    super(16);
+    this(isCurrentCircuit, 16);
+  }
+
+  public CircuitGlyphIcon(boolean isCurrentCircuit, int size) {
+    super(size);
     this.isCurrentCircuit = isCurrentCircuit;
   }
 
@@ -21,7 +25,7 @@ public class CircuitGlyphIcon extends SymbolicIcon {
 
   @Override
   protected void paintSymbolic(Graphics2D g2, int size, Color color) {
-    g2.setStroke(createStroke(1.6f));
+    g2.setStroke(createStroke(1.7f));
     float s = size;
 
     int x = (int) (s * 0.24f);

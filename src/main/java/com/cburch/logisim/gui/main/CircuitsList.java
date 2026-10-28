@@ -33,6 +33,7 @@ public class CircuitsList extends JPanel implements ExplorerModel.Listener {
 
   private static final long serialVersionUID = 1L;
   private final ExplorerModel model;
+  private final JPanel headerBox;
   private final JLabel headerLabel;
   private final JPanel itemsPanel;
   private Tool hoveredTool = null;
@@ -43,7 +44,7 @@ public class CircuitsList extends JPanel implements ExplorerModel.Listener {
     setOpaque(false);
 
     // Section header with subtle rule above
-    final var headerBox = new JPanel(new BorderLayout());
+    headerBox = new JPanel(new BorderLayout());
     headerBox.setOpaque(false);
     Color borderSubtle = UIManager.getColor("Surface.borderSubtle");
     if (borderSubtle == null) {
@@ -87,6 +88,11 @@ public class CircuitsList extends JPanel implements ExplorerModel.Listener {
       divColor = AppPreferences.isDarkTheme() ? new Color(0x39, 0x3C, 0x42) : new Color(0xD5, 0xDA, 0xE2);
     }
     setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, divColor));
+    if (headerBox != null) {
+      headerBox.setBorder(BorderFactory.createCompoundBorder(
+          BorderFactory.createMatteBorder(1, 0, 0, 0, divColor),
+          BorderFactory.createEmptyBorder(6, 12, 4, 12)));
+    }
   }
 
   @Override
@@ -164,19 +170,19 @@ public class CircuitsList extends JPanel implements ExplorerModel.Listener {
       this.tool = tool;
       setOpaque(false);
 
-      final var rowH = AppPreferences.getScaled(28);
+      final var rowH = AppPreferences.getScaled(30);
       setPreferredSize(new Dimension(-1, rowH));
       setMaximumSize(new Dimension(Integer.MAX_VALUE, rowH));
 
       final var isActive = model.isCircuitActive(tool);
       final var isArmed = (model.getArmedTool() == tool);
-      icon = new CircuitGlyphIcon(isActive);
+      icon = new CircuitGlyphIcon(isActive, 18);
 
       label = new JLabel(tool.getDisplayName());
       label.setFont(new Font(Font.SANS_SERIF, isActive ? Font.BOLD : Font.PLAIN, AppPreferences.getScaled(12)));
       label.setIcon(icon);
       label.setIconTextGap(AppPreferences.getScaled(8));
-      label.setBorder(BorderFactory.createEmptyBorder(0, 10, 0, 8));
+      label.setBorder(BorderFactory.createEmptyBorder(0, AppPreferences.getScaled(10), 0, AppPreferences.getScaled(22)));
 
       updateRowColors(isActive, isArmed);
       add(label, BorderLayout.CENTER);
@@ -241,12 +247,12 @@ public class CircuitsList extends JPanel implements ExplorerModel.Listener {
       if (accent == null) accent = new Color(53, 132, 228);
 
       if (isArmed) {
-        // Armed tool: solid accent fill -> white text
+        // Armed/selected tool: solid accent fill -> crisp white text
         icon.setColor(Color.WHITE);
         label.setForeground(Color.WHITE);
         label.setFont(label.getFont().deriveFont(Font.BOLD));
       } else if (isActive) {
-        // Current circuit: 14% accent tint -> semibold text with normal/accent color (not solid white)
+        // Current/active circuit: subtle accent tint pill -> prominent accent icon & semibold text
         icon.setColor(accent);
         label.setForeground(fgMain);
         label.setFont(label.getFont().deriveFont(Font.BOLD));
@@ -266,6 +272,8 @@ public class CircuitsList extends JPanel implements ExplorerModel.Listener {
       int h = getHeight();
       int arc = AppPreferences.getScaled(6);
       int marginX = AppPreferences.getScaled(4);
+      int innerW = w - 2 * marginX;
+      int innerH = h - 2;
 
       Color accent = UIManager.getColor("Component.accentColor");
       if (accent == null) accent = new Color(53, 132, 228);
@@ -277,36 +285,36 @@ public class CircuitsList extends JPanel implements ExplorerModel.Listener {
       updateRowColors(isActive, isArmed);
 
       if (isArmed) {
-        // Armed tool gets the solid accent fill
+        // Selected circuit gets clean modern solid accent fill with rounded corners
         g2.setColor(accent);
-        g2.fillRoundRect(marginX, 1, w - 2 * marginX, h - 2, arc, arc);
+        g2.fillRoundRect(marginX, 1, innerW, innerH, arc, arc);
       } else if (isActive) {
-        // Current circuit gets accent 14% tint + 3px left bar + semibold
-        Color tint = new Color(accent.getRed(), accent.getGreen(), accent.getBlue(), (int) (255 * 0.14f));
+        // Active/viewed circuit gets high-end subtle translucent rounded pill (no harsh left notch)
+        Color tint = AppPreferences.isDarkTheme()
+            ? new Color(accent.getRed(), accent.getGreen(), accent.getBlue(), (int) (255 * 0.18f))
+            : new Color(accent.getRed(), accent.getGreen(), accent.getBlue(), (int) (255 * 0.12f));
         g2.setColor(tint);
-        g2.fillRoundRect(marginX, 1, w - 2 * marginX, h - 2, arc, arc);
-
-        // 3px solid accent left bar
-        int barW = AppPreferences.getScaled(3);
-        int barH = h - AppPreferences.getScaled(8);
-        int barY = (h - barH) / 2;
-        g2.setColor(accent);
-        g2.fillRoundRect(marginX + 1, barY, barW, barH, 2, 2);
-
-        // Active simulation indicator badge on right
-        int dotR = AppPreferences.getScaled(3);
-        int dotX = w - marginX - AppPreferences.getScaled(14);
-        int dotY = (h - dotR * 2) / 2;
-        g2.setColor(new Color(46, 209, 115, 60));
-        g2.fillOval(dotX - 2, dotY - 2, dotR * 2 + 4, dotR * 2 + 4);
-        g2.setColor(new Color(46, 209, 115));
-        g2.fillOval(dotX, dotY, dotR * 2, dotR * 2);
+        g2.fillRoundRect(marginX, 1, innerW, innerH, arc, arc);
       } else if (isHovered) {
+        // Smooth theme-aware hover highlight
         Color hoverBg = AppPreferences.isDarkTheme()
             ? new Color(255, 255, 255, 14)
             : new Color(0, 0, 0, 12);
         g2.setColor(hoverBg);
-        g2.fillRoundRect(marginX, 1, w - 2 * marginX, h - 2, arc, arc);
+        g2.fillRoundRect(marginX, 1, innerW, innerH, arc, arc);
+      }
+
+      // Simulation active indicator dot on the right
+      if (isActive) {
+        int dotR = AppPreferences.getScaled(3);
+        int dotX = w - marginX - AppPreferences.getScaled(14);
+        int dotY = (h - dotR * 2) / 2;
+        Color halo = isArmed ? new Color(255, 255, 255, 90) : new Color(46, 209, 115, 60);
+        Color dot = isArmed ? Color.WHITE : new Color(46, 209, 115);
+        g2.setColor(halo);
+        g2.fillOval(dotX - 2, dotY - 2, dotR * 2 + 4, dotR * 2 + 4);
+        g2.setColor(dot);
+        g2.fillOval(dotX, dotY, dotR * 2, dotR * 2);
       }
 
       g2.dispose();

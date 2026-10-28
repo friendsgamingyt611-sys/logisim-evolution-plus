@@ -65,6 +65,8 @@ public class AttrTable extends JPanel implements LocaleListener {
   private final JTable table;
   private final TableModelAdapter tableModel;
   private final CellEditor editor = new CellEditor();
+  private final JPanel propPanel;
+  private final JScrollPane tableScroll;
   private boolean titleEnabled;
 
   public AttrTable(Window parent) {
@@ -133,9 +135,9 @@ public class AttrTable extends JPanel implements LocaleListener {
     title.setFont(titleFont);
     table.setDefaultRenderer(String.class, new HdlColorRenderer());
 
-    final var propPanel = new JPanel(new BorderLayout(0, 0));
+    propPanel = new JPanel(new BorderLayout(0, 0));
     propPanel.setBackground(panelTone);
-    final var tableScroll = new JScrollPane(table);
+    tableScroll = new JScrollPane(table);
     tableScroll.setBackground(panelTone);
     tableScroll.getViewport().setBackground(panelTone);
     tableScroll.putClientProperty(com.formdev.flatlaf.FlatClientProperties.STYLE, "focusWidth: 0; innerFocusWidth: 0;");
@@ -152,11 +154,21 @@ public class AttrTable extends JPanel implements LocaleListener {
   @Override
   public void updateUI() {
     super.updateUI();
-    if (table != null) {
-      Color panelTone = UIManager.getColor("Surface.panel");
-      if (panelTone == null) {
-        panelTone = AppPreferences.isDarkTheme() ? new Color(0x27, 0x29, 0x2D) : new Color(0xF3, 0xF5, 0xF8);
+    Color panelTone = UIManager.getColor("Surface.panel");
+    if (panelTone == null) {
+      panelTone = AppPreferences.isDarkTheme() ? new Color(0x27, 0x29, 0x2D) : new Color(0xF3, 0xF5, 0xF8);
+    }
+    setBackground(panelTone);
+    if (propPanel != null) {
+      propPanel.setBackground(panelTone);
+    }
+    if (tableScroll != null) {
+      tableScroll.setBackground(panelTone);
+      if (tableScroll.getViewport() != null) {
+        tableScroll.getViewport().setBackground(panelTone);
       }
+    }
+    if (table != null) {
       table.setBackground(panelTone);
 
       Color gridColor = UIManager.getColor("Surface.borderSubtle");
@@ -171,6 +183,10 @@ public class AttrTable extends JPanel implements LocaleListener {
       table.setIntercellSpacing(new Dimension(0, 1));
       table.putClientProperty(com.formdev.flatlaf.FlatClientProperties.STYLE,
           "showHorizontalLines: true; showVerticalLines: false; intercellSpacing: 0,1;");
+      table.repaint();
+    }
+    if (title != null) {
+      title.repaint();
     }
   }
 

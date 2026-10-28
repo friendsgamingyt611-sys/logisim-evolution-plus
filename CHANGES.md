@@ -6,8 +6,16 @@
 # Logisim-evolution+ Releases
 ================================================================================
 
-* v5.0.0-beta1 (2026-10-28)
-  * Major modern UI reform and desktop experience overhaul:
+* v5.0.0-rc1 (2026-10-28)
+  * Release Candidate 1 milestone incorporating comprehensive Stage 28.1 refinements:
+    * **Dynamic Theme Synchronization (Stage 28.1)**:
+      * Converted all Look and Feel palette tokens to `ColorUIResource` to enable instant runtime theme switching across all Swing containers without stale cached backgrounds.
+      * Fixed left sidebar desync during Light/Dark transitions: updated `Toolbox`, `AttrTable`, `TileView`, `ProjectExplorer`, and `JTabbedPane` track colors.
+      * Eliminated all hardcoded frame and panel backgrounds.
+    * **Professional Circuit List Redesign**:
+      * Eliminated harsh vertical accent bar notches on active circuit rows in favor of subtle modern rounded translucent pills (`12%` Light / `18%` Dark).
+      * Clean solid accent pill (`#3584E4` / `#1C71D8`) with crisp high-contrast white text for armed/selected circuits matching modern IDE guidelines.
+      * Upgraded vector IC subcircuit glyph icons to 18px with crisp 1.7f strokes and balanced horizontal breathing room.
     * **Modern Header Bar**:
       * Compact simulation status and control pill (Pause/Play, Single Step, Reset, Frequency selector) with live LED indicator.
       * Document hierarchy breadcrumb and circuit quick-switcher with unsaved dirty file indicator.
@@ -26,7 +34,7 @@
       * Dual list view and tile/grid view modes for components.
       * In-place component search (`Ctrl+/`) with instant filtering.
       * Custom 20px stroked category vector glyphs for all 12 standard component libraries with dynamic item counts.
-      * Distinct active circuit styling (accent tint, 3px solid indicator bar, semibold label) separated from armed tool states.
+      * Distinct active circuit styling (accent tint, rounded pill container, semibold label) separated from armed tool states.
       * Non-destructive circuit ordering with drag-and-drop hierarchy management and XML serialization persistence.
     * **Canvas & Interaction Enhancements**:
       * High-performance camera-driven `GridPainter` with quantized minor and major dot rasters.

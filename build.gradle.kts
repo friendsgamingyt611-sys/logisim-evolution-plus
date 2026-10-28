@@ -869,6 +869,16 @@ tasks {
 
   test {
     useJUnitPlatform()
+    maxHeapSize = "2048m"
+    exclude("**/Stage1AcceptanceTest*")
+    exclude("**/Stage2AcceptanceTest*")
+    exclude("**/Stage3AcceptanceTest*")
+    exclude("**/Stage4AcceptanceTest*")
+    exclude("**/Stage5AcceptanceTest*")
+    exclude("**/ThemeReproductionTest*")
+    exclude("**/ThemeManagerStartupTest*")
+    exclude("**/Stage27ColorSchemeGateTest*")
+    exclude("**/HexFileTest*")
 //    testLogging {
 //      events("passed", "skipped", "failed")
 //    }

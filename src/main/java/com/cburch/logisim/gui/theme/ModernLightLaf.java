@@ -39,15 +39,15 @@ public class ModernLightLaf extends FlatLightLaf {
     final var defaults = super.getDefaults();
 
     // 7 Tonal Tiers (Stage 28 Variation B)
-    Color canvas = new Color(0xFF, 0xFF, 0xFF); // #ffffff
-    Color well = new Color(0xFF, 0xFF, 0xFF); // #ffffff
-    Color panel = new Color(0xF2, 0xF3, 0xF5); // #f2f3f5
-    Color chrome = new Color(0xE4, 0xE6, 0xEA); // #e4e6ea
-    Color group = new Color(0xFF, 0xFF, 0xFF); // #ffffff
-    Color groupBorder = new Color(0xC0, 0xC5, 0xCE); // #c0c5ce (gb)
-    Color borderStrong = new Color(0xC4, 0xC8, 0xD0); // #c4c8d0 (bs)
-    Color borderSubtle = new Color(0xDA, 0xDD, 0xE3); // #dadde3 (bsub)
-    Color mutedText = new Color(0x54, 0x5A, 0x64); // #545a64 (muted)
+    final var canvas = new javax.swing.plaf.ColorUIResource(0xFF, 0xFF, 0xFF); // #ffffff
+    final var well = new javax.swing.plaf.ColorUIResource(0xFF, 0xFF, 0xFF); // #ffffff
+    final var panel = new javax.swing.plaf.ColorUIResource(0xF2, 0xF3, 0xF5); // #f2f3f5
+    final var chrome = new javax.swing.plaf.ColorUIResource(0xE4, 0xE6, 0xEA); // #e4e6ea
+    final var group = new javax.swing.plaf.ColorUIResource(0xFF, 0xFF, 0xFF); // #ffffff
+    final var groupBorder = new javax.swing.plaf.ColorUIResource(0xC0, 0xC5, 0xCE); // #c0c5ce (gb)
+    final var borderStrong = new javax.swing.plaf.ColorUIResource(0xC4, 0xC8, 0xD0); // #c4c8d0 (bs)
+    final var borderSubtle = new javax.swing.plaf.ColorUIResource(0xDA, 0xDD, 0xE3); // #dadde3 (bsub)
+    final var mutedText = new javax.swing.plaf.ColorUIResource(0x54, 0x5A, 0x64); // #545a64 (muted)
 
     defaults.put("Surface.canvas", canvas);
     defaults.put("Surface.well", well);
@@ -67,7 +67,7 @@ public class ModernLightLaf extends FlatLightLaf {
     defaults.put("Chrome.borderColor", borderStrong);
     defaults.put("Chrome.subtleBorderColor", borderSubtle);
     defaults.put("Chrome.mutedText", mutedText);
-    defaults.put("Chrome.warning", new Color(0xB8, 0x7D, 0x00));
+    defaults.put("Chrome.warning", new javax.swing.plaf.ColorUIResource(0xB8, 0x7D, 0x00));
     defaults.put("Group.background", group);
     defaults.put("Group.borderColor", groupBorder);
     defaults.put("Button.borderColor", groupBorder);
@@ -90,14 +90,14 @@ public class ModernLightLaf extends FlatLightLaf {
     defaults.put("SplitPane.dividerSize", 5);
 
     // Semantic action icon tokens (Variation B)
-    defaults.put("Action.create", new Color(0x1E, 0x8E, 0x4E)); // #1e8e4e
-    defaults.put("Action.move", new Color(0x1C, 0x71, 0xD8));   // #1c71d8
-    defaults.put("Action.edit", new Color(0xC2, 0x5A, 0x00));   // #c25a00
-    defaults.put("Action.destroy", new Color(0xC0, 0x1C, 0x28)); // #c01c28
+    defaults.put("Action.create", new javax.swing.plaf.ColorUIResource(0x1E, 0x8E, 0x4E)); // #1e8e4e
+    defaults.put("Action.move", new javax.swing.plaf.ColorUIResource(0x1C, 0x71, 0xD8));   // #1c71d8
+    defaults.put("Action.edit", new javax.swing.plaf.ColorUIResource(0xC2, 0x5A, 0x00));   // #c25a00
+    defaults.put("Action.destroy", new javax.swing.plaf.ColorUIResource(0xC0, 0x1C, 0x28)); // #c01c28
 
     // Underline tabbed pane styling
     defaults.put("TabbedPane.tabType", "underline");
-    defaults.put("TabbedPane.underlineColor", new Color(0x1C, 0x71, 0xD8));
+    defaults.put("TabbedPane.underlineColor", new javax.swing.plaf.ColorUIResource(0x1C, 0x71, 0xD8));
     defaults.put("TabbedPane.underlineHeight", 2);
     defaults.put("TabbedPane.background", chrome);
     defaults.put("TabbedPane.selectedBackground", panel);

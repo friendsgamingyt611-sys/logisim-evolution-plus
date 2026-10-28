@@ -59,4 +59,15 @@ public class TileView extends JPanel {
   public String getActiveCategory() {
     return tabs.getActiveCategory();
   }
+
+  @Override
+  public void updateUI() {
+    super.updateUI();
+    if (tabs != null) {
+      tabs.updateUI();
+    }
+    if (grid != null) {
+      grid.updateUI();
+    }
+  }
 }

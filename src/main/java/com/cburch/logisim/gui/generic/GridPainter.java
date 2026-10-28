@@ -181,9 +181,8 @@ public class GridPainter implements PropertyChangeListener {
     final var transform = (g2d != null) ? g2d.getTransform() : null;
     final var hiDpiScale = (transform != null) ? Math.max(1.0, transform.getScaleX()) : 1.0;
 
-    final var viewRect = (destination instanceof javax.swing.JComponent jc && jc.getVisibleRect().width > 0)
-        ? jc.getVisibleRect()
-        : clip;
+    final var vr = (destination instanceof javax.swing.JComponent jc) ? jc.getVisibleRect() : null;
+    final var viewRect = (vr != null && vr.width > 0) ? vr : clip;
 
     ensureRaster(viewRect, currentBg, hiDpiScale);
 

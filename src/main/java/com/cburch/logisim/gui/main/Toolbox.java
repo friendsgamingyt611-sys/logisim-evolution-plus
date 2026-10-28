@@ -97,6 +97,12 @@ public class Toolbox extends JPanel implements ExplorerModel.Listener, ProjectLi
   private final CardLayout cardLayout;
   private final JPanel cardsPanel;
 
+  private final JPanel projectHeaderPanel;
+  private final JPanel segBox;
+  private final JPanel searchBox;
+  private final JPanel libHeaderBox;
+  private final JLabel libHeaderLabel;
+
   public Toolbox(Project proj, Frame frame, MenuListener menu) {
     super(new BorderLayout());
     this.proj = proj;
@@ -107,7 +113,7 @@ public class Toolbox extends JPanel implements ExplorerModel.Listener, ProjectLi
     // =========================================================================
     // ROW 1: Project Header (40px)
     // =========================================================================
-    final var projectHeaderPanel = new JPanel(new BorderLayout());
+    projectHeaderPanel = new JPanel(new BorderLayout());
     projectHeaderPanel.setPreferredSize(new Dimension(-1, AppPreferences.getScaled(40)));
     projectHeaderPanel.setBorder(BorderFactory.createEmptyBorder(0, AppPreferences.getScaled(10), 0, AppPreferences.getScaled(10)));
     projectHeaderPanel.putClientProperty(FlatClientProperties.STYLE, "background: $Panel.background;");
@@ -152,7 +158,7 @@ public class Toolbox extends JPanel implements ExplorerModel.Listener, ProjectLi
     projectHeaderPanel.add(titleBox, BorderLayout.WEST);
 
     // Segmented Toggle: [☰] (List) | [⊞] (Tiles) with 16px vector glyphs
-    final var segBox = new JPanel();
+    segBox = new JPanel();
     segBox.setLayout(new BoxLayout(segBox, BoxLayout.X_AXIS));
     segBox.putClientProperty(FlatClientProperties.STYLE, "arc: 6; border: 1,1,1,1,$Component.borderColor; background: $Panel.background;");
     final var viewGroup = new ButtonGroup();
@@ -258,7 +264,7 @@ public class Toolbox extends JPanel implements ExplorerModel.Listener, ProjectLi
     searchPanel.setBorder(BorderFactory.createEmptyBorder(2, 10, 4, 10));
     searchPanel.setOpaque(false);
 
-    final var searchBox = new JPanel(new BorderLayout());
+    searchBox = new JPanel(new BorderLayout());
     searchBox.putClientProperty(FlatClientProperties.STYLE, "arc: 6; background: $TextField.background;");
     searchField = new JTextField();
     searchField.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "Search components");
@@ -328,12 +334,14 @@ public class Toolbox extends JPanel implements ExplorerModel.Listener, ProjectLi
     toolbox.setRootVisible(false);
     final var treeScroll = new JScrollPane(toolbox);
     treeScroll.setBorder(BorderFactory.createEmptyBorder());
+    treeScroll.setOpaque(false);
+    treeScroll.getViewport().setOpaque(false);
     treeScroll.putClientProperty(FlatClientProperties.STYLE, "border: 0,0,0,0;");
 
     final var treeContainer = new JPanel(new BorderLayout());
     treeContainer.setOpaque(false);
 
-    final var libHeaderBox = new JPanel(new BorderLayout());
+    libHeaderBox = new JPanel(new BorderLayout());
     libHeaderBox.setOpaque(false);
     Color borderSubtle = UIManager.getColor("Surface.borderSubtle");
     if (borderSubtle == null) {
@@ -343,7 +351,7 @@ public class Toolbox extends JPanel implements ExplorerModel.Listener, ProjectLi
         BorderFactory.createMatteBorder(1, 0, 0, 0, borderSubtle),
         BorderFactory.createEmptyBorder(6, 12, 4, 12)));
 
-    final var libHeaderLabel = new JLabel("LIBRARIES");
+    libHeaderLabel = new JLabel("LIBRARIES");
     libHeaderLabel.setFont(new Font(Font.SANS_SERIF, Font.BOLD, AppPreferences.getScaled(11)));
     Color libMuted = UIManager.getColor("Surface.mutedText");
     if (libMuted == null) libMuted = UIManager.getColor("Chrome.mutedText");
@@ -625,5 +633,47 @@ public class Toolbox extends JPanel implements ExplorerModel.Listener, ProjectLi
     if (circuitsList != null) {
       circuitsList.refresh();
     }
+  }
+
+  @Override
+  public void updateUI() {
+    super.updateUI();
+    if (projectHeaderPanel != null) {
+      projectHeaderPanel.putClientProperty(FlatClientProperties.STYLE, "background: $Panel.background;");
+    }
+    if (segBox != null) {
+      segBox.putClientProperty(FlatClientProperties.STYLE, "arc: 6; border: 1,1,1,1,$Component.borderColor; background: $Panel.background;");
+    }
+    if (searchBox != null) {
+      searchBox.putClientProperty(FlatClientProperties.STYLE, "arc: 6; background: $TextField.background;");
+    }
+    if (libHeaderBox != null) {
+      Color borderSubtle = UIManager.getColor("Surface.borderSubtle");
+      if (borderSubtle == null) {
+        borderSubtle = AppPreferences.isDarkTheme() ? new Color(0x39, 0x3C, 0x42) : new Color(0xD5, 0xDA, 0xE2);
+      }
+      libHeaderBox.setBorder(BorderFactory.createCompoundBorder(
+          BorderFactory.createMatteBorder(1, 0, 0, 0, borderSubtle),
+          BorderFactory.createEmptyBorder(6, 12, 4, 12)));
+    }
+    if (libHeaderLabel != null) {
+      Color libMuted = UIManager.getColor("Surface.mutedText");
+      if (libMuted == null) libMuted = UIManager.getColor("Chrome.mutedText");
+      if (libMuted == null) libMuted = AppPreferences.isDarkTheme() ? new Color(0x9E, 0x9E, 0x9E) : new Color(0x5A, 0x5D, 0x66);
+      libHeaderLabel.setForeground(libMuted);
+    }
+    if (circuitsList != null) {
+      circuitsList.updateUI();
+    }
+    if (tileView != null) {
+      tileView.updateUI();
+    }
+    if (toolbox != null) {
+      toolbox.updateUI();
+    }
+    if (projectTitleLabel != null) {
+      updateProjectTitle();
+    }
+    updateActionButtons();
   }
 }

@@ -1,69 +1,200 @@
-# Logisim-evolution+
+[![Logisim-evolution+](docs/img/logisim-evolution-logo.png)](https://github.com/logisim-evolution/logisim-evolution)
 
-Logisim-evolution+ is an independent, public fork that continues development
-from code originally released under the GNU General Public License version 3
-(GPLv3). This repository is maintained separately and is not the official
-upstream Logisim-evolution project.
+---
 
-## Short summary
+# Logisim-evolution+ #
 
-Logisim-evolution+ is a Java-based digital logic design and simulation tool.
-This fork focuses on improved canvas interactions (smoother pan and
-cursor-anchored zoom), usability refinements, and an explicit, public
-development path under GPLv3.
+* **Table of contents**
+  * [Features](#features)
+  * [Requirements](#requirements)
+  * **[Downloads](#download)**
+    * [Package Manager](#package-manager)
+    * [Nightly builds (unstable)](#nightly-builds)
+  * [Pictures of Logisim-evolution+](docs/pics.md)
+  * [More Information](docs/docs.md)
+  * [Bug reports & feature requests](https://github.com/logisim-evolution/logisim-evolution/issues)
+  * [For developers](docs/developers.md)
+  * [How to contribute](docs/developers.md#how-to-contribute)
+  * [Credits](docs/credits.md)
 
-## Licensing and copyright
+---
 
-- This repository contains code derived from GPLv3-licensed work.
-- The project and all contributed code in this repository are distributed
-	under the terms of the GNU General Public License version 3 (GPLv3).
-- Original contributors to the upstream project retain their copyrights
-	and their work remains subject to the original GPLv3 terms.
+## Features ##
 
-What GPLv3 means in practice:
+`Logisim-evolution+` is educational software for designing and simulating digital logic circuits.
+`Logisim-evolution+` is [free](#license), [open-source](https://github.com/logisim-evolution), and [cross-platform](#requirements).
 
-- You are free to use, study, modify, and distribute the software.
-- If you distribute the software (or a derivative work), you must make the
-	corresponding source available and license the distributed work under
-	GPLv3 as well.
-- You must preserve copyright and license notices for the parts you
-	distribute, and provide the same rights to downstream recipients.
+Project highlights:
 
-For the full license text, see the `LICENSE` file included in this
-repository.
+* **Modern Header Bar**: Unified simulation control center (Pause/Play, Single Step, Reset, Frequency selector) with live LED indicator, circuit breadcrumbs, and dirty save state indicator.
+* **Modern Themes (Dark & Light)**: Curated 7-tier tonal hierarchy (Variation B) adhering to WCAG standards with automatic OS theme detection (Portal, GNOME, GTK, KDE, macOS, Windows).
+* **High-Contrast Wire Color System**: CVD/color-blind friendly simulation schemes with real-time wire preview and byte-identical classic print/export fidelity.
+* **Redesigned Component Explorer**: In-place component search (`Ctrl+/`), dual list & 3-column symbol card views, and non-destructive drag-and-drop circuit ordering.
+* **Fluid Canvas Navigation**: Hardware-accelerated smooth panning and cursor-anchored zoom.
+* **Electronic board integration**: Schematics can be downloaded and simulated on real FPGA hardware.
+* **VHDL components**: Components behavior can be specified directly in VHDL.
+* **Chronogram**: Timing diagram viewer to inspect the evolution of signals in your circuit.
+* **TCL/TK console**: Interactive scriptable interface between the circuit and the user.
+* **Huge component library**: LEDs, TTL 7400-series ICs, arithmetic blocks, memories, switches, and SoCs.
+* **Extensible & localized**: Custom startup libraries and multi-language translations.
 
-## Building and running
+Getting started (no experience needed):
 
-Requirements:
+Step-by-step first circuit:
 
-- Java 21 or newer
+| Step | What you do | Why it matters |
+| --- | --- | --- |
+| 1 | `File → New` | Start a clean project |
+| 2 | Place two `Input` components and one `AND` gate | Create a simple logic function |
+| 3 | Add a `Probe` or `Lamp` as the output | Make the result visible |
+| 4 | Use the wiring tool to connect inputs → gate → output | Build the circuit path |
+| 5 | Toggle the inputs | Observe how logic affects the output |
+| 6 | Save the project | Keep your work for later |
 
-Build:
+Key ideas in plain language:
 
-```bash
-./gradlew shadowJar
-```
+| Concept | What it means in practice |
+| --- | --- |
+| Component | A building block you place on the canvas |
+| Wire | The path that carries a 0 or 1 between components |
+| Signal | The 0/1 value traveling on a wire |
+| Subcircuit | A reusable group of components you define |
+| Library | A collection of components you can add to a project |
 
-Run (after building):
+If you get stuck:
 
-```bash
-./logisim-evolution+
-```
+* Click a component and read its properties panel.
+* Use `Edit → Undo` to step back safely.
+* Check the screenshots and docs links below for examples.
 
-Show runtime help:
+[![Logisim-evolution+](docs/img/logisim-evolution-01-small.png)](docs/pics.md)
+[![Logisim-evolution+](docs/img/logisim-evolution-02-small.png)](docs/pics.md)
+[![Logisim-evolution+](docs/img/logisim-evolution-03-small.png)](docs/pics.md)
 
-```bash
-./logisim-evolution+ --help
-```
+Image gallery: the three thumbnails above link to a larger set of screenshots in `docs/pics.md`.
 
-## Contributing
+---
 
-By contributing to this repository you agree to license your contributions
-under GPLv3. Please include clear contributor licensing information in your
-pull requests and follow the repository contribution guidelines.
+## Requirements ##
 
-## Disclaimer
+`Logisim-evolution+` is a Java application; therefore, it can run on any operating system supporting the Java runtime environment.
+It requires [Java 21 (or newer)](https://adoptium.net/temurin/releases/).
 
-This repository is a separate public fork and is not affiliated with the
-original Logisim-evolution project. The original Logisim-evolution
-contributors retain their copyrights and their code remains under GPLv3.
+Accessibility notes:
+
+* If you use a screen reader, the `docs/` pages are plain Markdown and generally read well in linear order.
+* If you prefer larger text or higher contrast, use your OS display settings or Java accessibility options.
+* Keyboard navigation is supported throughout the app; consult the in-app help for shortcuts.
+* The image gallery uses thumbnails that link to full-size images for better visibility.
+
+Accessibility quick setup:
+
+| Need | Tip |
+| --- | --- |
+| Larger text | Increase OS scaling or Java UI scaling |
+| High contrast | Enable high-contrast mode in your OS |
+| Keyboard-only use | Rely on menus and in-app shortcuts |
+
+---
+
+## Download ###
+
+`Logisim-evolution+` is available for
+[download in compiled form](https://github.com/logisim-evolution/logisim-evolution/releases)
+with ready to use installable packages for Windows, macOS, and Linux
+or in [source code form](https://github.com/logisim-evolution), which you can [build yourself](docs/developers.md).
+
+The following [platform specific packages](https://github.com/logisim-evolution/logisim-evolution/releases)
+include the Java runtime and do not require it to be installed separately:
+
+* `logisim-evolution+_<version>-1_amd64.deb`: Debian package (also suitable for Ubuntu and derivatives),
+* `logisim-evolution+-<version>-1.x86_64.rpm`: Package for Fedora/Redhat/CentOS/SuSE Linux distributions,
+* `logisim-evolution+-<version>_amd64.snap`: The [Snap](https://snapcraft.io/docs) archive for all
+  supported Linux distributions (also available in [Snapcraft store](https://snapcraft.io/logisim-evolution)),
+* `logisim-evolution+-<version>-aarch64.msi`: Installer package for Microsoft Windows for Arm processors,
+* `logisim-evolution+-<version>-amd64.msi`: Installer package for Microsoft Windows for Intel processors,
+* `logisim-evolution+-<version>-aarch64.dmg`: macOS package for Apple processors,
+* `logisim-evolution+-<version>-x86_64.dmg`: macOS package for Intel processors (also runs on Apple processors in simulation).
+
+The Java JAR [`logisim-evolution+-<version>-all.jar`](https://github.com/logisim-evolution/logisim-evolution/releases)
+is also available and can be run on any system with a supported Java runtime installed.
+
+[![Get it from the Snap Store](https://snapcraft.io/static/images/badges/en/snap-store-black.svg)](https://snapcraft.io/logisim-evolution)
+
+Which download should I pick?
+
+| You are on | Pick this | Notes |
+| --- | --- | --- |
+| Windows (Intel/AMD) | `logisim-evolution+-<version>-amd64.msi` | Standard installer |
+| Windows (ARM) | `logisim-evolution+-<version>-aarch64.msi` | For ARM devices |
+| macOS (Apple Silicon) | `logisim-evolution+-<version>-aarch64.dmg` | For M-series Macs |
+| macOS (Intel) | `logisim-evolution+-<version>-x86_64.dmg` | Also runs via Rosetta |
+| Linux (Debian/Ubuntu) | `logisim-evolution+_<version>-1_amd64.deb` | Debian package |
+| Linux (Fedora/Redhat) | `logisim-evolution+-<version>-1.x86_64.rpm` | RPM package |
+| Linux (Snap) | `logisim-evolution+-<version>_amd64.snap` | Snap store build |
+| Any OS with Java | `logisim-evolution+-<version>-all.jar` | Portable option |
+
+---
+
+**Note for macOS users**:
+The Logisim-evolution.app is not signed with an Apple approved certificate.
+
+When launching the application for the first time, you will have to start it via the "Open" entry in the
+application icon's context menu in the macOS Finder. This is either done by clicking the application
+icon with the right mouse button or holding down <kbd>CTRL</kbd> while clicking the icon with the
+left mouse button. This will open a panel asking you to verify that you wish to launch the application.
+On more recent versions of macOS, the panel will only give you a choice of moving the app to the trash or Cancel.
+On those systems, click Cancel, open `System Preferences`, and select `Security & Privacy`.
+There you may need to click the lock to make changes and authenticate with an administrative account.
+It should show an option to open the app.
+See [Safely open apps on your Mac](https://support.apple.com/en-us/HT202491) for more information.
+
+Depending on your security settings, you may also get a panel asking if you wish to allow it to accept
+network connections. You can click "Deny" as we do not need network access currently nor we do request any.
+
+### Package Manager ###
+
+`Logisim-evolution+` is available from package managers.
+If you should observe a bug in Logisim-evolution+ while using one of these packages,
+first make sure that it can be reproduced with the most recent official packages
+[provided through this repository](https://github.com/logisim-evolution/logisim-evolution/releases)
+and ideally the HEAD of our [main branch](https://github.com/logisim-evolution/logisim-evolution/tree/main)
+before [creating an issue](https://github.com/logisim-evolution/logisim-evolution/issues).
+
+* [Snap](https://snapcraft.io/logisim-evolution) (`snap install logisim-evolution`)
+* [Flathub](https://flathub.org/apps/details/com.github.reds.LogisimEvolution) (`flatpak install flathub com.github.reds.LogisimEvolution`)
+* [Homebrew](https://formulae.brew.sh/cask/logisim-evolution) (`brew install --cask logisim-evolution`)
+* [MacPorts](https://ports.macports.org/port/logisim-evolution/details/) (`port install logisim-evolution`)
+* [Chocolatey](https://community.chocolatey.org/packages/logisim-evolution) (`choco install logisim-evolution`)
+* [winget](https://winget.run/pkg/logisim-evolution/logisim-evolution) (`winget install -e --id logisim-evolution.logisim-evolution`)
+* [Arch User Repository](https://aur.archlinux.org/packages/logisim-evolution)
+* [nixpkgs](https://search.nixos.org/packages?channel=24.05&show=logisim-evolution)(`nix-shell -p logisim-evolution`)
+
+### Nightly builds ###
+
+We also offer builds based on the current state of the
+[main](https://github.com/logisim-evolution/logisim-evolution/tree/main) branch.
+If the main branch has been changed,
+a new `Nightly build` is created at midnight [UTC](https://en.wikipedia.org/wiki/Coordinated_Universal_Time).
+
+Note that these builds may be unstable since the main branch is a work in progress.
+
+To get nightly downloads, please go to the
+[nightly workflow page](https://github.com/logisim-evolution/logisim-evolution/actions/workflows/nightly.yml)
+and browse to the last successful build from the `Nightly` worker.
+Nightly runs each night, but terminates quickly and does not produce new packages if nothing has changed since the last run.
+Find the most recent run that contains the packages.
+The time Nightly took to run, given near the clock icon on the right, helps your search.
+Note that due to GitHub internals, all files are provided as ZIP archives.
+You must unzip the downloaded file to get the installation package.
+
+Please share your experience in [Discussions](https://github.com/logisim-evolution/logisim-evolution/discussions)
+or [open a ticket](https://github.com/logisim-evolution/logisim-evolution/issues)
+if you found a bug or have suggestions for improvement.
+
+---
+
+## License ##
+
+* `Logisim-evolution+` is derived from work copyrighted ©2001-2024 by Logisim-evolution [developers](docs/credits.md).
+* This is free software licensed under [GNU General Public License v3](https://www.gnu.org/licenses/gpl-3.0.en.html).
