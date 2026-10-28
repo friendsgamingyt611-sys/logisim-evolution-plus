@@ -2,7 +2,44 @@
 
 # Changes #
 
-* @dev (????-??-??)
+================================================================================
+# Logisim-evolution+ Releases
+================================================================================
+
+* v5.0.0-beta1 (2026-10-28)
+  * Major modern UI reform and desktop experience overhaul:
+    * **Modern Header Bar**:
+      * Compact simulation status and control pill (Pause/Play, Single Step, Reset, Frequency selector) with live LED indicator.
+      * Document hierarchy breadcrumb and circuit quick-switcher with unsaved dirty file indicator.
+      * Integrated zoom level popover menu and left sidebar collapse/expand toggle.
+    * **Modern FlatLaf Themes (Dark and Light)**:
+      * Comprehensive 7-tier surface tonal hierarchy (canvas, well, panel, chrome, group, strong border, subtle border) adhering to WCAG contrast standards.
+      * **Variation B Color System**: High-contrast, tailored palette tokens for chrome, panels, inputs, borders, and controls.
+      * Seamless real-time Look & Feel switching with synchronous cache invalidation.
+      * **Cross-Platform Auto-Sync Theme Detection**: Automatically matches system appearance on cold start and runtime, with cascaded Linux desktop detection (FreeDesktop/XDG Desktop Portal, GNOME/GSettings, GTK 3, KDE Plasma) as well as macOS and Windows.
+    * **Simulation & Wire Color System (Stage 27 / Stage 28)**:
+      * **ColorScheme Registry**: Modular architecture supporting Modern (Light & Dark), Classic Upstream, Color-blind Friendly, and Custom schemes.
+      * **Modern Wire Palette**: Balanced luminance contrast (≥ 3:1 against canvas) and CIEDE2000 color distinctness across normal vision and Machado 2009 color vision deficiencies (Protanopia, Deuteranopia, Tritanopia).
+      * **Redesigned Simulation Preferences Tab**: Scheme selection dropdown, real-time multi-state wire preview strip, read-only token swatches for built-in palettes with Light/Dark preview toggle, and one-click clone to Custom.
+      * **Print & Export Fidelity**: Byte-identical classic color preservation for print, PNG, and SVG exports when using Modern or Classic schemes.
+    * **Project Explorer & Toolbox Navigation**:
+      * Dual list view and tile/grid view modes for components.
+      * In-place component search (`Ctrl+/`) with instant filtering.
+      * Custom 20px stroked category vector glyphs for all 12 standard component libraries with dynamic item counts.
+      * Distinct active circuit styling (accent tint, 3px solid indicator bar, semibold label) separated from armed tool states.
+      * Non-destructive circuit ordering with drag-and-drop hierarchy management and XML serialization persistence.
+    * **Canvas & Interaction Enhancements**:
+      * High-performance camera-driven `GridPainter` with quantized minor and major dot rasters.
+      * Smooth cursor-anchored zoom and responsive scroll wheel interaction.
+      * Translucent marquee selection fill with Libadwaita-style accent border.
+      * Context-aware adaptable component outline strokes with paint scopes.
+      * Enhanced dark-mode contrast for 7-Segment and Hex Digit display components.
+
+================================================================================
+# Upstream Logisim-evolution History (Pre-Fork)
+================================================================================
+
+* v4.2.0-dev (Upstream development baseline)
   * Added support for opening project files by dragging them into the application window.
   * Added ability to load multiple RAM or ROM memories from the command line
   * Added Real-Time Clock component.
