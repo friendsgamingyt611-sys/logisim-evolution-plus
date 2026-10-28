@@ -154,9 +154,10 @@ public class ThemeManager {
           if (out.contains("uint32 1") || out.contains("u 1")) {
             return Boolean.TRUE;
           }
-          if (out.contains("uint32 2") || out.contains("u 2") || out.contains("uint32 0") || out.contains("u 0")) {
+          if (out.contains("uint32 2") || out.contains("u 2")) {
             return Boolean.FALSE;
           }
+          // uint32 0 / u 0 is "no preference" in xdg portal spec; fall through to desktop environment
         }
       } else {
         proc.destroyForcibly();
@@ -184,9 +185,10 @@ public class ThemeManager {
           if (out.contains("uint32 1")) {
             return Boolean.TRUE;
           }
-          if (out.contains("uint32 2") || out.contains("uint32 0")) {
+          if (out.contains("uint32 2")) {
             return Boolean.FALSE;
           }
+          // uint32 0 is "no preference"; fall through to desktop environment
         }
       } else {
         proc.destroyForcibly();
