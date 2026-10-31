@@ -10,7 +10,7 @@ while [ -h "$SCRIPT_SOURCE" ]; do
   [[ $SCRIPT_SOURCE != /* ]] && SCRIPT_SOURCE="$SCRIPT_DIR/$SCRIPT_SOURCE"
 done
 SCRIPT_DIR="$(cd "$(dirname "$SCRIPT_SOURCE")" && pwd)"
-JAR="$SCRIPT_DIR/build/libs/logisim-evolution+-4.2.0dev-all.jar"
+JAR="$SCRIPT_DIR/build/libs/logisim-evolution+-5.0.0rc1-all.jar"
 
 # Find a suitable Java to run with (JRE is fine here — we only need 'java', not 'javac')
 find_java() {
