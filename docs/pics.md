@@ -16,9 +16,9 @@ High-resolution screenshots demonstrating Logisim-evolution+ in action across Li
 
 ![Logisim-evolution+ Modern Light](img/logisim-evolution-01.png)
 
-### Component Properties & Layout ###
+### Simulation Preferences & Color Scheme ###
 
-![Logisim-evolution+ Properties Inspector](img/logisim-evolution-02.png)
+![Logisim-evolution+ Simulation Preferences & Palette](img/logisim-evolution-02.png)
 
 ### Modern Dark Appearance ###
 
