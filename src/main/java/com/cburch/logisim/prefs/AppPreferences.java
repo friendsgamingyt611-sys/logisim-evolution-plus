@@ -635,21 +635,57 @@ public class AppPreferences {
   public static final int LIGHT_GRID_MAJOR_DOT_COLOR = 0xFFC8C8C8;
 
   public static boolean isCanvasBgDefault(int val) {
-    return val == DEFAULT_CANVAS_BG_COLOR
+    if (val == DEFAULT_CANVAS_BG_COLOR
         || val == 0xFFFFFFFF
         || val == -1
         || val == DARK_CANVAS_BG_COLOR
         || val == LIGHT_CANVAS_BG_COLOR
-        || val == 0xFFFCFCFB;
+        || val == 0xFFFCFCFB
+        || val == 0xFF2B2D33
+        || val == 0xFF2A2D32
+        || val == 0xFF25282C
+        || val == 0xFF2B2D30
+        || val == 0xFF2B2B2B
+        || val == -13948117
+        || val == 0xFF3C3F41
+        || val == 0xFF1E1E1E) {
+      return true;
+    }
+    try {
+      if (val == com.cburch.logisim.comp.Palette.DARK.background().getRGB()
+          || val == com.cburch.logisim.comp.Palette.LIGHT.background().getRGB()) {
+        return true;
+      }
+    } catch (Throwable ignored) {
+    }
+    return false;
   }
 
   public static boolean isGridBgDefault(int val) {
-    return val == DEFAULT_GRID_BG_COLOR
+    if (val == DEFAULT_GRID_BG_COLOR
         || val == 0xFFFFFFFF
         || val == -1
         || val == DARK_CANVAS_BG_COLOR
         || val == LIGHT_CANVAS_BG_COLOR
-        || val == 0xFFFCFCFB;
+        || val == 0xFFFCFCFB
+        || val == 0xFF2B2D33
+        || val == 0xFF2A2D32
+        || val == 0xFF25282C
+        || val == 0xFF2B2D30
+        || val == 0xFF2B2B2B
+        || val == -13948117
+        || val == 0xFF3C3F41
+        || val == 0xFF1E1E1E) {
+      return true;
+    }
+    try {
+      if (val == com.cburch.logisim.comp.Palette.DARK.background().getRGB()
+          || val == com.cburch.logisim.comp.Palette.LIGHT.background().getRGB()) {
+        return true;
+      }
+    } catch (Throwable ignored) {
+    }
+    return false;
   }
 
   public static Color getCanvasBgColor() {
@@ -691,7 +727,10 @@ public class AppPreferences {
 
   public static Color getComponentColor() {
     if (!ADAPT_COMPONENT_COLOR.getBoolean()) {
-      return new Color(COMPONENT_COLOR.get());
+      int val = COMPONENT_COLOR.get();
+      if (val != 0 && val != -1 && val != 0xFFFFFFFF && val != 0xFF000000 && val != -16777216) {
+        return new Color(val);
+      }
     }
     return Palette.current().stroke();
   }
@@ -757,9 +796,20 @@ public class AppPreferences {
     return isSystemDark();
   }
 
+  public static boolean isComponentIconDefault(int val) {
+    return val == 0
+        || val == DEFAULT_COMPONENT_ICON_COLOR
+        || val == 0xFF000000
+        || val == -16777216
+        || val == -1
+        || val == 0xFFFFFFFF
+        || val == 0xFFF5F5F5
+        || val == 0xFF2E3436;
+  }
+
   public static Color getComponentIconColor() {
     int val = COMPONENT_ICON_COLOR.get();
-    if (val != 0 && val != 0xFF000000 && val != -16777216) {
+    if (!isComponentIconDefault(val)) {
       return new Color(val);
     }
     if (isDarkTheme()) {

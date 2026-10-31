@@ -32,6 +32,7 @@ import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JSlider;
 import javax.swing.JTextArea;
+import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.UIManager.LookAndFeelInfo;
 import javax.swing.UnsupportedLookAndFeelException;
@@ -79,6 +80,7 @@ class WindowOptions extends OptionsPanel {
   
   private String initialAppFont;
   private String initialLookAndFeel;
+  private boolean isUpdatingUiProgrammatically = false;
 
   protected final String cmdResetWindowLayout = "reset-window-layout";
   protected final String cmdResetGridColors = "reset-grid-colors";
@@ -89,6 +91,12 @@ class WindowOptions extends OptionsPanel {
 
     final var listener = new SettingsChangeListener();
     final var panel = new JPanel(new TableLayout(2));
+
+    AppPreferences.AUTO_SYNC_THEME.addPropertyChangeListener(evt -> {
+      if (AppPreferences.AUTO_SYNC_THEME.get()) {
+        com.cburch.logisim.gui.theme.ThemeManager.syncWithSystemTheme();
+      }
+    });
 
     checks =
         new PrefBoolean[] {
@@ -215,6 +223,27 @@ class WindowOptions extends OptionsPanel {
         lookAndFeel.setSelectedIndex(index = i);
       }
     }
+
+    AppPreferences.LookAndFeel.addPropertyChangeListener(evt -> {
+      SwingUtilities.invokeLater(() -> {
+        isUpdatingUiProgrammatically = true;
+        try {
+          String currentLaf = AppPreferences.LookAndFeel.get();
+          for (var i = 0; i < lookAndFeelInfos.length; i++) {
+            if (lookAndFeelInfos[i].getClassName().equals(currentLaf)) {
+              if (lookAndFeel.getSelectedIndex() != i) {
+                index = i;
+                lookAndFeel.setSelectedIndex(i);
+              }
+              break;
+            }
+          }
+          initThemePreviewer();
+        } finally {
+          isUpdatingUiProgrammatically = false;
+        }
+      });
+    });
     
     appFont = new JComboBox<>();
     appFont.addItem(S.get("windowAppFontDefault"));
@@ -340,9 +369,13 @@ class WindowOptions extends OptionsPanel {
     @Override
     public void actionPerformed(ActionEvent e) {
       if (e.getSource().equals(lookAndFeel)) {
+        if (isUpdatingUiProgrammatically) {
+          return;
+        }
         int newIndex = lookAndFeel.getSelectedIndex();
         if (newIndex != index && newIndex >= 0 && newIndex < lookAndFeelInfos.length) {
           index = newIndex;
+          AppPreferences.AUTO_SYNC_THEME.set(false);
           ThemeManager.applyTheme(lookAndFeelInfos[index].getClassName());
           initThemePreviewer();
         }

@@ -310,12 +310,17 @@ public class ThemeManager {
     if (lafClassName == null || lafClassName.isBlank()) {
       return;
     }
-    SwingUtilities.invokeLater(() -> {
+    final Runnable task = () -> {
       try {
         UIManager.setLookAndFeel(lafClassName);
         AppPreferences.LookAndFeel.set(lafClassName);
         FlatLaf.updateUI();
         ComponentGlyphCache.clearCache();
+        for (final var window : java.awt.Window.getWindows()) {
+          if (window instanceof com.cburch.logisim.gui.main.Frame frame) {
+            frame.updateThemeUI();
+          }
+        }
         for (final var proj : Projects.getOpenProjects()) {
           final var frame = proj.getFrame();
           if (frame != null) {
@@ -325,10 +330,26 @@ public class ThemeManager {
       } catch (Throwable t) {
         t.printStackTrace();
       }
-    });
+    };
+    if (SwingUtilities.isEventDispatchThread()) {
+      task.run();
+    } else {
+      SwingUtilities.invokeLater(task);
+    }
+  }
+
+  public static void syncWithSystemTheme() {
+    cachedIsDark = querySystemDarkNow();
+    lastCheckTime = System.currentTimeMillis();
+    final var currentLaf = AppPreferences.LookAndFeel.get();
+    final var paired = getPairedLaf(currentLaf, cachedIsDark);
+    if (paired != null && !paired.equals(currentLaf)) {
+      applyTheme(paired);
+    }
   }
 
   public static synchronized void startSystemThemeMonitor() {
+    ThemeSyncListener.install();
     if (monitorService != null && !monitorService.isShutdown()) {
       return;
     }
@@ -337,11 +358,7 @@ public class ThemeManager {
 
     // Cold-start alignment if auto-sync is enabled
     if (AppPreferences.AUTO_SYNC_THEME.get()) {
-      final var currentLaf = AppPreferences.LookAndFeel.get();
-      final var paired = getPairedLaf(currentLaf, cachedIsDark);
-      if (paired != null && !paired.equals(currentLaf)) {
-        applyTheme(paired);
-      }
+      syncWithSystemTheme();
     }
 
     monitorService =

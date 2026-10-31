@@ -470,6 +470,28 @@ STAGE 26.1: Cold-Start OS Theme Detection & Auto-Sync Alignment
 - Cold-Start Monitor Sync: In ThemeManager.startSystemThemeMonitor(), align configured LaF to paired
   theme if the application was started while the OS was already in Dark or Light mode.
 
+STAGE 2: Cross-Platform Dynamic OS Theme Synchronization & Canvas Refresh Bridge
+- Step A (Robust Event-Driven OS Detection):
+  * ThemeSyncListener: Created global UIManager "lookAndFeel" bridge and component refresh dispatcher.
+  * ThemeManager: Integrated XDG Desktop Portal (org.freedesktop.portal.Settings color-scheme, treating
+    0 as indeterminate fallback to desktop settings), GNOME gsettings, GTK 3/4 settings, KDE, Windows
+    registry, and macOS defaults on a daemon monitor thread with EDT-safe dispatch via SwingUtilities.invokeLater.
+  * Instant Synchronization: Added ThemeManager.syncWithSystemTheme() to re-sync immediately on toggle.
+- Step B (Bulletproof Default Token Resolution & Cache Invalidation):
+  * AppPreferences: Fixed isCanvasBgDefault() and isGridBgDefault() to recognize all default dark/light tokens
+    (0xFFFFFFFF, 0xFF1F1F1F, 0xFF2B2D33, 0xFF2A2D32, 0xFF25282C, 0xFF2B2D30, 0xFFFCFCFB, -1) and dynamically
+    validate against Palette.DARK and Palette.LIGHT RGB values.
+  * GridPainter: Fully dumps cached BufferedImage dot raster, rasterPixels, cachedHiDpiScale, and cached
+    colors in invalidateGrid() and listens to UIManager "lookAndFeel" property changes.
+  * Custom Renderers: Updated HdlColorRenderer, ProjectExplorer, CircuitsList, and AttrTable to dynamically
+    re-fetch FlatLaf UI tokens on updateUI().
+- Step C (Loop-Free Preferences UI Sync):
+  * WindowOptions: Implemented isUpdatingUiProgrammatically boolean guard around lookAndFeel JComboBox listener.
+  * Direct User vs Auto-Sync: Changing the theme via the dropdown only disables AUTO_SYNC_THEME when triggered
+    by direct user interaction, not by programmatic OS auto-sync.
+  * Synchronized Dropdown: Subscribed lookAndFeel JComboBox to AppPreferences.LookAndFeel property changes.
+
+
 
 --------------------------------------------------------------------------------
 4. KEY SOURCE FILES & ROLES

@@ -756,6 +756,9 @@ public class Frame extends LFrame.MainWindow implements LocaleListener {
     if (headerBar != null) {
       headerBar.updateUI();
     }
+    if (toolbar != null) {
+      toolbar.updateUI();
+    }
     if (toolbox != null) {
       toolbox.updateUI();
     }

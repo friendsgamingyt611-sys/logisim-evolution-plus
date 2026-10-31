@@ -6,6 +6,23 @@
 # Logisim-evolution+ Releases
 ================================================================================
 
+* v5.1.0-dev (Stage 2 - Cross-Platform OS Theme Synchronization)
+  * **Dynamic OS Theme Sync & Event Bus (Step A)**:
+    * Implemented `ThemeSyncListener` global `UIManager` "lookAndFeel" bridge to dispatch synchronous UI invalidations across open frames and custom delegates.
+    * Refined Linux XDG Desktop Portal detection (`org.freedesktop.portal.Settings` `color-scheme`), treating value `0` as non-prescriptive so it gracefully falls through to desktop settings (GNOME, GTK 3/4, KDE Plasma).
+    * Guaranteed thread safety on background monitor threads with EDT-safe dispatch via `SwingUtilities.invokeLater()`.
+    * Added `ThemeManager.syncWithSystemTheme()` to immediately trigger synchronization on demand.
+  * **Bulletproof Canvas & Cell Renderer Refresh Bridge (Step B)**:
+    * Updated `AppPreferences.isCanvasBgDefault()` and `isGridBgDefault()` to recognize Variation B tokens (`0xFF2B2D33`, `0xFF2A2D32`, `0xFF25282C`, `0xFF2B2D30`) and dynamically check against `Palette.DARK` / `Palette.LIGHT` backgrounds.
+    * Fixed canvas locking bug where an older saved preference prevented the canvas and grid from transitioning to pure white in light mode.
+    * Ensured `GridPainter.invalidateGrid()` immediately dumps the cached `BufferedImage` dot raster and rebuilds with the new theme's dot colors.
+    * Updated custom cell renderers in `CircuitsList`, `Toolbox`, `ProjectExplorer`, and `AttrTable` to dynamically re-query FlatLaf tokens on `updateUI()`.
+  * **Loop-Free Preferences UI Synchronization (Step C)**:
+    * Added `isUpdatingUiProgrammatically` guard flag to `WindowOptions` `lookAndFeel` combo box.
+    * Direct user selection in the dropdown safely disables `AUTO_SYNC_THEME`, preventing background monitor overrides.
+    * Subscribed the preferences dropdown to `AppPreferences.LookAndFeel` property changes so it stays in sync with dynamic OS changes.
+    * Checking "Auto-sync with OS theme" immediately synchronizes with the system appearance.
+
 * v5.0.0-rc1 (2026-10-28)
   * Release Candidate 1 milestone incorporating comprehensive Stage 28.1 refinements:
     * **Dynamic Theme Synchronization (Stage 28.1)**:

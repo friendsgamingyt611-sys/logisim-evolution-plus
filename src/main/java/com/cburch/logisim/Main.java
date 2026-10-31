@@ -77,6 +77,7 @@ public class Main {
             AppPreferences.LookAndFeel.set(initialLaf);
           }
         }
+        com.cburch.logisim.gui.theme.ThemeSyncListener.install();
         UIManager.setLookAndFeel(initialLaf);
         ThemeManager.startSystemThemeMonitor();
         

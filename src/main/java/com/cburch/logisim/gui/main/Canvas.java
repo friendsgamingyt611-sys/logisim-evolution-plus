@@ -153,6 +153,7 @@ public class Canvas extends JPanel implements LocaleListener, CanvasPaneContents
     AppPreferences.SHOW_TICK_RATE.addPropertyChangeListener(myListener);
     AppPreferences.CANVAS_BG_COLOR.addPropertyChangeListener(myListener);
     AppPreferences.LookAndFeel.addPropertyChangeListener(myListener);
+    javax.swing.UIManager.addPropertyChangeListener(myListener);
     loadOptions(options);
   }
 
@@ -1076,8 +1077,10 @@ public class Canvas extends JPanel implements LocaleListener, CanvasPaneContents
         final var showTips = AppPreferences.COMPONENT_TIPS.getBoolean();
         setToolTipText(showTips ? "" : null);
       } else if (AppPreferences.CANVAS_BG_COLOR.isSource(event)
-          || AppPreferences.LookAndFeel.isSource(event)) {
+          || AppPreferences.LookAndFeel.isSource(event)
+          || "lookAndFeel".equals(event.getPropertyName())) {
         setBackground(AppPreferences.getCanvasBgColor());
+        invalidateGrid();
         repaint();
       }
     }

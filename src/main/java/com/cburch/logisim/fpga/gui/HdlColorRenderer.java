@@ -65,8 +65,8 @@ public class HdlColorRenderer extends JLabel implements TableCellRenderer {
       tableBg = (rowIdx % 2 == 1
           ? (UIManager.getColor("Table.alternateRowColor") != null
               ? UIManager.getColor("Table.alternateRowColor")
-              : UIManager.getColor("Table.background"))
-          : UIManager.getColor("Table.background"));
+              : (table != null ? table.getBackground() : UIManager.getColor("Table.background")))
+          : (table != null ? table.getBackground() : UIManager.getColor("Table.background")));
     }
     setBackground(tableBg);
 

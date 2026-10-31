@@ -76,6 +76,7 @@ import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JTree;
 import javax.swing.KeyStroke;
+import javax.swing.SwingUtilities;
 import javax.swing.ToolTipManager;
 import javax.swing.UIManager;
 import javax.swing.event.TreeSelectionEvent;
@@ -272,6 +273,10 @@ public class ProjectExplorer extends JTree implements LocaleListener {
   public void updateUI() {
     super.updateUI();
     configureTreeUi();
+    if (renderer != null) {
+      SwingUtilities.updateComponentTreeUI(renderer);
+    }
+    repaint();
   }
 
   @Override

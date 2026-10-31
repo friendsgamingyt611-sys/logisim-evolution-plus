@@ -73,6 +73,7 @@ public class GridPainter implements PropertyChangeListener {
     AppPreferences.GRID_DOT_COLOR.addPropertyChangeListener(this);
     AppPreferences.GRID_ZOOMED_DOT_COLOR.addPropertyChangeListener(this);
     AppPreferences.LookAndFeel.addPropertyChangeListener(this);
+    javax.swing.UIManager.addPropertyChangeListener(this);
   }
 
   public void addPropertyChangeListener(String prop, PropertyChangeListener listener) {
@@ -146,7 +147,13 @@ public class GridPainter implements PropertyChangeListener {
 
   public void invalidateGrid() {
     cachedZoom = -1.0;
+    cachedDark = false;
     cachedBgColor = null;
+    cachedDotColor = null;
+    cachedMajorDotColor = null;
+    cachedRaster = null;
+    rasterPixels = null;
+    cachedHiDpiScale = -1.0;
     if (destination != null) {
       destination.repaint();
     }
@@ -158,7 +165,8 @@ public class GridPainter implements PropertyChangeListener {
         || AppPreferences.GRID_DOT_COLOR.isSource(event)
         || AppPreferences.GRID_ZOOMED_DOT_COLOR.isSource(event)
         || AppPreferences.CANVAS_BG_COLOR.isSource(event)
-        || AppPreferences.LookAndFeel.isSource(event)) {
+        || AppPreferences.LookAndFeel.isSource(event)
+        || "lookAndFeel".equals(event.getPropertyName())) {
       invalidateGrid();
     }
   }

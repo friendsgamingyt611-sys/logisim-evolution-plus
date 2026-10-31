@@ -75,6 +75,8 @@ public class Toolbar extends JPanel {
         tbBorder = AppPreferences.isDarkTheme() ? new Color(51, 51, 51) : new Color(208, 213, 221);
       }
       setBorder(javax.swing.BorderFactory.createMatteBorder(0, 0, 1, 0, tbBorder));
+      computeContents();
+      repaint();
     }
   }
 
