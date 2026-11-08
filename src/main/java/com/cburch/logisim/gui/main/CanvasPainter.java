@@ -153,18 +153,7 @@ class CanvasPainter implements PropertyChangeListener {
   }
 
   private void exposeHaloedComponent(Graphics gfx) {
-    final var comp = haloedComponent;
-    if (comp == null) return;
-    final var bds = comp.getBounds(gfx).expand(7);
-    final var width = bds.getWidth();
-    final var height = bds.getHeight();
-    final var a = Canvas.SQRT_2 * width;
-    final var b = Canvas.SQRT_2 * height;
-    canvas.repaint(
-        (int) Math.round(bds.getX() + width / 2.0 - a / 2.0),
-        (int) Math.round(bds.getY() + height / 2.0 - b / 2.0),
-        (int) Math.round(a),
-        (int) Math.round(b));
+    canvas.repaint();
   }
 
   //
@@ -191,6 +180,7 @@ class CanvasPainter implements PropertyChangeListener {
     com.cburch.logisim.circuit.Simulator.stepPulsePhase();
     final var size = canvas.getSize();
     final double zoomFactor = canvas.getZoomFactor();
+    final var camera = canvas.getCamera();
 
     grid.paintGrid(g);
     g.setColor(Palette.current().stroke());
@@ -203,7 +193,12 @@ class CanvasPainter implements PropertyChangeListener {
       g2d.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_PURE);
       g2d.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
       g2d.setRenderingHint(RenderingHints.KEY_FRACTIONALMETRICS, RenderingHints.VALUE_FRACTIONALMETRICS_ON);
-      if (zoomFactor != 1.0) {
+      if (camera != null) {
+        int tx = (int) Math.round(camera.getPanX() + (canvas.getWidth() / 2.0));
+        int ty = (int) Math.round(camera.getPanY() + (canvas.getHeight() / 2.0));
+        g2d.translate(tx, ty);
+        g2d.scale(camera.getZoomFactor(), camera.getZoomFactor());
+      } else if (zoomFactor != 1.0) {
         final var at = AffineTransform.getScaleInstance(zoomFactor, zoomFactor);
         g2d.transform(at);
       }

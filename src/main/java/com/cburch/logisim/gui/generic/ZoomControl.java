@@ -436,7 +436,9 @@ public class ZoomControl extends JPanel {
         if (bounds.getHeight() == 0 || bounds.getWidth() == 0) return;
 
         final var canvasPane = canvas.getCanvasPane();
-        if (canvasPane == null) return;
+        final double vpW = canvasPane != null ? canvasPane.getViewport().getSize().getWidth() : canvas.getWidth();
+        final double vpH = canvasPane != null ? canvasPane.getViewport().getSize().getHeight() : canvas.getHeight();
+        if (vpW <= 0 || vpH <= 0) return;
         // the white space around
         final var padding = 50;
         // set autozoom
@@ -444,10 +446,7 @@ public class ZoomControl extends JPanel {
         final var height = (bounds.getHeight() + 2 * padding) * zoomFactor;
         final var width = (bounds.getWidth() + 2 * padding) * zoomFactor;
         var autozoom = zoomFactor;
-        autozoom *=
-            Math.min(
-                canvasPane.getViewport().getSize().getWidth() / width,
-                canvasPane.getViewport().getSize().getHeight() / height);
+        autozoom *= Math.min(vpW / width, vpH / height);
         final var max =
             zoomModel.getZoomOptions().get(zoomModel.getZoomOptions().size() - 1) / 100.0;
         final var min = zoomModel.getZoomOptions().get(0) / 100.0;

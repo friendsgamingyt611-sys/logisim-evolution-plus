@@ -112,6 +112,7 @@ public class Canvas extends JPanel implements LocaleListener, CanvasPaneContents
   private final CanvasPaintCoordinator paintCoordinator;
   private final CanvasPainter painter;
   private final Object repaintLock = new Object(); // for waitForRepaintDone
+  private final Camera2D camera;
   private Tool dragTool;
   private Tool tempTool;
   private MouseMappings mappings;
@@ -125,6 +126,7 @@ public class Canvas extends JPanel implements LocaleListener, CanvasPaneContents
 
   public Canvas(Project proj) {
     this.proj = proj;
+    this.camera = new Camera2D();
     this.selection = new Selection(proj, this);
     this.painter = new CanvasPainter(this);
     this.oldPreferredSize = null;
@@ -132,6 +134,8 @@ public class Canvas extends JPanel implements LocaleListener, CanvasPaneContents
     this.mappings = proj.getOptions().getMouseMappings();
     this.canvasPane = null;
     this.tickCounter = new TickCounter();
+
+    camera.addPropertyChangeListener(e -> repaint());
 
     setBackground(AppPreferences.getCanvasBgColor());
     addMouseListener(myListener);
@@ -252,9 +256,22 @@ public class Canvas extends JPanel implements LocaleListener, CanvasPaneContents
         ? proj.getCurrentCircuit().getBounds(getGraphics())
         : proj.getCurrentCircuit().getBounds();
     if (bounds.getHeight() == 0 || bounds.getWidth() == 0) {
-      setScrollBar(0, 0);
+      if (camera != null) {
+        camera.resetToCenter();
+      } else {
+        setScrollBar(0, 0);
+      }
+      repaint();
       return;
     }
+    if (camera != null) {
+      double cx = bounds.getX() + bounds.getWidth() / 2.0;
+      double cy = bounds.getY() + bounds.getHeight() / 2.0;
+      camera.centerOn(cx, cy);
+      repaint();
+      return;
+    }
+    if (canvasPane == null) return;
     final var xpos =
         (int)
             (Math.round(
@@ -329,7 +346,9 @@ public class Canvas extends JPanel implements LocaleListener, CanvasPaneContents
 
   public Rectangle getViewableBaseRect() {
     Rectangle viewableBase;
-    if (canvasPane != null) {
+    if (camera != null) {
+      viewableBase = new Rectangle(0, 0, getWidth(), getHeight());
+    } else if (canvasPane != null) {
       viewableBase = canvasPane.getViewport().getViewRect();
     } else {
       final var bds = proj.getCurrentCircuit().getBounds();
@@ -339,6 +358,10 @@ public class Canvas extends JPanel implements LocaleListener, CanvasPaneContents
   }
 
   public Rectangle getViewableRect() {
+    if (camera != null) {
+      final var b = camera.getViewportWorldBounds();
+      return new Rectangle(b.getX(), b.getY(), b.getWidth(), b.getHeight());
+    }
     Rectangle viewable;
     Rectangle viewableBase = getViewableBaseRect();
     final var zoom = getZoomFactor();
@@ -409,15 +432,28 @@ public class Canvas extends JPanel implements LocaleListener, CanvasPaneContents
   }
 
   public int getHorizontalScrollBar() {
-    return canvasPane.getHorizontalScrollBar().getValue();
+    if (camera != null) {
+      return (int) Math.round(camera.getPanX());
+    }
+    return canvasPane != null ? canvasPane.getHorizontalScrollBar().getValue() : 0;
   }
 
   public int getVerticalScrollBar() {
-    return canvasPane.getVerticalScrollBar().getValue();
+    if (camera != null) {
+      return (int) Math.round(camera.getPanY());
+    }
+    return canvasPane != null ? canvasPane.getVerticalScrollBar().getValue() : 0;
   }
 
   public void setVerticalScrollBar(int posY) {
-    canvasPane.getVerticalScrollBar().setValue(posY);
+    if (camera != null) {
+      camera.setPan(camera.getPanX(), posY);
+      repaint();
+      return;
+    }
+    if (canvasPane != null) {
+      canvasPane.getVerticalScrollBar().setValue(posY);
+    }
   }
 
   @Override
@@ -482,9 +518,44 @@ public class Canvas extends JPanel implements LocaleListener, CanvasPaneContents
   //
   // graphics methods
   //
+  public Camera2D getCamera() {
+    return camera;
+  }
+
+  public MouseEvent toWorldEvent(MouseEvent screenEvent) {
+    if (screenEvent == null) return null;
+    int wx = (int) Math.round(camera.screenToWorldX(screenEvent.getX()));
+    int wy = (int) Math.round(camera.screenToWorldY(screenEvent.getY()));
+    return new MouseEvent(
+        (java.awt.Component) screenEvent.getSource(),
+        screenEvent.getID(),
+        screenEvent.getWhen(),
+        screenEvent.getModifiersEx(),
+        wx, wy,
+        screenEvent.getClickCount(),
+        screenEvent.isPopupTrigger(),
+        screenEvent.getButton());
+  }
+
+  public MouseWheelEvent toWorldWheelEvent(MouseWheelEvent mwe) {
+    if (mwe == null) return null;
+    int wx = (int) Math.round(camera.screenToWorldX(mwe.getX()));
+    int wy = (int) Math.round(camera.screenToWorldY(mwe.getY()));
+    return new MouseWheelEvent(
+        (java.awt.Component) mwe.getSource(),
+        mwe.getID(),
+        mwe.getWhen(),
+        mwe.getModifiersEx(),
+        wx, wy,
+        mwe.getClickCount(),
+        mwe.isPopupTrigger(),
+        mwe.getScrollType(),
+        mwe.getScrollAmount(),
+        mwe.getWheelRotation());
+  }
+
   double getZoomFactor() {
-    final var pane = canvasPane;
-    return pane == null ? 1.0 : pane.getZoomFactor();
+    return camera != null ? camera.getZoomFactor() : (canvasPane == null ? 1.0 : canvasPane.getZoomFactor());
   }
 
   boolean isPopupMenuUp() {
@@ -520,6 +591,11 @@ public class Canvas extends JPanel implements LocaleListener, CanvasPaneContents
     inPaint = true; // volatile
     try {
       super.paintComponent(g);
+
+      if (camera != null) {
+        camera.setViewportSize(getWidth(), getHeight());
+      }
+
       painter.paintContents(g, proj);
       if (canvasPane == null) {
         viewport.paintContents(g);
@@ -558,6 +634,10 @@ public class Canvas extends JPanel implements LocaleListener, CanvasPaneContents
 
   @Override
   public void repaint(int x, int y, int width, int height) {
+    if (camera != null) {
+      super.repaint();
+      return;
+    }
     final var zoom = getZoomFactor();
     if (zoom < 1.0) {
       final var newX = (int) Math.floor(x * zoom);
@@ -577,6 +657,10 @@ public class Canvas extends JPanel implements LocaleListener, CanvasPaneContents
 
   @Override
   public void repaint(Rectangle r) {
+    if (camera != null) {
+      super.repaint();
+      return;
+    }
     final var zoom = getZoomFactor();
     if (zoom == 1.0) {
       super.repaint(r);
@@ -586,6 +670,11 @@ public class Canvas extends JPanel implements LocaleListener, CanvasPaneContents
   }
 
   private void repairMouseEvent(MouseEvent e) {
+    if (camera != null) {
+      // In infinite canvas mode, repairMouseEvent does NOT mutate coordinates globally.
+      // Screen space is preserved for overlays; tools receive world coordinates via toWorldEvent().
+      return;
+    }
     final var zoom = getZoomFactor();
     if (zoom != 1.0) {
       zoomEvent(e, zoom);
@@ -662,19 +751,36 @@ public class Canvas extends JPanel implements LocaleListener, CanvasPaneContents
   }
 
   public void setHorizontalScrollBar(int posX) {
-    canvasPane.getHorizontalScrollBar().setValue(posX);
+    if (camera != null) {
+      camera.setPan(posX, camera.getPanY());
+      repaint();
+      return;
+    }
+    if (canvasPane != null) {
+      canvasPane.getHorizontalScrollBar().setValue(posX);
+    }
   }
 
   public void setScrollBar(int posX, int posY) {
+    if (camera != null) {
+      camera.setPan(posX, posY);
+      repaint();
+      return;
+    }
     setHorizontalScrollBar(posX);
     setVerticalScrollBar(posY);
   }
 
   public void showPopupMenu(JPopupMenu menu, int x, int y) {
-    final var zoom = getZoomFactor();
-    if (zoom != 1.0) {
-      x = (int) Math.round(x * zoom);
-      y = (int) Math.round(y * zoom);
+    if (camera != null) {
+      x = (int) Math.round(camera.worldToScreenX(x));
+      y = (int) Math.round(camera.worldToScreenY(y));
+    } else {
+      final var zoom = getZoomFactor();
+      if (zoom != 1.0) {
+        x = (int) Math.round(x * zoom);
+        y = (int) Math.round(y * zoom);
+      }
     }
     myListener.menuOn = true;
     menu.addPopupMenuListener(myListener);
@@ -842,19 +948,16 @@ public class Canvas extends JPanel implements LocaleListener, CanvasPaneContents
 
     @Override
     public void mouseDragged(MouseEvent e) {
-      if (isMiddlePanning && canvasPane != null) {
+      if (isMiddlePanning) {
         final var dx = e.getXOnScreen() - panStartX;
         final var dy = e.getYOnScreen() - panStartY;
-        canvasPane.getHorizontalScrollBar().setValue(panScrollStartX - dx);
-        canvasPane.getVerticalScrollBar().setValue(panScrollStartY - dy);
+        camera.setPan(panScrollStartX + dx, panScrollStartY + dy);
+        repaint();
         return;
       }
+      final var worldEvent = toWorldEvent(e);
       if (dragTool != null) {
-        dragTool.mouseDragged(Canvas.this, getGraphics(), e);
-        final var zoomModel = proj.getFrame().getZoomModel();
-        double zoomFactor = zoomModel.getZoomFactor();
-        scrollRectToVisible(
-            new Rectangle((int) (e.getX() * zoomFactor), (int) (e.getY() * zoomFactor), 1, 1));
+        dragTool.mouseDragged(Canvas.this, getGraphics(), worldEvent);
       }
     }
 
@@ -895,7 +998,7 @@ public class Canvas extends JPanel implements LocaleListener, CanvasPaneContents
 
       final var tool = getToolFor(e);
       if (tool != null) {
-        tool.mouseMoved(Canvas.this, getGraphics(), e);
+        tool.mouseMoved(Canvas.this, getGraphics(), toWorldEvent(e));
       }
     }
 
@@ -906,12 +1009,12 @@ public class Canvas extends JPanel implements LocaleListener, CanvasPaneContents
         if (e.getClickCount() == 2) {
           center();
           setCursor(proj.getTool().getCursor());
-        } else if (canvasPane != null) {
+        } else {
           isMiddlePanning = true;
           panStartX = e.getXOnScreen();
           panStartY = e.getYOnScreen();
-          panScrollStartX = canvasPane.getHorizontalScrollBar().getValue();
-          panScrollStartY = canvasPane.getVerticalScrollBar().getValue();
+          panScrollStartX = (int) Math.round(camera.getPanX());
+          panScrollStartY = (int) Math.round(camera.getPanY());
           setCursor(java.awt.Cursor.getPredefinedCursor(java.awt.Cursor.MOVE_CURSOR));
         }
         return;
@@ -947,7 +1050,8 @@ public class Canvas extends JPanel implements LocaleListener, CanvasPaneContents
         Canvas.this.requestFocus();
         dragTool = getToolFor(e);
         if (dragTool != null) {
-          dragTool.mousePressed(Canvas.this, getGraphics(), e);
+          final var worldEvent = toWorldEvent(e);
+          dragTool.mousePressed(Canvas.this, getGraphics(), worldEvent);
           if (e.getButton() != MouseEvent.BUTTON1 && !(dragTool instanceof MenuTool)) {
             tempTool = proj.getTool();
             proj.setTool(dragTool);
@@ -978,7 +1082,7 @@ public class Canvas extends JPanel implements LocaleListener, CanvasPaneContents
         setCursor(proj.getTool().getCursor());
       }
       if (dragTool != null) {
-        dragTool.mouseReleased(Canvas.this, getGraphics(), e);
+        dragTool.mouseReleased(Canvas.this, getGraphics(), toWorldEvent(e));
         dragTool = null;
       }
       if (tempTool != null) {
@@ -987,7 +1091,7 @@ public class Canvas extends JPanel implements LocaleListener, CanvasPaneContents
       }
       final var tool = proj.getTool();
       if (tool != null && !(tool instanceof EditTool)) {
-        tool.mouseMoved(Canvas.this, getGraphics(), e);
+        tool.mouseMoved(Canvas.this, getGraphics(), toWorldEvent(e));
         setCursor(tool.getCursor());
       }
       completeAction();
@@ -1002,7 +1106,12 @@ public class Canvas extends JPanel implements LocaleListener, CanvasPaneContents
         final var e = new KeyEvent(mwe.getComponent(), KeyEvent.KEY_PRESSED, mwe.getWhen(), 0, id, '\0');
         tool.keyPressed(Canvas.this, e);
       } else if (mwe.isShiftDown()) {
-        canvasPane.getHorizontalScrollBar().setValue(scrollValue(canvasPane.getHorizontalScrollBar(), mwe.getWheelRotation()));
+        if (canvasPane != null) {
+          canvasPane.getHorizontalScrollBar().setValue(scrollValue(canvasPane.getHorizontalScrollBar(), mwe.getWheelRotation()));
+        } else if (camera != null) {
+          camera.panBy(-mwe.getWheelRotation() * 30, 0);
+          repaint();
+        }
       } else {
         repairMouseEvent(mwe);
         if (!AppPreferences.SMOOTH_ZOOM.getBoolean()) {

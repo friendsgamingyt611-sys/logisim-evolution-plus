@@ -149,14 +149,12 @@ public class Frame extends LFrame.MainWindow implements LocaleListener {
     // set up elements for the Layout view
     layoutToolbarModel = new LayoutToolbarModel(this, project);
     layoutCanvas = new Canvas(project);
-    final var canvasPane = new CanvasPane(layoutCanvas);
+    final var minimap = new MinimapOverlay(layoutCanvas, layoutCanvas.getCamera());
+    final var canvasContainer = new InfiniteCanvasContainer(layoutCanvas, minimap);
 
-    layoutZoomModel =
-        new BasicZoomModel(
-            AppPreferences.LAYOUT_SHOW_GRID,
-            AppPreferences.LAYOUT_ZOOM,
-            buildZoomSteps(),
-            canvasPane);
+    layoutZoomModel = layoutCanvas.getCamera();
+    layoutZoomModel.setShowGrid(AppPreferences.LAYOUT_SHOW_GRID.getBoolean());
+    layoutZoomModel.setZoomFactor(AppPreferences.LAYOUT_ZOOM.get());
 
     layoutCanvas.getGridPainter().setZoomModel(layoutZoomModel);
     layoutEditHandler = new LayoutEditHandler(this);
@@ -190,9 +188,8 @@ public class Frame extends LFrame.MainWindow implements LocaleListener {
 
     // set up the central area
     mainPanelSuper = new JPanel(new BorderLayout());
-    canvasPane.setZoomModel(layoutZoomModel);
     mainPanel = new CardPanel();
-    mainPanel.addView(EDIT_LAYOUT, canvasPane);
+    mainPanel.addView(EDIT_LAYOUT, canvasContainer);
     mainPanel.setView(EDIT_LAYOUT);
     mainPanelSuper.add(mainPanel, BorderLayout.CENTER);
 
