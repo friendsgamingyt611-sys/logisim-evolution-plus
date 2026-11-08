@@ -160,31 +160,57 @@ public final class GraphicsUtil {
     if (text.length() == 0) return;
     if (g instanceof Graphics2D g2d) {
       final double sy = Math.abs(g2d.getTransform().getScaleY());
-      if (g2d.getFont().getSize2D() * sy < 3.5) {
-        return; // Semantic Zooming: drop unreadable microscopic text (< 3.5px on screen)
+      if (g2d.getFont().getSize2D() * sy < 8.0) {
+        return; // Semantic Zooming: drop unreadable microscopic text (< 8.0px on screen)
       }
     }
-    final var bd = getTextBounds(g, text, x, y, halign, valign);
     final var tm = new TextMetrics(g, text);
-    g.drawString(text, bd.x, bd.y + tm.ascent);
+    int bx = x;
+    int by = y;
+    switch (halign) {
+      case H_CENTER -> bx -= (tm.width / 2);
+      case H_RIGHT -> bx -= tm.width;
+      default -> {}
+    }
+    switch (valign) {
+      case V_TOP -> by += 0;
+      case V_CENTER -> by -= (tm.height / 2);
+      case V_BASELINE -> by -= tm.ascent;
+      case V_BOTTOM -> by -= tm.height;
+      default -> {}
+    }
+    g.drawString(text, bx, by + tm.ascent);
   }
 
   public static void drawText(Graphics g, String text, int x, int y, int halign, int valign, Color fg, Color bg) {
     if (text.length() == 0) return;
     if (g instanceof Graphics2D g2d) {
       final double sy = Math.abs(g2d.getTransform().getScaleY());
-      if (g2d.getFont().getSize2D() * sy < 3.5) {
-        return; // Semantic Zooming: drop unreadable microscopic text (< 3.5px on screen)
+      if (g2d.getFont().getSize2D() * sy < 8.0) {
+        return; // Semantic Zooming: drop unreadable microscopic text (< 8.0px on screen)
       }
     }
-    final var bd = getTextBounds(g, text, x, y, halign, valign);
     final var tm = new TextMetrics(g, text);
+    int bx = x;
+    int by = y;
+    switch (halign) {
+      case H_CENTER -> bx -= (tm.width / 2);
+      case H_RIGHT -> bx -= tm.width;
+      default -> {}
+    }
+    switch (valign) {
+      case V_TOP -> by += 0;
+      case V_CENTER -> by -= (tm.height / 2);
+      case V_BASELINE -> by -= tm.ascent;
+      case V_BOTTOM -> by -= tm.height;
+      default -> {}
+    }
     if (g instanceof Graphics2D g2d) {
       g2d.setPaint(bg);
-      g.fillRect(bd.x, bd.y, bd.width, bd.height);
+      g.fillRect(bx, by, tm.width, tm.height);
       g2d.setPaint(fg);
     }
-    g.drawString(text, bd.x, bd.y + tm.ascent);
+    g.drawString(text, bx, by + tm.ascent);
   }
 
   public static void outlineText(Graphics g, String text, int x, int y, Color fg, Color bg) {

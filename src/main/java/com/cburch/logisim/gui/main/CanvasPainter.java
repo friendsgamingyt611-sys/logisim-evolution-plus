@@ -139,8 +139,14 @@ class CanvasPainter implements PropertyChangeListener {
     final var circState = proj.getCircuitState();
     final var context = new ComponentDrawContext(canvas, circ, circState, base, g, false);
     context.setHighlightedWires(highlightedWires);
+    final var camera = canvas.getCamera();
+    final var tier = canvas.isPanning()
+        ? com.cburch.logisim.gui.main.render.QualityTier.INTERACTIVE
+        : com.cburch.logisim.gui.main.render.QualityTier.SETTLED;
+    final var rc = com.cburch.logisim.gui.main.render.RenderContext.of(camera, 1.0, tier);
+    context.setRenderContext(rc);
+
     if (circ != null) {
-      final var camera = canvas.getCamera();
       java.awt.Shape oldClip = null;
       if (camera != null && g instanceof Graphics2D g2d) {
         oldClip = g2d.getClip();

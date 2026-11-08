@@ -471,19 +471,22 @@ public class Circuit {
 
     final var dest = context.getDestination();
     final com.cburch.logisim.gui.main.Camera2D cam = (dest instanceof com.cburch.logisim.gui.main.Canvas cv) ? cv.getCamera() : null;
-    final double zoom = (cam != null) ? cam.getZoomFactor() : 1.0;
-    final boolean macroView = (cam != null && zoom < 0.30);
-    final var vp = (cam != null) ? cam.getViewportWorldBounds() : null;
+    final var rc = context.getRenderContext() != null
+        ? context.getRenderContext()
+        : com.cburch.logisim.gui.main.render.RenderContext.of(cam, 1.0, com.cburch.logisim.gui.main.render.QualityTier.SETTLED);
+    final var policy = rc.policy();
+    final var vp = rc.worldFrustum();
 
     if (CollectionUtil.isNullOrEmpty(hidden)) {
       for (final var c : comps) {
         final var bds = c.getBounds();
-        if (vp != null && bds != null && !cam.intersectsViewport(bds)) {
+        if (vp != null && bds != null && !rc.intersectsViewport(bds)) {
           continue; // Viewport Frustum Culling
         }
 
-        if (macroView && bds != null) {
-          // Macro View (Zoom < 30%): Fast color-coded bounding box diagram
+        final var symbolTier = policy.getSymbolTier(bds);
+        if (symbolTier == com.cburch.logisim.gui.main.render.DetailPolicy.SymbolTier.MICRO_BOX && bds != null) {
+          // TIER 3: Micro Object (<= 16px screen area) - Fast color-coded bounding block
           gCopy.setColor(context.getPalette().fill());
           gCopy.fillRect(bds.getX(), bds.getY(), bds.getWidth(), bds.getHeight());
           gCopy.setColor(context.getPalette().stroke());
@@ -496,17 +499,25 @@ public class Circuit {
         gCopy.dispose();
         gCopy = gNew;
 
+        if (symbolTier == com.cburch.logisim.gui.main.render.DetailPolicy.SymbolTier.SIMPLIFIED) {
+          context.setShowState(false);
+        } else {
+          context.setShowState(true);
+        }
+
         c.draw(context);
       }
     } else {
       for (final var c : comps) {
         if (!hidden.contains(c)) {
           final var bds = c.getBounds();
-          if (vp != null && bds != null && !cam.intersectsViewport(bds)) {
+          if (vp != null && bds != null && !rc.intersectsViewport(bds)) {
             continue; // Viewport Frustum Culling
           }
 
-          if (macroView && bds != null) {
+          final var symbolTier = policy.getSymbolTier(bds);
+          if (symbolTier == com.cburch.logisim.gui.main.render.DetailPolicy.SymbolTier.MICRO_BOX && bds != null) {
+            // TIER 3: Micro Object (<= 16px screen area) - Fast color-coded bounding block
             gCopy.setColor(context.getPalette().fill());
             gCopy.fillRect(bds.getX(), bds.getY(), bds.getWidth(), bds.getHeight());
             gCopy.setColor(context.getPalette().stroke());
@@ -518,6 +529,12 @@ public class Circuit {
           context.setGraphics(gNew);
           gCopy.dispose();
           gCopy = gNew;
+
+          if (symbolTier == com.cburch.logisim.gui.main.render.DetailPolicy.SymbolTier.SIMPLIFIED) {
+            context.setShowState(false);
+          } else {
+            context.setShowState(true);
+          }
 
           try {
             c.draw(context);

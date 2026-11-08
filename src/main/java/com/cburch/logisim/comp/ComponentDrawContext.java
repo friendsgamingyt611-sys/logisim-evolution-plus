@@ -40,6 +40,7 @@ public class ComponentDrawContext {
   private WireSet highlightedWires;
   private final InstancePainter instancePainter;
   private final Palette palette;
+  private com.cburch.logisim.gui.main.render.RenderContext renderContext;
 
   public ComponentDrawContext(
       java.awt.Component dest,
@@ -326,6 +327,14 @@ public class ComponentDrawContext {
 
   public void setShowState(boolean value) {
     showState = value;
+  }
+
+  public void setRenderContext(com.cburch.logisim.gui.main.render.RenderContext rc) {
+    this.renderContext = rc;
+  }
+
+  public com.cburch.logisim.gui.main.render.RenderContext getRenderContext() {
+    return renderContext;
   }
 
   public boolean shouldDrawColor() {

@@ -673,6 +673,10 @@ public class Canvas extends JPanel implements LocaleListener, CanvasPaneContents
     }
   }
 
+  public boolean isPanning() {
+    return (pendingPanX != 0 || pendingPanY != 0) || (myListener != null && myListener.isMiddlePanning);
+  }
+
   public void invalidateGrid() {
     if (painter != null) {
       painter.invalidateGrid();
