@@ -443,4 +443,67 @@ class InfiniteCanvasStage1Test {
     assertTrue(variation < 0.15, String.format("Dot density across quadrants must be uniform (max=%d, min=%d, var=%.2f%%)",
         maxDots, minDots, variation * 100.0));
   }
+
+  @Test
+  @DisplayName("8. LOD Performance: Sustained >= 30-40 FPS at 5% zoom with dense multi-quadrant circuit")
+  void testLowZoomLevelOfDetailPerformance() {
+    final var file = LogisimFile.createNew(new Loader(null), null);
+    final var proj = new Project(file);
+    final var circ = new Circuit("DenseLODCircuit", file, proj);
+    file.addCircuit(circ);
+    proj.setCurrentCircuit(circ);
+
+    // 1. Populate circuit with 300 components placed across all 4 quadrants (-6000 to +6000)
+    final var factory = Pin.FACTORY;
+    final var mutation = new CircuitMutation(circ);
+    for (int i = 0; i < 300; i++) {
+      int x = ((i % 20) - 10) * 300;
+      int y = ((i / 20) - 8) * 300;
+      mutation.add(factory.createComponent(Location.create(x, y, false), factory.createAttributeSet()));
+    }
+    mutation.execute();
+
+    // 2. Set up canvas with 1920x1080 Full HD viewport and 5% (0.05) zoom
+    final var canvas = new Canvas(proj);
+    canvas.setSize(1920, 1080);
+    final var cam = canvas.getCamera();
+    cam.setViewportSize(1920, 1080);
+    cam.setZoomFactor(0.05);
+    cam.resetToCenter();
+
+    final var img = new BufferedImage(1920, 1080, BufferedImage.TYPE_INT_ARGB);
+    final var g = img.createGraphics();
+
+    // 3. Warm-up JIT
+    for (int i = 0; i < 10; i++) {
+      cam.setPan(i * 50.0, -i * 30.0);
+      canvas.paintComponent(g);
+    }
+
+    // 4. Benchmark 50 consecutive frames during panning at 5% zoom
+    final int benchmarkFrames = 50;
+    long totalNanoTime = 0;
+    long maxNanoTime = 0;
+
+    for (int i = 0; i < benchmarkFrames; i++) {
+      cam.setPan((i - 25) * 40.0, (i - 25) * 25.0);
+      long start = System.nanoTime();
+      canvas.paintComponent(g);
+      long duration = System.nanoTime() - start;
+      totalNanoTime += duration;
+      maxNanoTime = Math.max(maxNanoTime, duration);
+    }
+    g.dispose();
+
+    final double avgFrameMs = (totalNanoTime / (double) benchmarkFrames) / 1_000_000.0;
+    final double maxFrameMs = maxNanoTime / 1_000_000.0;
+    final double fps = 1000.0 / avgFrameMs;
+
+    System.out.printf("[LOD BENCHMARK] 5%% Zoom (0.05x) with 300 components across 4 quadrants | Avg: %.2f ms | Max: %.2f ms | Measured FPS: %.1f%n",
+        avgFrameMs, maxFrameMs, fps);
+
+    // Must exceed 35-40 FPS (i.e. avgFrameMs <= 25.0 ms)
+    assertTrue(fps >= 35.0, String.format("Rendering at 5%% zoom must sustain >= 35 FPS (actual: %.1f FPS, avgFrameMs: %.2f ms)",
+        fps, avgFrameMs));
+  }
 }

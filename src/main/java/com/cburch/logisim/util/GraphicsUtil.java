@@ -244,17 +244,24 @@ public final class GraphicsUtil {
     return ret;
   }
 
+  private static final java.util.Map<Integer, BasicStroke> STROKE_CACHE = new java.util.concurrent.ConcurrentHashMap<>();
+
   public static void switchToWidth(Graphics gfx, int width) {
     switchToWidth(gfx, width, true);
   }
 
   public static void switchToWidth(Graphics gfx, int width, boolean allowRound) {
     if (gfx instanceof Graphics2D g2d) {
-      if (allowRound && AppPreferences.EXPERIMENTAL_ROUND_STROKES.getBoolean() && !Palette.isForceLight()) {
-        g2d.setStroke(new BasicStroke(width, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
-      } else {
-        g2d.setStroke(new BasicStroke(width));
-      }
+      boolean round = allowRound && AppPreferences.EXPERIMENTAL_ROUND_STROKES.getBoolean() && !Palette.isForceLight();
+      int key = (width << 1) | (round ? 1 : 0);
+      BasicStroke stroke = STROKE_CACHE.computeIfAbsent(key, k -> {
+        boolean isRound = (k & 1) != 0;
+        int w = k >> 1;
+        return isRound
+            ? new BasicStroke(w, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND)
+            : new BasicStroke(w);
+      });
+      g2d.setStroke(stroke);
     }
   }
 

@@ -203,9 +203,18 @@ public class GridPainter implements PropertyChangeListener {
     }
 
     final var blendedMinor = blend(currentBg, dotColor, minorAlpha);
-    final boolean drawMinor = !cheapDraw && (minorAlpha > 0.01f);
-
+    boolean drawMinor = !cheapDraw && (minorAlpha > 0.01f);
     final int majorStep = step * 5;
+
+    // Hard Grid Cutoff at macro zoom levels (<15% zoom):
+    // Minor dots become solid visual noise; drop them entirely.
+    if (camera != null && effZoom < 0.15) {
+      drawMinor = false;
+      // If even major dots become too densely crowded (< 8px screen spacing), abort grid entirely
+      if (majorStep * effZoom < 8.0) {
+        return;
+      }
+    }
 
     // Dot diameter based on zoom
     final double scale = Math.min(1.5, Math.pow(Math.max(1.0, effZoom), 0.35));

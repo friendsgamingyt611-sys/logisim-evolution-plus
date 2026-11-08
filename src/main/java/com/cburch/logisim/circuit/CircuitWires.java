@@ -888,8 +888,15 @@ public class CircuitWires {
     final var streamCyan = new Color(0x62, 0xA0, 0xEA);
     final var animPhase = Simulator.getPulsePhase();
 
+    final var dest = context.getDestination();
+    final com.cburch.logisim.gui.main.Camera2D cam = (dest instanceof com.cburch.logisim.gui.main.Canvas cv) ? cv.getCamera() : null;
+    final var vp = (cam != null) ? cam.getViewportWorldBounds() : null;
+
     if (CollectionUtil.isNullOrEmpty(hidden)) {
       for (final var wire : wires) {
+        if (vp != null && !cam.intersectsViewport(wire.getBounds())) {
+          continue;
+        }
         final var s = wire.e0;
         final var t = wire.e1;
         final var wb = cmap.getBundleAt(s);
@@ -957,6 +964,9 @@ public class CircuitWires {
       }
 
       for (final var loc : points.getAllLocations()) {
+        if (vp != null && !vp.contains(loc.getX(), loc.getY(), 10)) {
+          continue;
+        }
         if (points.getComponentCount(loc) > 2) {
           final var wb = cmap.getBundleAt(loc);
           if (wb != null) {
@@ -985,6 +995,9 @@ public class CircuitWires {
       }
     } else {
       for (final var wire : wires) {
+        if (vp != null && !cam.intersectsViewport(wire.getBounds())) {
+          continue;
+        }
         if (!hidden.contains(wire)) {
           final var s = wire.e0;
           final var t = wire.e1;
@@ -1030,6 +1043,9 @@ public class CircuitWires {
       // the problem is minor, and hidden only exists for a short
       // while at a time anyway.
       for (final var loc : points.getAllLocations()) {
+        if (vp != null && !vp.contains(loc.getX(), loc.getY(), 10)) {
+          continue;
+        }
         if (points.getComponentCount(loc) > 2) {
           var icount = 0;
           for (final var comp : points.getComponents(loc)) {

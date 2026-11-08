@@ -124,6 +124,16 @@ public class Canvas extends JPanel implements LocaleListener, CanvasPaneContents
   private int zoomAnchorY = 0;
   private javax.swing.Timer zoomEasingTimer = null;
 
+  // EDT Mouse Coalescer & FPS debug tracking
+  private double pendingPanX = 0;
+  private double pendingPanY = 0;
+  private final javax.swing.Timer renderTimer = new javax.swing.Timer(16, e -> flushPendingPan());
+  private long lastFpsPrintTime = 0;
+  private int frameCount = 0;
+  private long accumulatedRenderTimeNanos = 0;
+  private volatile double lastRenderTimeMs = 0.0;
+  private volatile double lastMeasuredFps = 0.0;
+
   public Canvas(Project proj) {
     this.proj = proj;
     this.camera = new Camera2D();
@@ -168,6 +178,10 @@ public class Canvas extends JPanel implements LocaleListener, CanvasPaneContents
     AppPreferences.LookAndFeel.addPropertyChangeListener(myListener);
     javax.swing.UIManager.addPropertyChangeListener(myListener);
     loadOptions(options);
+
+    if (!java.awt.GraphicsEnvironment.isHeadless()) {
+      renderTimer.start();
+    }
   }
 
   public static boolean autoZoomButtonClicked(final Dimension sz,
@@ -606,6 +620,7 @@ public class Canvas extends JPanel implements LocaleListener, CanvasPaneContents
     }
 
     inPaint = true; // volatile
+    final long startNanos = System.nanoTime();
     try {
       super.paintComponent(g);
 
@@ -614,11 +629,47 @@ public class Canvas extends JPanel implements LocaleListener, CanvasPaneContents
         viewport.paintContents(g);
       }
     } finally {
+      final long renderNanos = System.nanoTime() - startNanos;
+      lastRenderTimeMs = renderNanos / 1_000_000.0;
+      accumulatedRenderTimeNanos += renderNanos;
+      frameCount++;
+
+      final long now = System.currentTimeMillis();
+      if (now - lastFpsPrintTime >= 1000) {
+        final double avgFrameMs = (accumulatedRenderTimeNanos / (double) frameCount) / 1_000_000.0;
+        lastMeasuredFps = avgFrameMs > 0 ? (1000.0 / avgFrameMs) : 0.0;
+        final double zoom = (camera != null) ? camera.getZoomFactor() : getZoomFactor();
+        System.out.printf("[DEBUG FPS] Zoom: %.0f%% | Frame Render: %.2f ms | Potential FPS: %.1f%n",
+            zoom * 100.0, avgFrameMs, lastMeasuredFps);
+        lastFpsPrintTime = now;
+        frameCount = 0;
+        accumulatedRenderTimeNanos = 0;
+      }
+
       synchronized (repaintLock) {
         inPaint = false;
         repaintLock.notifyAll();
       }
       paintCoordinator.repaintCompleted();
+    }
+  }
+
+  public double getLastRenderTimeMs() {
+    return lastRenderTimeMs;
+  }
+
+  public double getLastMeasuredFps() {
+    return lastMeasuredFps;
+  }
+
+  public void flushPendingPan() {
+    if (pendingPanX != 0 || pendingPanY != 0) {
+      if (camera != null) {
+        camera.panBy(pendingPanX, pendingPanY);
+      }
+      pendingPanX = 0;
+      pendingPanY = 0;
+      repaint();
     }
   }
 
@@ -966,8 +1017,18 @@ public class Canvas extends JPanel implements LocaleListener, CanvasPaneContents
         final var dy = currentY - panStartY;
         panStartX = currentX;
         panStartY = currentY;
-        camera.panBy(dx, dy);
-        repaint();
+
+        // Macro-Zoom Damping: Ignore micro-jitters at <15% zoom
+        if (camera != null && camera.getZoomFactor() < 0.15 && Math.abs(dx) < 2 && Math.abs(dy) < 2) {
+          return;
+        }
+
+        pendingPanX += dx;
+        pendingPanY += dy;
+
+        if (!isShowing() || java.awt.GraphicsEnvironment.isHeadless() || !renderTimer.isRunning()) {
+          flushPendingPan();
+        }
         return;
       }
       final var worldEvent = toWorldEvent(e);
@@ -1078,6 +1139,7 @@ public class Canvas extends JPanel implements LocaleListener, CanvasPaneContents
     public void mouseReleased(MouseEvent e) {
       if (e.getButton() == MouseEvent.BUTTON2) {
         if (isMiddlePanning) {
+          flushPendingPan();
           isMiddlePanning = false;
           final var tool = proj.getTool();
           setCursor((tool != null) ? tool.getCursor() : java.awt.Cursor.getDefaultCursor());

@@ -139,7 +139,19 @@ class CanvasPainter implements PropertyChangeListener {
     final var circState = proj.getCircuitState();
     final var context = new ComponentDrawContext(canvas, circ, circState, base, g, false);
     context.setHighlightedWires(highlightedWires);
-    if (circ != null) circ.draw(context, hidden);
+    if (circ != null) {
+      final var camera = canvas.getCamera();
+      java.awt.Shape oldClip = null;
+      if (camera != null && g instanceof Graphics2D g2d) {
+        oldClip = g2d.getClip();
+        final var viewBds = camera.getViewportWorldBounds();
+        g2d.clipRect(viewBds.getX(), viewBds.getY(), viewBds.getWidth(), viewBds.getHeight());
+      }
+      circ.draw(context, hidden);
+      if (oldClip != null && g instanceof Graphics2D g2d) {
+        g2d.setClip(oldClip);
+      }
+    }
     if (sel != null) sel.draw(context, hidden);
 
     // draw tool
