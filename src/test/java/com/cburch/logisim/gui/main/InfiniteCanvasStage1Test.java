@@ -399,4 +399,48 @@ class InfiniteCanvasStage1Test {
     assertEquals(500.0, projectedTargetScreenX, 1.0, "CenterOn target world X must project to center of screen (width/2)");
     assertEquals(300.0, projectedTargetScreenY, 1.0, "CenterOn target world Y must project to center of screen (height/2)");
   }
+
+  @Test
+  @DisplayName("7. Canvas: Full-viewport repaint coverage and uniform raster distribution across all quadrants")
+  void testRepaintCoverageAndUniformRasterDistribution() {
+    final var file = LogisimFile.createNew(new Loader(null), null);
+    final var proj = new Project(file);
+    final var canvas = new Canvas(proj);
+    canvas.setSize(1000, 800);
+    final var cam = canvas.getCamera();
+    cam.setViewportSize(1000, 800);
+    cam.resetToCenter();
+
+    // 1. Paint into offscreen buffer
+    final var img = new BufferedImage(1000, 800, BufferedImage.TYPE_INT_ARGB);
+    final var g = img.createGraphics();
+    canvas.paintComponent(g);
+    g.dispose();
+
+    // 2. Count dots across horizontal bands: [0..250], [250..500], [500..750], [750..1000]
+    final var bgColor = AppPreferences.getGridBgColor().getRGB();
+    final int[] quadDotCounts = new int[4];
+    for (int y = 0; y < 800; y++) {
+      for (int x = 0; x < 1000; x++) {
+        if (img.getRGB(x, y) != bgColor) {
+          int quad = x / 250;
+          if (quad >= 0 && quad < 4) {
+            quadDotCounts[quad]++;
+          }
+        }
+      }
+    }
+
+    // Every quadrant must have dots and the density must be uniform (within 15%)
+    int minDots = Integer.MAX_VALUE;
+    int maxDots = Integer.MIN_VALUE;
+    for (int i = 0; i < 4; i++) {
+      assertTrue(quadDotCounts[i] > 100, "Quadrant " + i + " must have dots rendered (found: " + quadDotCounts[i] + ")");
+      minDots = Math.min(minDots, quadDotCounts[i]);
+      maxDots = Math.max(maxDots, quadDotCounts[i]);
+    }
+    double variation = (double) (maxDots - minDots) / ((maxDots + minDots) / 2.0);
+    assertTrue(variation < 0.15, String.format("Dot density across quadrants must be uniform (max=%d, min=%d, var=%.2f%%)",
+        maxDots, minDots, variation * 100.0));
+  }
 }

@@ -69,6 +69,9 @@ public class InfiniteCanvasContainer extends JLayeredPane {
 
     // 1. Canvas fills 100% of the viewport container
     canvas.setBounds(0, 0, w, h);
+    if (canvas.getCamera() != null) {
+      canvas.getCamera().setViewportSize(w, h);
+    }
 
     // 2. Snap Minimap to bottom-right corner with margin
     if (minimap != null) {

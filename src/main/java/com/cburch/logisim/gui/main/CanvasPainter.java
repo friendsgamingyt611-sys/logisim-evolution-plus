@@ -139,8 +139,8 @@ class CanvasPainter implements PropertyChangeListener {
     final var circState = proj.getCircuitState();
     final var context = new ComponentDrawContext(canvas, circ, circState, base, g, false);
     context.setHighlightedWires(highlightedWires);
-    circ.draw(context, hidden);
-    sel.draw(context, hidden);
+    if (circ != null) circ.draw(context, hidden);
+    if (sel != null) sel.draw(context, hidden);
 
     // draw tool
     final var tool = dragTool != null ? dragTool : proj.getTool();
@@ -198,12 +198,10 @@ class CanvasPainter implements PropertyChangeListener {
       g2d.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
       g2d.setRenderingHint(RenderingHints.KEY_FRACTIONALMETRICS, RenderingHints.VALUE_FRACTIONALMETRICS_ON);
       if (camera != null) {
-        int tx = (int) Math.round(camera.getPanX() + (canvas.getWidth() / 2.0));
-        int ty = (int) Math.round(camera.getPanY() + (canvas.getHeight() / 2.0));
+        double tx = camera.getPanX() + (canvas.getWidth() / 2.0);
+        double ty = camera.getPanY() + (canvas.getHeight() / 2.0);
         g2d.translate(tx, ty);
         g2d.scale(camera.getZoomFactor(), camera.getZoomFactor());
-        final var viewBds = camera.getViewportWorldBounds();
-        g2d.setClip(viewBds.getX(), viewBds.getY(), viewBds.getWidth(), viewBds.getHeight());
       } else if (zoomFactor != 1.0) {
         final var at = AffineTransform.getScaleInstance(zoomFactor, zoomFactor);
         g2d.transform(at);

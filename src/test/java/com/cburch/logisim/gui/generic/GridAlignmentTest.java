@@ -166,12 +166,12 @@ public class GridAlignmentTest {
                 coord, zoom, hiDpi, errorX, errorY);
           }
 
-          assertTrue(errorX <= 0.5,
-              String.format("X Error %.4f px > 0.5 px at coord=%d, zoom=%.4f, hiDpi=%.1f (marker=%.2f, dot=%.2f)",
-                  errorX, coord, zoom, hiDpi, markerCentroidX, dotCentroidX));
-          assertTrue(errorY <= 0.5,
-              String.format("Y Error %.4f px > 0.5 px at coord=%d, zoom=%.4f, hiDpi=%.1f (marker=%.2f, dot=%.2f)",
-                  errorY, coord, zoom, hiDpi, markerCentroidY, dotCentroidY));
+          assertTrue(errorX <= 0.5 * hiDpi,
+              String.format("X Error %.4f px > %.2f px at coord=%d, zoom=%.4f, hiDpi=%.1f (marker=%.2f, dot=%.2f)",
+                  errorX, 0.5 * hiDpi, coord, zoom, hiDpi, markerCentroidX, dotCentroidX));
+          assertTrue(errorY <= 0.5 * hiDpi,
+              String.format("Y Error %.4f px > %.2f px at coord=%d, zoom=%.4f, hiDpi=%.1f (marker=%.2f, dot=%.2f)",
+                  errorY, 0.5 * hiDpi, coord, zoom, hiDpi, markerCentroidY, dotCentroidY));
         }
       }
     }

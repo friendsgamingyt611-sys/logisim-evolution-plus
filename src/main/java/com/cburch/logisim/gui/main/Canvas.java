@@ -137,7 +137,16 @@ public class Canvas extends JPanel implements LocaleListener, CanvasPaneContents
 
     camera.addPropertyChangeListener(e -> repaint());
 
+    setOpaque(true);
     setBackground(AppPreferences.getCanvasBgColor());
+    addComponentListener(new java.awt.event.ComponentAdapter() {
+      @Override
+      public void componentResized(java.awt.event.ComponentEvent e) {
+        if (camera != null) {
+          camera.setViewportSize(getWidth(), getHeight());
+        }
+      }
+    });
     addMouseListener(myListener);
     addMouseMotionListener(myListener);
     addMouseWheelListener(myListener);
@@ -584,7 +593,9 @@ public class Canvas extends JPanel implements LocaleListener, CanvasPaneContents
   @Override
   public void paintComponent(final Graphics g) {
     // Also update register values showing in the state registers tab
-    getProject().getFrame().getRegTabContent().writeValuesToLabels();
+    if (getProject().getFrame() != null && getProject().getFrame().getRegTabContent() != null) {
+      getProject().getFrame().getRegTabContent().writeValuesToLabels();
+    }
 
     if (g instanceof Graphics2D g2) {
       g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
@@ -597,10 +608,6 @@ public class Canvas extends JPanel implements LocaleListener, CanvasPaneContents
     inPaint = true; // volatile
     try {
       super.paintComponent(g);
-
-      if (camera != null) {
-        camera.setViewportSize(getWidth(), getHeight());
-      }
 
       painter.paintContents(g, proj);
       if (canvasPane == null) {
@@ -641,24 +648,16 @@ public class Canvas extends JPanel implements LocaleListener, CanvasPaneContents
   @Override
   public void repaint(long tm, int x, int y, int width, int height) {
     if (camera != null) {
-      if (width <= 0 || height <= 0) return;
-      int sx = (int) Math.floor(camera.worldToScreenX(x));
-      int sy = (int) Math.floor(camera.worldToScreenY(y));
-      int sw = (int) Math.ceil(width * camera.getZoomFactor()) + 4;
-      int sh = (int) Math.ceil(height * camera.getZoomFactor()) + 4;
-      // Clamp to screen bounds
+      // In infinite canvas camera mode, always repaint the full canvas to guarantee:
+      // 1. Zero dirty-rect coordinate space mismatches
+      // 2. Complete clearing of prior dot positions during panning and zooming
+      // 3. Immediate, tear-free removal of drag ghosts without trails
       int curW = getWidth();
       int curH = getHeight();
       if (curW > 0 && curH > 0) {
-        int x0 = Math.max(0, sx);
-        int y0 = Math.max(0, sy);
-        int x1 = Math.min(curW, sx + sw);
-        int y1 = Math.min(curH, sy + sh);
-        if (x1 > x0 && y1 > y0) {
-          super.repaint(tm, x0, y0, x1 - x0, y1 - y0);
-        }
+        super.repaint(tm, 0, 0, curW, curH);
       } else {
-        super.repaint(tm, sx, sy, sw, sh);
+        super.repaint(tm, x, y, width, height);
       }
     } else {
       super.repaint(tm, x, y, width, height);
@@ -672,10 +671,10 @@ public class Canvas extends JPanel implements LocaleListener, CanvasPaneContents
 
   @Override
   public void repaint(Rectangle r) {
-    if (r == null) {
-      super.repaint();
+    if (camera != null) {
+      repaint(0, 0, 0, getWidth(), getHeight());
     } else {
-      repaint(r.x, r.y, r.width, r.height);
+      super.repaint(r);
     }
   }
 
