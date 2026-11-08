@@ -102,3 +102,25 @@ Located at [`src/test/java/com/cburch/logisim/gui/main/InfiniteCanvasStage1Test.
 3. **Screen Clip Preservation:** Removed redundant `g2d.setClip()` from `CanvasPainter`, allowing Swing's hardware-accelerated clipping to operate cleanly.
 4. **Automated Verification:** Added `testRepaintCoverageAndUniformRasterDistribution` to verify equal dot counts across quadrants and prevent regression.
 
+---
+
+## 6. Multi-Tier Level of Detail (LOD) & Frustum Culling Engine
+
+### The Low-Zoom Bottleneck
+When zooming far out (e.g. 10% – 30%):
+1. **Grid Dot Overhead:** Without batching, `g.setColor()` was invoked inside the inner pixel loop up to 50,000 times per frame, flushing the Java 2D native pipeline.
+2. **Frustum Explosion:** At wide zoom, every component in the schematic falls inside the camera's viewport. `Circuit.draw()` previously allocated a new `Graphics2D` context via `g.create()` and called vector shape and font layout routines for every component, even when an entire gate occupied less than $5\text{px}$ on screen.
+
+### Architectural Solution
+1. **Batched Single-Pass Grid Painting ([`GridPainter.java`](file:///home/devansh/logisim-evolution-plus/src/main/java/com/cburch/logisim/gui/generic/GridPainter.java)):**
+   - Separated dot rendering into two distinct passes: Minor dots and Major dots.
+   - `g.setColor()` is called exactly twice per frame instead of tens of thousands of times.
+   - Major dots iterate directly at `majorStep` increments, dropping inner-loop operations by 80%.
+   - At extreme zoom-out, LOD decimation scales `step` adaptively so physical screen spacing stays bounded.
+2. **Viewport Frustum Culling ([`Circuit.java`](file:///home/devansh/logisim-evolution-plus/src/main/java/com/cburch/logisim/circuit/Circuit.java)):**
+   - Each component checks `cam.intersectsViewport(bds)` before allocating graphics contexts or invoking draw routines. Out-of-viewport components are dropped with zero overhead.
+3. **Macro Block Diagram View Tier ([`Circuit.java`](file:///home/devansh/logisim-evolution-plus/src/main/java/com/cburch/logisim/circuit/Circuit.java)):**
+   - When $\text{zoom} < 0.30$, complex gate curves, internal pin icons, and child graphics allocations are bypassed. Components render as crisp, color-coded bounding box blocks on the shared graphics context, turning complex schematics into lightweight architectural diagrams.
+4. **Semantic Text Dropping ([`GraphicsUtil.java`](file:///home/devansh/logisim-evolution-plus/src/main/java/com/cburch/logisim/util/GraphicsUtil.java)):**
+   - If screen font size would render $< 3.5\text{px}$ tall, `drawText` exits immediately, skipping `FontRenderContext` and `TextMetrics` layout computations for unreadable microscopic text.
+
