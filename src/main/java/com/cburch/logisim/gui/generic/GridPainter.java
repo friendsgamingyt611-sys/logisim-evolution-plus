@@ -228,30 +228,46 @@ public class GridPainter implements PropertyChangeListener {
     final int minScreenX = (clip != null) ? clip.x - 2 : -2;
     final int maxScreenX = (clip != null) ? clip.x + clip.width + 2 : width + 2;
 
-    for (long ly = startLogY; ly <= endLogY; ly += step) {
+    // 1. Draw minor dots in a single batch (only 1 setColor call, zero state flushes)
+    if (drawMinor) {
+      g.setColor(blendedMinor);
+      for (long ly = startLogY; ly <= endLogY; ly += step) {
+        final int py = (camera != null)
+            ? (int) Math.round(camera.worldToScreenY(ly))
+            : (int) Math.round(ly * effZoom);
+        if (py < minScreenY || py >= maxScreenY) continue;
+        final boolean isMajorY = (ly % majorStep == 0);
+
+        for (long lx = startLogX; lx <= endLogX; lx += step) {
+          if (isMajorY && (lx % majorStep == 0)) continue; // major dot drawn in pass 2
+          final int px = (camera != null)
+              ? (int) Math.round(camera.worldToScreenX(lx))
+              : (int) Math.round(lx * effZoom);
+          if (px < minScreenX || px >= maxScreenX) continue;
+          g.fillRect(px - minorD / 2, py - minorD / 2, minorD, minorD);
+        }
+      }
+    }
+
+    // 2. Draw major dots in a single batch (step = majorStep directly, minimal loop count)
+    g.setColor(majorDotColor);
+    final long startMajorX = (long) Math.floor(Math.min(leftWorldX, rightWorldX) / majorStep) * majorStep;
+    final long endMajorX = (long) Math.ceil(Math.max(leftWorldX, rightWorldX) / majorStep) * majorStep;
+    final long startMajorY = (long) Math.floor(Math.min(topWorldY, bottomWorldY) / majorStep) * majorStep;
+    final long endMajorY = (long) Math.ceil(Math.max(topWorldY, bottomWorldY) / majorStep) * majorStep;
+
+    for (long ly = startMajorY; ly <= endMajorY; ly += majorStep) {
       final int py = (camera != null)
           ? (int) Math.round(camera.worldToScreenY(ly))
           : (int) Math.round(ly * effZoom);
       if (py < minScreenY || py >= maxScreenY) continue;
 
-      final boolean isMajorY = (ly % majorStep == 0);
-
-      for (long lx = startLogX; lx <= endLogX; lx += step) {
+      for (long lx = startMajorX; lx <= endMajorX; lx += majorStep) {
         final int px = (camera != null)
             ? (int) Math.round(camera.worldToScreenX(lx))
             : (int) Math.round(lx * effZoom);
         if (px < minScreenX || px >= maxScreenX) continue;
-
-        final boolean isMajor = isMajorY && (lx % majorStep == 0);
-        if (!isMajor && !drawMinor) continue;
-
-        if (isMajor) {
-          g.setColor(majorDotColor);
-          g.fillRect(px - majorD / 2, py - majorD / 2, majorD, majorD);
-        } else {
-          g.setColor(blendedMinor);
-          g.fillRect(px - minorD / 2, py - minorD / 2, minorD, minorD);
-        }
+        g.fillRect(px - majorD / 2, py - majorD / 2, majorD, majorD);
       }
     }
   }

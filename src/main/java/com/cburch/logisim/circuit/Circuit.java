@@ -469,8 +469,28 @@ public class Circuit {
     context.setGraphics(gCopy);
     wires.draw(context, hidden);
 
+    final var dest = context.getDestination();
+    final com.cburch.logisim.gui.main.Camera2D cam = (dest instanceof com.cburch.logisim.gui.main.Canvas cv) ? cv.getCamera() : null;
+    final double zoom = (cam != null) ? cam.getZoomFactor() : 1.0;
+    final boolean macroView = (cam != null && zoom < 0.30);
+    final var vp = (cam != null) ? cam.getViewportWorldBounds() : null;
+
     if (CollectionUtil.isNullOrEmpty(hidden)) {
       for (final var c : comps) {
+        final var bds = c.getBounds();
+        if (vp != null && bds != null && !cam.intersectsViewport(bds)) {
+          continue; // Viewport Frustum Culling
+        }
+
+        if (macroView && bds != null) {
+          // Macro View (Zoom < 30%): Fast color-coded bounding box diagram
+          gCopy.setColor(context.getPalette().fill());
+          gCopy.fillRect(bds.getX(), bds.getY(), bds.getWidth(), bds.getHeight());
+          gCopy.setColor(context.getPalette().stroke());
+          gCopy.drawRect(bds.getX(), bds.getY(), bds.getWidth(), bds.getHeight());
+          continue;
+        }
+
         final var gNew = g.create();
         context.setGraphics(gNew);
         gCopy.dispose();
@@ -481,6 +501,19 @@ public class Circuit {
     } else {
       for (final var c : comps) {
         if (!hidden.contains(c)) {
+          final var bds = c.getBounds();
+          if (vp != null && bds != null && !cam.intersectsViewport(bds)) {
+            continue; // Viewport Frustum Culling
+          }
+
+          if (macroView && bds != null) {
+            gCopy.setColor(context.getPalette().fill());
+            gCopy.fillRect(bds.getX(), bds.getY(), bds.getWidth(), bds.getHeight());
+            gCopy.setColor(context.getPalette().stroke());
+            gCopy.drawRect(bds.getX(), bds.getY(), bds.getWidth(), bds.getHeight());
+            continue;
+          }
+
           final var gNew = g.create();
           context.setGraphics(gNew);
           gCopy.dispose();

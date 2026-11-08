@@ -158,6 +158,12 @@ public final class GraphicsUtil {
 
   public static void drawText(Graphics g, String text, int x, int y, int halign, int valign) {
     if (text.length() == 0) return;
+    if (g instanceof Graphics2D g2d) {
+      final double sy = Math.abs(g2d.getTransform().getScaleY());
+      if (g2d.getFont().getSize2D() * sy < 3.5) {
+        return; // Semantic Zooming: drop unreadable microscopic text (< 3.5px on screen)
+      }
+    }
     final var bd = getTextBounds(g, text, x, y, halign, valign);
     final var tm = new TextMetrics(g, text);
     g.drawString(text, bd.x, bd.y + tm.ascent);
@@ -165,6 +171,12 @@ public final class GraphicsUtil {
 
   public static void drawText(Graphics g, String text, int x, int y, int halign, int valign, Color fg, Color bg) {
     if (text.length() == 0) return;
+    if (g instanceof Graphics2D g2d) {
+      final double sy = Math.abs(g2d.getTransform().getScaleY());
+      if (g2d.getFont().getSize2D() * sy < 3.5) {
+        return; // Semantic Zooming: drop unreadable microscopic text (< 3.5px on screen)
+      }
+    }
     final var bd = getTextBounds(g, text, x, y, halign, valign);
     final var tm = new TextMetrics(g, text);
     if (g instanceof Graphics2D g2d) {
