@@ -304,6 +304,10 @@ public class Canvas extends JPanel implements LocaleListener, CanvasPaneContents
   }
 
   public void computeSize(final boolean immediate) {
+    if (camera != null) {
+      // In infinite canvas mode, preferred size is unbounded and governed exclusively by InfiniteCanvasContainer
+      return;
+    }
     if (proj.getCurrentCircuit() == null) return;
     final var g = getGraphics();
     final var bounds = (g != null)
@@ -495,8 +499,10 @@ public class Canvas extends JPanel implements LocaleListener, CanvasPaneContents
   public String getToolTipText(final MouseEvent event) {
     boolean showTips = AppPreferences.COMPONENT_TIPS.getBoolean();
     if (showTips) {
-      Canvas.snapToGrid(event);
-      final var loc = Location.create(event.getX(), event.getY(), false);
+      final MouseEvent worldEv = toWorldEvent(event);
+      final var ev = (worldEv != null) ? worldEv : event;
+      Canvas.snapToGrid(ev);
+      final var loc = Location.create(ev.getX(), ev.getY(), false);
       ComponentUserEvent e = null;
       for (final var comp : getCircuit().getAllContaining(loc)) {
         Object makerObj = comp.getFeature(ToolTipMaker.class);
@@ -526,10 +532,6 @@ public class Canvas extends JPanel implements LocaleListener, CanvasPaneContents
     if (screenEvent == null) return null;
     int wx = (int) Math.round(camera.screenToWorldX(screenEvent.getX()));
     int wy = (int) Math.round(camera.screenToWorldY(screenEvent.getY()));
-    System.out.println(String.format("[DEBUG INPUT] Screen (x:%d, y:%d) | Camera (panX:%.1f, panY:%.1f, zoom:%.2f) -> World (x:%d, y:%d)",
-        screenEvent.getX(), screenEvent.getY(),
-        camera.getPanX(), camera.getPanY(), camera.getZoomFactor(),
-        wx, wy));
     return new MouseEvent(
         (java.awt.Component) screenEvent.getSource(),
         screenEvent.getID(),
@@ -639,11 +641,25 @@ public class Canvas extends JPanel implements LocaleListener, CanvasPaneContents
   @Override
   public void repaint(long tm, int x, int y, int width, int height) {
     if (camera != null) {
+      if (width <= 0 || height <= 0) return;
       int sx = (int) Math.floor(camera.worldToScreenX(x));
       int sy = (int) Math.floor(camera.worldToScreenY(y));
-      int sw = (int) Math.ceil(width * camera.getZoomFactor()) + 2;
-      int sh = (int) Math.ceil(height * camera.getZoomFactor()) + 2;
-      super.repaint(tm, sx, sy, sw, sh);
+      int sw = (int) Math.ceil(width * camera.getZoomFactor()) + 4;
+      int sh = (int) Math.ceil(height * camera.getZoomFactor()) + 4;
+      // Clamp to screen bounds
+      int curW = getWidth();
+      int curH = getHeight();
+      if (curW > 0 && curH > 0) {
+        int x0 = Math.max(0, sx);
+        int y0 = Math.max(0, sy);
+        int x1 = Math.min(curW, sx + sw);
+        int y1 = Math.min(curH, sy + sh);
+        if (x1 > x0 && y1 > y0) {
+          super.repaint(tm, x0, y0, x1 - x0, y1 - y0);
+        }
+      } else {
+        super.repaint(tm, sx, sy, sw, sh);
+      }
     } else {
       super.repaint(tm, x, y, width, height);
     }
@@ -676,8 +692,8 @@ public class Canvas extends JPanel implements LocaleListener, CanvasPaneContents
   }
 
   public void updateArrows() {
-    /* Disable for VHDL content */
-    if (proj.getCurrentCircuit() == null) return;
+    /* Disable for VHDL content or Infinite Canvas mode (radar minimap supersedes edge arrows) */
+    if (proj.getCurrentCircuit() == null || camera != null) return;
     final var g = getGraphics();
     final var circBds = (g != null)
             ? proj.getCurrentCircuit().getBounds(getGraphics())
@@ -852,6 +868,8 @@ public class Canvas extends JPanel implements LocaleListener, CanvasPaneContents
 
     if (mouseLocation != null && model instanceof BasicZoomModel bzm) {
       bzm.setZoomFactor(newZoom, mouseLocation.x, mouseLocation.y);
+    } else if (mouseLocation != null && camera != null) {
+      camera.setZoomFactor(newZoom, mouseLocation.x, mouseLocation.y);
     } else {
       model.setZoomFactor(newZoom);
     }
@@ -943,9 +961,13 @@ public class Canvas extends JPanel implements LocaleListener, CanvasPaneContents
     @Override
     public void mouseDragged(MouseEvent e) {
       if (isMiddlePanning) {
-        final var dx = e.getXOnScreen() - panStartX;
-        final var dy = e.getYOnScreen() - panStartY;
-        camera.setPan(panScrollStartX + dx, panScrollStartY + dy);
+        final var currentX = e.getXOnScreen();
+        final var currentY = e.getYOnScreen();
+        final var dx = currentX - panStartX;
+        final var dy = currentY - panStartY;
+        panStartX = currentX;
+        panStartY = currentY;
+        camera.panBy(dx, dy);
         repaint();
         return;
       }
@@ -1007,8 +1029,6 @@ public class Canvas extends JPanel implements LocaleListener, CanvasPaneContents
           isMiddlePanning = true;
           panStartX = e.getXOnScreen();
           panStartY = e.getYOnScreen();
-          panScrollStartX = (int) Math.round(camera.getPanX());
-          panScrollStartY = (int) Math.round(camera.getPanY());
           setCursor(java.awt.Cursor.getPredefinedCursor(java.awt.Cursor.MOVE_CURSOR));
         }
         return;

@@ -38,31 +38,9 @@ public class GridPainter implements PropertyChangeListener {
   private ZoomModel zoomModel;
   private boolean showGrid = true;
   private double zoomFactor = 1.0;
-
-  // Single reusable raster buffer
-  private BufferedImage cachedRaster;
-  private int[] rasterPixels;
-  private int rasterWidth;
-  private int rasterHeight;
-
-  // Cache validation keys
-  private double cachedZoom = -1.0;
-  private boolean cachedDark = false;
-  private Color cachedBgColor = null;
-  private Color cachedDotColor = null;
-  private Color cachedMajorDotColor = null;
-  private double cachedHiDpiScale = -1.0;
-  private long cachedOriginLogicalX = Long.MIN_VALUE;
-  private long cachedOriginLogicalY = Long.MIN_VALUE;
-  private int cachedViewportX = Integer.MIN_VALUE;
-  private int cachedViewportY = Integer.MIN_VALUE;
-
-  // Hysteresis for quantized dot diameter
+  private boolean cheapDraw = false;
   private double lastMinorDiameter = 2.0;
   private double lastMajorDiameter = 3.0;
-
-  // Cheap draw mode flag (set during zoom tween or under performance guard)
-  private boolean cheapDraw = false;
 
   public GridPainter(Component destination) {
     this.destination = destination;
@@ -138,22 +116,10 @@ public class GridPainter implements PropertyChangeListener {
   }
 
   public void setCheapDraw(boolean cheap) {
-    if (this.cheapDraw != cheap) {
-      this.cheapDraw = cheap;
-      // Invalidate so cheap mode takes effect
-      cachedZoom = -1.0;
-    }
+    this.cheapDraw = cheap;
   }
 
   public void invalidateGrid() {
-    cachedZoom = -1.0;
-    cachedDark = false;
-    cachedBgColor = null;
-    cachedDotColor = null;
-    cachedMajorDotColor = null;
-    cachedRaster = null;
-    rasterPixels = null;
-    cachedHiDpiScale = -1.0;
     if (destination != null) {
       destination.repaint();
     }
@@ -175,208 +141,99 @@ public class GridPainter implements PropertyChangeListener {
    * Main entry point to paint the grid onto the canvas graphics.
    */
   public void paintGrid(Graphics g) {
-    final var clip = g.getClipBounds();
-    if (clip == null || clip.width <= 0 || clip.height <= 0) return;
-
-    final var currentBg = AppPreferences.getGridBgColor();
-    if (!showGrid) {
-      g.setColor(currentBg);
-      g.fillRect(clip.x, clip.y, clip.width, clip.height);
-      return;
-    }
-
-    final var g2d = (g instanceof Graphics2D) ? (Graphics2D) g : null;
-    final var transform = (g2d != null) ? g2d.getTransform() : null;
-    final var hiDpiScale = (transform != null) ? Math.max(1.0, transform.getScaleX()) : 1.0;
-
-    final var vr = (destination instanceof javax.swing.JComponent jc) ? jc.getVisibleRect() : null;
-    final var viewRect = (destination instanceof com.cburch.logisim.gui.main.Canvas cv && cv.getCamera() != null)
-        ? clip
-        : ((vr != null && vr.width > 0) ? vr : clip);
-
-    ensureRaster(viewRect, currentBg, hiDpiScale);
-
-    if (cachedRaster != null) {
-      // Blit cached raster directly
-      if (hiDpiScale == 1.0) {
-        g.drawImage(cachedRaster, cachedViewportX, cachedViewportY, destination);
-      } else {
-        final var userW = (int) Math.round(rasterWidth / hiDpiScale);
-        final var userH = (int) Math.round(rasterHeight / hiDpiScale);
-        g.drawImage(cachedRaster, cachedViewportX, cachedViewportY, userW, userH, destination);
-      }
-    }
+    final com.cburch.logisim.gui.main.Camera2D cam = (destination instanceof com.cburch.logisim.gui.main.Canvas cv)
+        ? cv.getCamera()
+        : null;
+    paintInfiniteGrid(g, cam);
   }
 
   /**
-   * Ensures the cached raster matches current viewport, zoom, colors, and fills it.
+   * Multisim/Altium architecture: Paints the infinite dot grid directly in Screen Space.
+   * Modulo arithmetic maps screen coordinates to the world grid without floating-point drift,
+   * completely eliminating voids, clipping boundaries, and memory allocations.
    */
-  private void ensureRaster(Rectangle viewRect, Color currentBg, double hiDpiScale) {
-    final var dark = AppPreferences.isDarkTheme();
+  public void paintInfiniteGrid(Graphics g, com.cburch.logisim.gui.main.Camera2D camera) {
+    final int width = destination.getWidth();
+    final int height = destination.getHeight();
+    if (width <= 0 || height <= 0) return;
+
+    final var currentBg = AppPreferences.getGridBgColor();
+    g.setColor(currentBg);
+    g.fillRect(0, 0, width, height);
+
+    if (!showGrid) {
+      return;
+    }
+
+    final double effZoom = (camera != null) ? camera.getZoomFactor() : Math.max(0.05, zoomFactor);
+
+    // LOD Decimation: Ensure dots don't clump into a solid texture when zoomed far out
+    int step = BASE_GRID_SIZE;
+    while (step * effZoom < 6.0 && step < 10_000) {
+      step *= 5;
+    }
+
+    final double dotSpacing = step * effZoom;
+    if (dotSpacing <= 0) return;
+
     final var dotColor = AppPreferences.getGridMinorDotColor();
     final var majorDotColor = AppPreferences.getGridMajorDotColor();
 
-    final var neededW = (int) Math.ceil((viewRect.width + 2 * MARGIN) * hiDpiScale);
-    final var neededH = (int) Math.ceil((viewRect.height + 2 * MARGIN) * hiDpiScale);
-
-    // Check if buffer reallocation is needed due to window resize
-    if (cachedRaster == null || rasterWidth < neededW || rasterHeight < neededH) {
-      rasterWidth = Math.max(rasterWidth, neededW);
-      rasterHeight = Math.max(rasterHeight, neededH);
-      cachedRaster = new BufferedImage(rasterWidth, rasterHeight, BufferedImage.TYPE_INT_RGB);
-      rasterPixels = ((DataBufferInt) cachedRaster.getRaster().getDataBuffer()).getData();
-      cachedZoom = -1.0; // Force regeneration
-    }
-
-    // Check if we can reuse the raster during panning
-    final var userW = rasterWidth / hiDpiScale;
-    final var userH = rasterHeight / hiDpiScale;
-    final var canReusePan = (cachedZoom == zoomFactor)
-        && (cachedDark == dark)
-        && Objects.equals(cachedBgColor, currentBg)
-        && Objects.equals(cachedDotColor, dotColor)
-        && Objects.equals(cachedMajorDotColor, majorDotColor)
-        && (cachedHiDpiScale == hiDpiScale)
-        && (viewRect.x >= cachedViewportX)
-        && (viewRect.y >= cachedViewportY)
-        && (viewRect.x + viewRect.width <= cachedViewportX + userW)
-        && (viewRect.y + viewRect.height <= cachedViewportY + userH);
-
-    if (canReusePan) {
-      return; // Reusing cached raster directly via integer offset!
-    }
-
-    // Regenerate raster centered around the current viewport
-    cachedViewportX = viewRect.x - MARGIN;
-    cachedViewportY = viewRect.y - MARGIN;
-    cachedZoom = zoomFactor;
-    cachedDark = dark;
-    cachedBgColor = currentBg;
-    cachedDotColor = dotColor;
-    cachedMajorDotColor = majorDotColor;
-    cachedHiDpiScale = hiDpiScale;
-
-    renderRaster(currentBg, dotColor, majorDotColor, hiDpiScale);
-  }
-
-  /**
-   * Renders dots into rasterPixels directly using camera math.
-   * Dot positions: round(Lx * zoomFactor - cachedViewportX)
-   */
-  private void renderRaster(Color bg, Color dotColor, Color majorDotColor, double hiDpiScale) {
-    final var bgRgb = bg.getRGB();
-    Arrays.fill(rasterPixels, bgRgb);
-
-    final var effZoom = (zoomFactor <= 0.0) ? 1.0 : zoomFactor;
-
-    // LOD decimation calculation
-    var step = BASE_GRID_SIZE;
-    while (step * effZoom < 4.0 && step < 10_000) {
-      step *= 5;
-    }
-
-    // Dot-count budget check
-    final var visibleW = rasterWidth / hiDpiScale;
-    final var visibleH = rasterHeight / hiDpiScale;
-    final var estDotsX = (long) Math.ceil(visibleW / (step * effZoom));
-    final var estDotsY = (long) Math.ceil(visibleH / (step * effZoom));
-    if (estDotsX * estDotsY > MAX_DOT_BUDGET && step < 10_000) {
-      step *= 5;
-    }
-
-    final var majorStep = step * 5;
-    final var spacing = step * effZoom;
-
-    // Continuous minor dot alpha: 0.0 at spacing <= 4.0px, 1.0 at spacing >= 8.0px
+    // Minor dot alpha smoothstep: 0.0 at spacing <= 4.0px, 1.0 at spacing >= 8.0px
     float minorAlpha;
-    if (spacing <= 4.0) {
+    if (dotSpacing <= 4.0) {
       minorAlpha = 0.0f;
-    } else if (spacing >= 8.0) {
+    } else if (dotSpacing >= 8.0) {
       minorAlpha = 1.0f;
     } else {
-      final var t = (float) ((spacing - 4.0) / 4.0);
-      minorAlpha = t * t * (3.0f - 2.0f * t); // Smoothstep curve
+      final var t = (float) ((dotSpacing - 4.0) / 4.0);
+      minorAlpha = t * t * (3.0f - 2.0f * t);
     }
 
-    // Quantize dot diameter to 0.5px steps with hysteresis
-    final var scale = Math.min(1.5, Math.pow(Math.max(1.0, effZoom), 0.35));
-    final var rawMinorD = Math.min(3.5, 2.0 * scale);
-    final var rawMajorD = Math.min(4.0, 3.2 * scale);
+    final var blendedMinor = blend(currentBg, dotColor, minorAlpha);
+    final boolean drawMinor = !cheapDraw && (minorAlpha > 0.01f);
 
-    final var minorD = quantizeDiameterWithHysteresis(rawMinorD, lastMinorDiameter);
-    final var majorD = quantizeDiameterWithHysteresis(rawMajorD, lastMajorDiameter);
-    lastMinorDiameter = minorD;
-    lastMajorDiameter = majorD;
+    final int majorStep = step * 5;
 
-    final var blendedMinor = blend(bg, dotColor, minorAlpha);
-    final var minorRgb = blendedMinor.getRGB();
-    final var majorRgb = majorDotColor.getRGB();
+    // Dot diameter based on zoom
+    final double scale = Math.min(1.5, Math.pow(Math.max(1.0, effZoom), 0.35));
+    final int minorD = Math.max(1, (int) Math.round(quantizeDiameterWithHysteresis(Math.min(3.5, 2.0 * scale), lastMinorDiameter)));
+    final int majorD = Math.max(2, (int) Math.round(quantizeDiameterWithHysteresis(Math.min(4.0, 3.2 * scale), lastMajorDiameter)));
 
-    // Bounds in logical schematic coordinates
-    // Using Math.floorDiv for robust negative coordinate handling
-    final var minLogX = (long) Math.floor((double) cachedViewportX / effZoom);
-    final var maxLogX = (long) Math.ceil((double) (cachedViewportX + visibleW) / effZoom);
-    final var minLogY = (long) Math.floor((double) cachedViewportY / effZoom);
-    final var maxLogY = (long) Math.ceil((double) (cachedViewportY + visibleH) / effZoom);
+    // Logical schematic grid iteration to guarantee clean major grid dot alignment
+    final double leftWorldX = (camera != null) ? camera.screenToWorldX(0) : 0;
+    final double rightWorldX = (camera != null) ? camera.screenToWorldX(width) : width / effZoom;
+    final double topWorldY = (camera != null) ? camera.screenToWorldY(0) : 0;
+    final double bottomWorldY = (camera != null) ? camera.screenToWorldY(height) : height / effZoom;
 
-    final var startLogX = Math.floorDiv(minLogX, step) * step;
-    final var endLogX = Math.floorDiv(maxLogX + step - 1, step) * step;
-    final var startLogY = Math.floorDiv(minLogY, step) * step;
-    final var endLogY = Math.floorDiv(maxLogY + step - 1, step) * step;
+    final long startLogX = (long) Math.floor(Math.min(leftWorldX, rightWorldX) / step) * step;
+    final long endLogX = (long) Math.ceil(Math.max(leftWorldX, rightWorldX) / step) * step;
+    final long startLogY = (long) Math.floor(Math.min(topWorldY, bottomWorldY) / step) * step;
+    final long endLogY = (long) Math.ceil(Math.max(topWorldY, bottomWorldY) / step) * step;
 
-    final var drawMinor = !cheapDraw && (minorAlpha > 0.01f);
-    final var minorRadius = (int) Math.max(1, Math.round((minorD * hiDpiScale) / 2.0));
-    final var majorRadius = (int) Math.max(1, Math.round((majorD * hiDpiScale) / 2.0));
+    for (long ly = startLogY; ly <= endLogY; ly += step) {
+      final int py = (camera != null)
+          ? (int) Math.round(camera.worldToScreenY(ly))
+          : (int) Math.round(ly * effZoom);
+      if (py < -2 || py >= height + 2) continue;
 
-    for (var ly = startLogY; ly <= endLogY; ly += step) {
-      final var isMajorY = (Math.floorMod(ly, majorStep) == 0);
-      // Absolute camera device coordinate
-      final var py = (int) Math.round((ly * effZoom - cachedViewportY) * hiDpiScale);
-      if (py < -4 || py >= rasterHeight + 4) continue;
+      final boolean isMajorY = (ly % majorStep == 0);
 
-      for (var lx = startLogX; lx <= endLogX; lx += step) {
-        final var isMajorX = (Math.floorMod(lx, majorStep) == 0);
-        final var isMajor = isMajorX && isMajorY;
+      for (long lx = startLogX; lx <= endLogX; lx += step) {
+        final int px = (camera != null)
+            ? (int) Math.round(camera.worldToScreenX(lx))
+            : (int) Math.round(lx * effZoom);
+        if (px < -2 || px >= width + 2) continue;
 
+        final boolean isMajor = isMajorY && (lx % majorStep == 0);
         if (!isMajor && !drawMinor) continue;
 
-        final var px = (int) Math.round((lx * effZoom - cachedViewportX) * hiDpiScale);
-        if (px < -4 || px >= rasterWidth + 4) continue;
-
         if (isMajor) {
-          stampDot(px, py, majorRadius, majorRgb);
+          g.setColor(majorDotColor);
+          g.fillRect(px - majorD / 2, py - majorD / 2, majorD, majorD);
         } else {
-          stampDot(px, py, minorRadius, minorRgb);
-        }
-      }
-    }
-  }
-
-  /**
-   * Fast raster dot stamp with clipping.
-   */
-  private void stampDot(int cx, int cy, int radius, int colorRgb) {
-    if (radius <= 1) {
-      if (cx >= 0 && cx < rasterWidth && cy >= 0 && cy < rasterHeight) {
-        rasterPixels[cy * rasterWidth + cx] = colorRgb;
-      }
-      return;
-    }
-
-    final var r2 = radius * radius;
-    final var y0 = Math.max(0, cy - radius);
-    final var y1 = Math.min(rasterHeight - 1, cy + radius);
-    final var x0 = Math.max(0, cx - radius);
-    final var x1 = Math.min(rasterWidth - 1, cx + radius);
-
-    for (var y = y0; y <= y1; y++) {
-      final var dy = y - cy;
-      final var dy2 = dy * dy;
-      final var rowOff = y * rasterWidth;
-      for (var x = x0; x <= x1; x++) {
-        final var dx = x - cx;
-        if (dx * dx + dy2 <= r2) {
-          rasterPixels[rowOff + x] = colorRgb;
+          g.setColor(blendedMinor);
+          g.fillRect(px - minorD / 2, py - minorD / 2, minorD, minorD);
         }
       }
     }

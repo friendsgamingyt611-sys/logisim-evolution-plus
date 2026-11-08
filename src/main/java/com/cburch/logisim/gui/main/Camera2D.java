@@ -99,13 +99,8 @@ public class Camera2D implements ZoomModel {
 
   @Override
   public void setZoomFactor(double value) {
-    final double clamped = Math.max(0.05, Math.min(10.0, value));
-    final double old = this.zoomFactor;
-    if (Math.abs(old - clamped) > 0.0001) {
-      this.zoomFactor = clamped;
-      support.firePropertyChange(ZoomModel.ZOOM, old, clamped);
-      support.firePropertyChange(PROPERTY_TRANSFORM, null, this);
-    }
+    // Zoom toward center of viewport when no anchor is specified
+    zoomAt(viewportWidth / 2.0, viewportHeight / 2.0, value);
   }
 
   @Override

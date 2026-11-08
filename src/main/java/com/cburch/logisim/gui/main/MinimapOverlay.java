@@ -64,7 +64,6 @@ public class MinimapOverlay extends JPanel {
 
     if (camera != null) {
       camera.addPropertyChangeListener(evt -> {
-        System.out.println("[DEBUG MINIMAP] Received PropertyChange: " + evt.getPropertyName() + " | Forcing repaint.");
         repaint();
       });
     }
