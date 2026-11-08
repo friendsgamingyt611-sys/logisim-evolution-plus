@@ -124,10 +124,8 @@ public class Canvas extends JPanel implements LocaleListener, CanvasPaneContents
   private int zoomAnchorY = 0;
   private javax.swing.Timer zoomEasingTimer = null;
 
-  // EDT Mouse Coalescer & FPS debug tracking
-  private double pendingPanX = 0;
-  private double pendingPanY = 0;
-  private final javax.swing.Timer renderTimer = new javax.swing.Timer(16, e -> flushPendingPan());
+  // Frame Scheduler & FPS debug tracking
+  private final com.cburch.logisim.gui.main.render.FrameScheduler scheduler;
   private long lastFpsPrintTime = 0;
   private int frameCount = 0;
   private long accumulatedRenderTimeNanos = 0;
@@ -137,6 +135,7 @@ public class Canvas extends JPanel implements LocaleListener, CanvasPaneContents
   public Canvas(Project proj) {
     this.proj = proj;
     this.camera = new Camera2D();
+    this.scheduler = new com.cburch.logisim.gui.main.render.FrameScheduler(this, this.camera);
     this.selection = new Selection(proj, this);
     this.painter = new CanvasPainter(this);
     this.oldPreferredSize = null;
@@ -178,10 +177,6 @@ public class Canvas extends JPanel implements LocaleListener, CanvasPaneContents
     AppPreferences.LookAndFeel.addPropertyChangeListener(myListener);
     javax.swing.UIManager.addPropertyChangeListener(myListener);
     loadOptions(options);
-
-    if (!java.awt.GraphicsEnvironment.isHeadless()) {
-      renderTimer.start();
-    }
   }
 
   public static boolean autoZoomButtonClicked(final Dimension sz,
@@ -318,6 +313,7 @@ public class Canvas extends JPanel implements LocaleListener, CanvasPaneContents
 
   private void completeAction() {
     if (proj.getCurrentCircuit() == null) return;
+    if (painter != null) painter.invalidateSchematicCache();
     computeSize(false);
     // After any interaction, nudge the simulator, which in autoPropagate mode
     // will (if needed) eventually, fire a propagateCompleted event, which will
@@ -662,19 +658,18 @@ public class Canvas extends JPanel implements LocaleListener, CanvasPaneContents
     return lastMeasuredFps;
   }
 
+  public com.cburch.logisim.gui.main.render.FrameScheduler getScheduler() {
+    return scheduler;
+  }
+
   public void flushPendingPan() {
-    if (pendingPanX != 0 || pendingPanY != 0) {
-      if (camera != null) {
-        camera.panBy(pendingPanX, pendingPanY);
-      }
-      pendingPanX = 0;
-      pendingPanY = 0;
-      repaint();
+    if (scheduler != null) {
+      scheduler.flush();
     }
   }
 
   public boolean isPanning() {
-    return (pendingPanX != 0 || pendingPanY != 0) || (myListener != null && myListener.isMiddlePanning);
+    return (scheduler != null && scheduler.isMoving()) || (myListener != null && myListener.isMiddlePanning);
   }
 
   public void invalidateGrid() {
@@ -1022,17 +1017,7 @@ public class Canvas extends JPanel implements LocaleListener, CanvasPaneContents
         panStartX = currentX;
         panStartY = currentY;
 
-        // Macro-Zoom Damping: Ignore micro-jitters at <15% zoom
-        if (camera != null && camera.getZoomFactor() < 0.15 && Math.abs(dx) < 2 && Math.abs(dy) < 2) {
-          return;
-        }
-
-        pendingPanX += dx;
-        pendingPanY += dy;
-
-        if (!isShowing() || java.awt.GraphicsEnvironment.isHeadless() || !renderTimer.isRunning()) {
-          flushPendingPan();
-        }
+        scheduler.postPanDelta(dx, dy);
         return;
       }
       final var worldEvent = toWorldEvent(e);
@@ -1303,6 +1288,9 @@ public class Canvas extends JPanel implements LocaleListener, CanvasPaneContents
 
     @Override
     public void circuitChanged(CircuitEvent event) {
+      if (painter != null) {
+        painter.invalidateSchematicCache();
+      }
       int act = event.getAction();
       if (act == CircuitEvent.ACTION_REMOVE) {
         final var c = (Component) event.getData();

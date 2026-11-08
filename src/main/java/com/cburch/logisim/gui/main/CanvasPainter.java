@@ -140,22 +140,23 @@ class CanvasPainter implements PropertyChangeListener {
     final var context = new ComponentDrawContext(canvas, circ, circState, base, g, false);
     context.setHighlightedWires(highlightedWires);
     final var camera = canvas.getCamera();
-    final var tier = canvas.isPanning()
-        ? com.cburch.logisim.gui.main.render.QualityTier.INTERACTIVE
-        : com.cburch.logisim.gui.main.render.QualityTier.SETTLED;
+    final var scheduler = canvas.getScheduler();
+    final var tier = (scheduler != null)
+        ? scheduler.currentTier()
+        : (canvas.isPanning()
+            ? com.cburch.logisim.gui.main.render.QualityTier.INTERACTIVE
+            : com.cburch.logisim.gui.main.render.QualityTier.SETTLED);
     final var rc = com.cburch.logisim.gui.main.render.RenderContext.of(camera, 1.0, tier);
     context.setRenderContext(rc);
 
     if (circ != null) {
-      java.awt.Shape oldClip = null;
-      if (camera != null && g instanceof Graphics2D g2d) {
-        oldClip = g2d.getClip();
-        final var viewBds = camera.getViewportWorldBounds();
-        g2d.clipRect(viewBds.getX(), viewBds.getY(), viewBds.getWidth(), viewBds.getHeight());
-      }
-      circ.draw(context, hidden);
-      if (oldClip != null && g instanceof Graphics2D g2d) {
-        g2d.setClip(oldClip);
+      if (camera != null && CollectionUtil.isNullOrEmpty(hidden)) {
+        if (!layerCache.paintCached(base, camera, canvas.getWidth(), canvas.getHeight())) {
+          layerCache.renderAndCache(canvas, camera, circ, context, hidden, canvas.getWidth(), canvas.getHeight(), tier);
+          layerCache.paintCached(base, camera, canvas.getWidth(), canvas.getHeight());
+        }
+      } else {
+        circ.draw(context, hidden);
       }
     }
     if (sel != null) sel.draw(context, hidden);
@@ -185,6 +186,12 @@ class CanvasPainter implements PropertyChangeListener {
     if (grid != null) {
       grid.invalidateGrid();
     }
+  }
+
+  private final com.cburch.logisim.gui.main.render.SchematicLayerCache layerCache = new com.cburch.logisim.gui.main.render.SchematicLayerCache();
+
+  public void invalidateSchematicCache() {
+    layerCache.invalidate();
   }
 
   Component getHaloedComponent() {
