@@ -590,7 +590,7 @@ public class AddTool extends Tool implements Transferable, PropertyChangeListene
             }
 
             final var bds = comp.getBounds(gfx);
-            if (bds.getX() < 0 || bds.getY() < 0) {
+            if (canvas.getCamera() == null && (bds.getX() < 0 || bds.getY() < 0)) {
               canvas.setErrorMessage(S.getter("negativeCoordError"));
               return;
             }

@@ -295,7 +295,7 @@ public class TextTool extends Tool {
 
     // if nothing found, create a new label
     if (caret == null) {
-      if (loc.getX() < 0 || loc.getY() < 0) return;
+      if (canvas.getCamera() == null && (loc.getX() < 0 || loc.getY() < 0)) return;
       final var copy = (AttributeSet) attrs.clone();
       caretComponent = Text.FACTORY.createComponent(loc, copy);
       caretCreatingText = true;

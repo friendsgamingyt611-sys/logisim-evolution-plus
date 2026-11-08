@@ -63,7 +63,10 @@ public class MinimapOverlay extends JPanel {
     addMouseMotionListener(mouse);
 
     if (camera != null) {
-      camera.addPropertyChangeListener(e -> repaint());
+      camera.addPropertyChangeListener(evt -> {
+        System.out.println("[DEBUG MINIMAP] Received PropertyChange: " + evt.getPropertyName() + " | Forcing repaint.");
+        repaint();
+      });
     }
   }
 

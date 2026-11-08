@@ -160,6 +160,14 @@ public class Frame extends LFrame.MainWindow implements LocaleListener {
     layoutEditHandler = new LayoutEditHandler(this);
     attrTableSelectionModel = new AttrTableSelectionModel(project, this);
 
+    headerBar = new ModernHeaderBar(this, project);
+    if (layoutZoomModel != null) {
+      layoutZoomModel.addPropertyChangeListener(
+          com.cburch.logisim.gui.generic.ZoomModel.ZOOM,
+          e -> headerBar.setZoomText((int) (layoutZoomModel.getZoomFactor() * 100) + "%"));
+      headerBar.setZoomText((int) (layoutZoomModel.getZoomFactor() * 100) + "%");
+    }
+
     // set up menu bar and toolbar
     menuListener = new MainMenuListener(this, menubar);
     menuListener.setEditHandler(layoutEditHandler);
@@ -234,13 +242,6 @@ public class Frame extends LFrame.MainWindow implements LocaleListener {
     mainRegion = new MainRegionVerticalSplitPane(leftRegion, rightPanel);
     getContentPane().add(mainRegion, BorderLayout.CENTER);
 
-    headerBar = new ModernHeaderBar(this, project);
-    if (layoutZoomModel != null) {
-      layoutZoomModel.addPropertyChangeListener(
-          com.cburch.logisim.gui.generic.ZoomModel.ZOOM,
-          e -> headerBar.setZoomText((int) (layoutZoomModel.getZoomFactor() * 100) + "%"));
-      headerBar.setZoomText((int) (layoutZoomModel.getZoomFactor() * 100) + "%");
-    }
     if (AppPreferences.USE_HEADER_BAR.getBoolean()) {
       getContentPane().add(headerBar, BorderLayout.NORTH);
     }

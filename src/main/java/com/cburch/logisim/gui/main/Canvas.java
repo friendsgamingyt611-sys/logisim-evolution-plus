@@ -526,6 +526,10 @@ public class Canvas extends JPanel implements LocaleListener, CanvasPaneContents
     if (screenEvent == null) return null;
     int wx = (int) Math.round(camera.screenToWorldX(screenEvent.getX()));
     int wy = (int) Math.round(camera.screenToWorldY(screenEvent.getY()));
+    System.out.println(String.format("[DEBUG INPUT] Screen (x:%d, y:%d) | Camera (panX:%.1f, panY:%.1f, zoom:%.2f) -> World (x:%d, y:%d)",
+        screenEvent.getX(), screenEvent.getY(),
+        camera.getPanX(), camera.getPanY(), camera.getZoomFactor(),
+        wx, wy));
     return new MouseEvent(
         (java.awt.Component) screenEvent.getSource(),
         screenEvent.getID(),
@@ -633,39 +637,29 @@ public class Canvas extends JPanel implements LocaleListener, CanvasPaneContents
   }
 
   @Override
-  public void repaint(int x, int y, int width, int height) {
+  public void repaint(long tm, int x, int y, int width, int height) {
     if (camera != null) {
-      super.repaint();
-      return;
+      int sx = (int) Math.floor(camera.worldToScreenX(x));
+      int sy = (int) Math.floor(camera.worldToScreenY(y));
+      int sw = (int) Math.ceil(width * camera.getZoomFactor()) + 2;
+      int sh = (int) Math.ceil(height * camera.getZoomFactor()) + 2;
+      super.repaint(tm, sx, sy, sw, sh);
+    } else {
+      super.repaint(tm, x, y, width, height);
     }
-    final var zoom = getZoomFactor();
-    if (zoom < 1.0) {
-      final var newX = (int) Math.floor(x * zoom);
-      final var newY = (int) Math.floor(y * zoom);
-      width += x - newX;
-      height += y - newY;
-      x = newX;
-      y = newY;
-    } else if (zoom > 1.0) {
-      final var x1 = (int) Math.ceil((x + width) * zoom);
-      final var y1 = (int) Math.ceil((y + height) * zoom);
-      width = x1 - x;
-      height = y1 - y;
-    }
-    super.repaint(x, y, width, height);
+  }
+
+  @Override
+  public void repaint(int x, int y, int width, int height) {
+    repaint(0, x, y, width, height);
   }
 
   @Override
   public void repaint(Rectangle r) {
-    if (camera != null) {
+    if (r == null) {
       super.repaint();
-      return;
-    }
-    final var zoom = getZoomFactor();
-    if (zoom == 1.0) {
-      super.repaint(r);
     } else {
-      this.repaint(r.x, r.y, r.width, r.height);
+      repaint(r.x, r.y, r.width, r.height);
     }
   }
 

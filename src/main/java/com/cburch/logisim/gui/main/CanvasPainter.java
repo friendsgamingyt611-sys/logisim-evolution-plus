@@ -182,9 +182,6 @@ class CanvasPainter implements PropertyChangeListener {
     final double zoomFactor = canvas.getZoomFactor();
     final var camera = canvas.getCamera();
 
-    grid.paintGrid(g);
-    g.setColor(Palette.current().stroke());
-
     final var gfxScaled = g.create();
     if (gfxScaled instanceof Graphics2D g2d) {
       g2d.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 10));
@@ -196,6 +193,8 @@ class CanvasPainter implements PropertyChangeListener {
       if (camera != null) {
         int tx = (int) Math.round(camera.getPanX() + (canvas.getWidth() / 2.0));
         int ty = (int) Math.round(camera.getPanY() + (canvas.getHeight() / 2.0));
+        System.out.println(String.format("[DEBUG PAINT] Canvas Size (w:%d, h:%d) | g2d.translate(tx:%d, ty:%d) | Scale: %.2f",
+            canvas.getWidth(), canvas.getHeight(), tx, ty, camera.getZoomFactor()));
         g2d.translate(tx, ty);
         g2d.scale(camera.getZoomFactor(), camera.getZoomFactor());
       } else if (zoomFactor != 1.0) {
@@ -203,6 +202,10 @@ class CanvasPainter implements PropertyChangeListener {
         g2d.transform(at);
       }
     }
+
+    grid.paintGrid(gfxScaled);
+    gfxScaled.setColor(Palette.current().stroke());
+
     final var circ = proj.getCurrentCircuit();
     if (circ == null) {
       gfxScaled.dispose();
