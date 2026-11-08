@@ -153,13 +153,25 @@ public class GridPainter implements PropertyChangeListener {
    * completely eliminating voids, clipping boundaries, and memory allocations.
    */
   public void paintInfiniteGrid(Graphics g, com.cburch.logisim.gui.main.Camera2D camera) {
-    final int width = destination.getWidth();
-    final int height = destination.getHeight();
-    if (width <= 0 || height <= 0) return;
+    int width = destination != null ? destination.getWidth() : 0;
+    int height = destination != null ? destination.getHeight() : 0;
+    final var clip = g.getClipBounds();
+    if (width <= 0 || height <= 0) {
+      if (clip != null && clip.width > 0 && clip.height > 0) {
+        width = clip.x + clip.width;
+        height = clip.y + clip.height;
+      } else {
+        return;
+      }
+    }
 
     final var currentBg = AppPreferences.getGridBgColor();
     g.setColor(currentBg);
-    g.fillRect(0, 0, width, height);
+    if (clip != null) {
+      g.fillRect(clip.x, clip.y, clip.width, clip.height);
+    } else {
+      g.fillRect(0, 0, width, height);
+    }
 
     if (!showGrid) {
       return;
@@ -201,21 +213,26 @@ public class GridPainter implements PropertyChangeListener {
     final int majorD = Math.max(2, (int) Math.round(quantizeDiameterWithHysteresis(Math.min(4.0, 3.2 * scale), lastMajorDiameter)));
 
     // Logical schematic grid iteration to guarantee clean major grid dot alignment
-    final double leftWorldX = (camera != null) ? camera.screenToWorldX(0) : 0;
-    final double rightWorldX = (camera != null) ? camera.screenToWorldX(width) : width / effZoom;
-    final double topWorldY = (camera != null) ? camera.screenToWorldY(0) : 0;
-    final double bottomWorldY = (camera != null) ? camera.screenToWorldY(height) : height / effZoom;
+    final double leftWorldX = (camera != null) ? camera.screenToWorldX(0) : (clip != null ? clip.x / effZoom : 0);
+    final double rightWorldX = (camera != null) ? camera.screenToWorldX(width) : (clip != null ? (clip.x + clip.width) / effZoom : width / effZoom);
+    final double topWorldY = (camera != null) ? camera.screenToWorldY(0) : (clip != null ? clip.y / effZoom : 0);
+    final double bottomWorldY = (camera != null) ? camera.screenToWorldY(height) : (clip != null ? (clip.y + clip.height) / effZoom : height / effZoom);
 
     final long startLogX = (long) Math.floor(Math.min(leftWorldX, rightWorldX) / step) * step;
     final long endLogX = (long) Math.ceil(Math.max(leftWorldX, rightWorldX) / step) * step;
     final long startLogY = (long) Math.floor(Math.min(topWorldY, bottomWorldY) / step) * step;
     final long endLogY = (long) Math.ceil(Math.max(topWorldY, bottomWorldY) / step) * step;
 
+    final int minScreenY = (clip != null) ? clip.y - 2 : -2;
+    final int maxScreenY = (clip != null) ? clip.y + clip.height + 2 : height + 2;
+    final int minScreenX = (clip != null) ? clip.x - 2 : -2;
+    final int maxScreenX = (clip != null) ? clip.x + clip.width + 2 : width + 2;
+
     for (long ly = startLogY; ly <= endLogY; ly += step) {
       final int py = (camera != null)
           ? (int) Math.round(camera.worldToScreenY(ly))
           : (int) Math.round(ly * effZoom);
-      if (py < -2 || py >= height + 2) continue;
+      if (py < minScreenY || py >= maxScreenY) continue;
 
       final boolean isMajorY = (ly % majorStep == 0);
 
@@ -223,7 +240,7 @@ public class GridPainter implements PropertyChangeListener {
         final int px = (camera != null)
             ? (int) Math.round(camera.worldToScreenX(lx))
             : (int) Math.round(lx * effZoom);
-        if (px < -2 || px >= width + 2) continue;
+        if (px < minScreenX || px >= maxScreenX) continue;
 
         final boolean isMajor = isMajorY && (lx % majorStep == 0);
         if (!isMajor && !drawMinor) continue;
