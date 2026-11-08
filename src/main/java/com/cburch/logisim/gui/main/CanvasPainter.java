@@ -197,6 +197,8 @@ class CanvasPainter implements PropertyChangeListener {
             canvas.getWidth(), canvas.getHeight(), tx, ty, camera.getZoomFactor()));
         g2d.translate(tx, ty);
         g2d.scale(camera.getZoomFactor(), camera.getZoomFactor());
+        final var viewBds = camera.getViewportWorldBounds();
+        g2d.setClip(viewBds.getX(), viewBds.getY(), viewBds.getWidth(), viewBds.getHeight());
       } else if (zoomFactor != 1.0) {
         final var at = AffineTransform.getScaleInstance(zoomFactor, zoomFactor);
         g2d.transform(at);
