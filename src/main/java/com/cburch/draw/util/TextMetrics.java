@@ -41,19 +41,11 @@ public class TextMetrics {
       throw new IllegalStateException("need g");
     }
     if (font == null) font = g.getFont();
-    final var fr = ((Graphics2D) g).getFontRenderContext();
-
-    if (text == null) {
-      text = "ÄAy";
-      width = 0;
-    } else {
-      width = (int) font.getStringBounds(text, fr).getWidth();
-    }
-
-    final var lm = font.getLineMetrics(text, fr);
-    ascent = (int) Math.ceil(lm.getAscent());
-    descent = (int) Math.ceil(lm.getDescent());
-    leading = (int) Math.ceil(lm.getLeading());
+    final var fm = g.getFontMetrics(font);
+    width = (text != null ? fm.stringWidth(text) : 0);
+    ascent = fm.getAscent();
+    descent = fm.getDescent();
+    leading = fm.getLeading();
     height = ascent + descent + leading;
   }
 

@@ -141,6 +141,36 @@ public class Camera2D implements ZoomModel {
     support.removePropertyChangeListener(listener);
   }
 
+  public void zoomIn() {
+    zoomStep(true);
+  }
+
+  public void zoomOut() {
+    zoomStep(false);
+  }
+
+  public void zoomStep(boolean in) {
+    final double factor = zoomFactor * 100.0 * (in ? 1.001 : 0.999);
+    double newZoom = zoomFactor;
+    if (in) {
+      for (final var choice : zoomOptions) {
+        if (choice > factor) {
+          newZoom = choice / 100.0;
+          break;
+        }
+      }
+    } else {
+      for (int i = zoomOptions.size() - 1; i >= 0; i--) {
+        final var choice = zoomOptions.get(i);
+        if (choice < factor) {
+          newZoom = choice / 100.0;
+          break;
+        }
+      }
+    }
+    setZoomFactor(newZoom);
+  }
+
   // ---------------------------------------------------------------------------
   // 2D Viewport & Panning Controls
   // ---------------------------------------------------------------------------

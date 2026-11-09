@@ -9,7 +9,6 @@
 
 package com.cburch.logisim.gui.main;
 
-import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
@@ -18,15 +17,13 @@ import javax.swing.JLayeredPane;
 /**
  * Container hosting the Infinite Canvas (Layer 0) and floating HUD overlays
  * like the interactive Minimap (Layer 1).
- * Uses a ComponentListener to automatically size the Canvas to 100% of the viewport
- * and anchor the MinimapOverlay dynamically to the bottom-right corner.
+ * Automatically sizes Canvas to 100% of viewport and dynamically anchors
+ * the MinimapOverlay to the bottom-right corner without clipping or overflow.
  */
 public class InfiniteCanvasContainer extends JLayeredPane {
   private static final long serialVersionUID = 1L;
 
   private static final int MINIMAP_MARGIN = 16;
-  private static final int MINIMAP_WIDTH = 190;
-  private static final int MINIMAP_HEIGHT = 130;
 
   private final Canvas canvas;
   private final MinimapOverlay minimap;
@@ -44,6 +41,7 @@ public class InfiniteCanvasContainer extends JLayeredPane {
     // Layer 1: Floating Minimap HUD
     if (minimap != null) {
       add(minimap, JLayeredPane.PALETTE_LAYER);
+      canvas.setActivityCallback(() -> minimap.wakeUp());
     }
 
     addComponentListener(new ComponentAdapter() {
@@ -62,7 +60,13 @@ public class InfiniteCanvasContainer extends JLayeredPane {
     return minimap;
   }
 
-  private void layoutComponents() {
+  @Override
+  public void doLayout() {
+    super.doLayout();
+    layoutComponents();
+  }
+
+  public void layoutComponents() {
     final int w = getWidth();
     final int h = getHeight();
     if (w <= 0 || h <= 0) return;
@@ -73,16 +77,21 @@ public class InfiniteCanvasContainer extends JLayeredPane {
       canvas.getCamera().setViewportSize(w, h);
     }
 
-    // 2. Snap Minimap to bottom-right corner with margin
+    // 2. Snap Minimap to bottom-right corner with margin, strictly bounded within viewport
     if (minimap != null) {
-      final int mw = Math.min(MINIMAP_WIDTH, Math.max(80, w / 4));
-      final int mh = Math.min(MINIMAP_HEIGHT, Math.max(60, h / 4));
-      final int mx = w - mw - MINIMAP_MARGIN;
-      final int my = h - mh - MINIMAP_MARGIN;
+      final Dimension pref = minimap.getPreferredSize();
+      final int maxAllowedW = Math.max(60, w - 2 * MINIMAP_MARGIN);
+      final int maxAllowedH = Math.max(40, h - 2 * MINIMAP_MARGIN);
+
+      final int mw = Math.min(pref.width, maxAllowedW);
+      final int mh = Math.min(pref.height, maxAllowedH);
+
+      final int mx = Math.max(MINIMAP_MARGIN, w - mw - MINIMAP_MARGIN);
+      final int my = Math.max(MINIMAP_MARGIN, h - mh - MINIMAP_MARGIN);
+
       minimap.setBounds(mx, my, mw, mh);
     }
 
-    revalidate();
     repaint();
   }
 }

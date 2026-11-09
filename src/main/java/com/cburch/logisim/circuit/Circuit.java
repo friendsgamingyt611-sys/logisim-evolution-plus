@@ -224,6 +224,11 @@ public class Circuit {
   private final AttributeSet staticAttrs;
   private final SubcircuitFactory subcircuitFactory;
   private final EventSourceWeakSupport<CircuitListener> listeners = new EventSourceWeakSupport<>();
+  private final java.util.concurrent.atomic.AtomicLong structureVersion = new java.util.concurrent.atomic.AtomicLong(1);
+
+  public long getStructureVersion() {
+    return structureVersion.get();
+  }
   private LinkedHashSet<Component> comps = new LinkedHashSet<>(); // doesn't include wires
   CircuitWires wires = new CircuitWires();
   private final List<Component> clocks = new ArrayList<>();
@@ -464,92 +469,46 @@ public class Circuit {
   // Graphics methods
   //
   public void draw(ComponentDrawContext context, Collection<Component> hidden) {
-    final var g = context.getGraphics();
-    var gCopy = g.create();
-    context.setGraphics(gCopy);
     wires.draw(context, hidden);
 
     final var dest = context.getDestination();
     final com.cburch.logisim.gui.main.Camera2D cam = (dest instanceof com.cburch.logisim.gui.main.Canvas cv) ? cv.getCamera() : null;
-    final var rc = context.getRenderContext() != null
-        ? context.getRenderContext()
-        : com.cburch.logisim.gui.main.render.RenderContext.of(cam, 1.0, com.cburch.logisim.gui.main.render.QualityTier.SETTLED);
-    final var policy = rc.policy();
-    final var vp = rc.worldFrustum();
+    final var vp = (cam != null) ? cam.getViewportWorldBounds() : null;
 
     if (CollectionUtil.isNullOrEmpty(hidden)) {
       for (final var c : comps) {
         final var bds = c.getBounds();
-        if (vp != null && bds != null && !rc.intersectsViewport(bds)) {
-          continue; // Viewport Frustum Culling
+        if (vp != null && bds != null && !cam.intersectsViewport(bds)) {
+          continue; // Viewport Frustum Culling O(visible)
         }
-
-        final var symbolTier = policy.getSymbolTier(bds);
-        if (symbolTier == com.cburch.logisim.gui.main.render.DetailPolicy.SymbolTier.MICRO_BOX && bds != null) {
-          // TIER 3: Micro Object (<= 16px screen area) - Fast color-coded bounding block
-          gCopy.setColor(context.getPalette().fill());
-          gCopy.fillRect(bds.getX(), bds.getY(), bds.getWidth(), bds.getHeight());
-          gCopy.setColor(context.getPalette().stroke());
-          gCopy.drawRect(bds.getX(), bds.getY(), bds.getWidth(), bds.getHeight());
-          continue;
-        }
-
-        final var gNew = g.create();
-        context.setGraphics(gNew);
-        gCopy.dispose();
-        gCopy = gNew;
-
-        if (symbolTier == com.cburch.logisim.gui.main.render.DetailPolicy.SymbolTier.SIMPLIFIED) {
-          context.setShowState(false);
-        } else {
-          context.setShowState(true);
-        }
-
         c.draw(context);
       }
     } else {
       for (final var c : comps) {
         if (!hidden.contains(c)) {
           final var bds = c.getBounds();
-          if (vp != null && bds != null && !rc.intersectsViewport(bds)) {
-            continue; // Viewport Frustum Culling
+          if (vp != null && bds != null && !cam.intersectsViewport(bds)) {
+            continue; // Viewport Frustum Culling O(visible)
           }
-
-          final var symbolTier = policy.getSymbolTier(bds);
-          if (symbolTier == com.cburch.logisim.gui.main.render.DetailPolicy.SymbolTier.MICRO_BOX && bds != null) {
-            // TIER 3: Micro Object (<= 16px screen area) - Fast color-coded bounding block
-            gCopy.setColor(context.getPalette().fill());
-            gCopy.fillRect(bds.getX(), bds.getY(), bds.getWidth(), bds.getHeight());
-            gCopy.setColor(context.getPalette().stroke());
-            gCopy.drawRect(bds.getX(), bds.getY(), bds.getWidth(), bds.getHeight());
-            continue;
-          }
-
-          final var gNew = g.create();
-          context.setGraphics(gNew);
-          gCopy.dispose();
-          gCopy = gNew;
-
-          if (symbolTier == com.cburch.logisim.gui.main.render.DetailPolicy.SymbolTier.SIMPLIFIED) {
-            context.setShowState(false);
-          } else {
-            context.setShowState(true);
-          }
-
           try {
             c.draw(context);
           } catch (RuntimeException e) {
-            // this is a JAR developer error - display it and move on
             e.printStackTrace();
           }
         }
       }
     }
-    context.setGraphics(g);
-    gCopy.dispose();
   }
 
   private void fireEvent(CircuitEvent event) {
+    final int action = event.getAction();
+    if (action == CircuitEvent.ACTION_ADD
+        || action == CircuitEvent.ACTION_REMOVE
+        || action == CircuitEvent.ACTION_CLEAR
+        || action == CircuitEvent.ACTION_INVALIDATE
+        || action == CircuitEvent.TRANSACTION_DONE) {
+      structureVersion.incrementAndGet();
+    }
     for (final var l : listeners) {
       l.circuitChanged(event);
     }

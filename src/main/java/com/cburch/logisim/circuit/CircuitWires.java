@@ -891,6 +891,9 @@ public class CircuitWires {
     final var dest = context.getDestination();
     final com.cburch.logisim.gui.main.Camera2D cam = (dest instanceof com.cburch.logisim.gui.main.Canvas cv) ? cv.getCamera() : null;
     final var vp = (cam != null) ? cam.getViewportWorldBounds() : null;
+    final long now = System.currentTimeMillis();
+    BasicStroke cachedDashBus = null;
+    BasicStroke cachedDashWire = null;
 
     if (CollectionUtil.isNullOrEmpty(hidden)) {
       for (final var wire : wires) {
@@ -904,7 +907,7 @@ public class CircuitWires {
         final var wireData = (state != null) ? state.getWireData() : null;
         final var vb = (wireData != null) ? wireData.busAt.get(s) : null;
         final var isHighSpeed = isHighFreq && wb != null && wb.isValid() && showState
-            && (highSpeedBundles.contains(wb.find()) || (vb != null && (System.currentTimeMillis() - vb.lastToggleTime < 250)));
+            && (highSpeedBundles.contains(wb.find()) || (vb != null && (now - vb.lastToggleTime < 250)));
 
         if (!wb.isValid()) {
           g.setColor(context.getPalette().widthError());
@@ -933,13 +936,18 @@ public class CircuitWires {
           g.drawLine(s.getX(), s.getY(), t.getX(), t.getY());
           if (isHighSpeed) {
             final var oldStroke = g.getStroke();
-            final var dashStroke = new BasicStroke(
-                width,
-                BasicStroke.CAP_ROUND,
-                BasicStroke.JOIN_ROUND,
-                10.0f,
-                new float[] { 6.0f, 4.0f },
-                animPhase);
+            BasicStroke dashStroke = (width == Wire.WIDTH_BUS) ? cachedDashBus : cachedDashWire;
+            if (dashStroke == null) {
+              dashStroke = new BasicStroke(
+                  width,
+                  BasicStroke.CAP_ROUND,
+                  BasicStroke.JOIN_ROUND,
+                  10.0f,
+                  new float[] { 6.0f, 4.0f },
+                  animPhase);
+              if (width == Wire.WIDTH_BUS) cachedDashBus = dashStroke;
+              else cachedDashWire = dashStroke;
+            }
             g.setStroke(dashStroke);
             g.setColor(streamCyan);
             g.drawLine(s.getX(), s.getY(), t.getX(), t.getY());
@@ -972,7 +980,7 @@ public class CircuitWires {
           if (wb != null) {
             var color = context.getPalette().stroke();
             final var isHighSpeedDot = isHighFreq && wb.isValid() && showState
-                && (highSpeedBundles.contains(wb.find()) || (state != null && state.getWireData() != null && state.getWireData().busAt.get(loc) != null && (System.currentTimeMillis() - state.getWireData().busAt.get(loc).lastToggleTime < 250)));
+                && (highSpeedBundles.contains(wb.find()) || (state != null && state.getWireData() != null && state.getWireData().busAt.get(loc) != null && (now - state.getWireData().busAt.get(loc).lastToggleTime < 250)));
             if (!wb.isValid()) {
               color = context.getPalette().widthError();
             } else if (showState) {
@@ -1005,7 +1013,7 @@ public class CircuitWires {
           final var wireData = (state != null) ? state.getWireData() : null;
           final var vb = (wireData != null) ? wireData.busAt.get(s) : null;
           final var isHighSpeed = isHighFreq && wb != null && wb.isValid() && showState
-              && (highSpeedBundles.contains(wb.find()) || (vb != null && (System.currentTimeMillis() - vb.lastToggleTime < 250)));
+              && (highSpeedBundles.contains(wb.find()) || (vb != null && (now - vb.lastToggleTime < 250)));
           if (!wb.isValid()) {
             g.setColor(context.getPalette().widthError());
           } else if (showState) {
@@ -1074,6 +1082,8 @@ public class CircuitWires {
       }
     }
   }
+
+
 
   // There are only two threads that need to use the connectivity map, I think:
   // the AWT event thread, and the simulation worker thread.

@@ -26,6 +26,7 @@ import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 
 public class ComponentDrawContext {
+  private static final Font DEFAULT_FONT = new Font(Font.SANS_SERIF, Font.PLAIN, 10);
   private static final int PIN_OFFS = 2;
   private static final int PIN_RAD = 4;
 
@@ -70,12 +71,12 @@ public class ComponentDrawContext {
     this.instancePainter = new InstancePainter(this, null);
     this.palette = Palette.of(this);
     if (g instanceof Graphics2D g2d) {
-      g2d.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 10));
+      g2d.setFont(DEFAULT_FONT);
       g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
       g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
-      g2d.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_PURE);
+      g2d.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_NORMALIZE);
       g2d.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
-      g2d.setRenderingHint(RenderingHints.KEY_FRACTIONALMETRICS, RenderingHints.VALUE_FRACTIONALMETRICS_ON);
+      g2d.setRenderingHint(RenderingHints.KEY_FRACTIONALMETRICS, RenderingHints.VALUE_FRACTIONALMETRICS_OFF);
     }
   }
 
@@ -308,11 +309,13 @@ public class ComponentDrawContext {
   public void setGraphics(Graphics g) {
     this.g = g;
     if (g instanceof Graphics2D g2d) {
-      g2d.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 10));
-      g2d.setRenderingHint(RenderingHints.KEY_FRACTIONALMETRICS, RenderingHints.VALUE_FRACTIONALMETRICS_ON);
+      g2d.setFont(DEFAULT_FONT);
+      g2d.setRenderingHint(RenderingHints.KEY_FRACTIONALMETRICS, RenderingHints.VALUE_FRACTIONALMETRICS_OFF);
       g2d.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
       if (AppPreferences.EXPERIMENTAL_ROUND_STROKES.getBoolean() && !Palette.isForceLight()) {
         g2d.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_PURE);
+      } else {
+        g2d.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_NORMALIZE);
       }
     }
   }

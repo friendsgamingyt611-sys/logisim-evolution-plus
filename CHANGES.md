@@ -6,6 +6,21 @@
 # Logisim-evolution+ Releases
 ================================================================================
 
+* v5.2.0 (2026-11-09) - Infinite Canvas Engine & High-Performance Minimap
+  * **Infinite Canvas Architecture**:
+    * Replaced bounded `JScrollPane` viewport layout with a fully infinite 2D world camera (`Camera2D`), supporting arbitrary pan coordinates and smooth continuous zoom from 5% to 1,000%.
+    * Implemented logarithmic Desmos 1-2-5 dot grid clamping screen dots between 500 and 2,000 across all zoom levels.
+    * Added zero-lag mouse panning and wheel-based zooming around cursor coordinates.
+  * **Dynamic Minimap Overlay**:
+    * Added semi-transparent HUD overlay with live zoom indicator and interactive viewport frustum box.
+    * Implemented top-left corner extender handle for freeform drag-resizing with bounds clamping.
+    * Added inactivity sleep (fades out after 2.5 seconds of pan/zoom inactivity; wakes automatically on pan/zoom).
+    * Implemented connected-components wire filtering to preserve wire rendering in dense schematics while reducing wide-area visual noise.
+  * **Rendering & Latency Optimizations**:
+    * Bypassed timer-based buffering in `FrameScheduler` for instant input-to-frame dispatch (< 1 ms latency).
+    * Optimized font measurement in `GraphicsUtil` and `TextMetrics` using JDK-cached integer font metrics (`FontMetrics.stringWidth`, `FontMetrics.getAscent`), eliminating native glyph outline allocation stalls during high-density rendering.
+    * Integrated Viewport Frustum Culling $O(\text{visible})$ for wires and components.
+
 * v5.1.0-dev (Stage 2 - Cross-Platform OS Theme Synchronization)
   * **Dynamic OS Theme Sync & Event Bus (Step A)**:
     * Implemented `ThemeSyncListener` global `UIManager` "lookAndFeel" bridge to dispatch synchronous UI invalidations across open frames and custom delegates.

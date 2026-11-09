@@ -36,10 +36,6 @@ public final class FrameScheduler {
     this.frameTimer = new Timer(16, e -> onFrameTick());
     this.settleTimer = new Timer(100, e -> onSettleTick());
     this.settleTimer.setRepeats(false);
-
-    if (!GraphicsEnvironment.isHeadless()) {
-      frameTimer.start();
-    }
   }
 
   public void invalidateLayer(int mask) {
@@ -50,21 +46,11 @@ public final class FrameScheduler {
   }
 
   public void postPanDelta(double dx, double dy) {
-    // Macro-Zoom Damping: ignore micro-jitters (< 2px) at extreme zoom-out (< 15%)
-    if (camera != null && camera.getZoomFactor() < 0.15 && Math.abs(dx) < 2 && Math.abs(dy) < 2) {
-      return;
+    if (camera != null) {
+      camera.panBy(dx, dy);
     }
-
-    pendingPanX += dx;
-    pendingPanY += dy;
     isMoving = true;
-    dirtyMask |= DIRTY_L0;
-
     settleTimer.restart();
-
-    if (!canvas.isShowing() || GraphicsEnvironment.isHeadless() || !frameTimer.isRunning()) {
-      flush();
-    }
   }
 
   public void onFrameTick() {

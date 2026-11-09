@@ -32,6 +32,7 @@ import java.util.Collections;
 import java.util.Set;
 
 class CanvasPainter implements PropertyChangeListener {
+  private static final Font DEFAULT_FONT = new Font(Font.SANS_SERIF, Font.PLAIN, 10);
   private static final Set<Component> NO_COMPONENTS = Collections.emptySet();
 
   private final Canvas canvas;
@@ -150,14 +151,7 @@ class CanvasPainter implements PropertyChangeListener {
     context.setRenderContext(rc);
 
     if (circ != null) {
-      if (camera != null && CollectionUtil.isNullOrEmpty(hidden)) {
-        if (!layerCache.paintCached(base, camera, canvas.getWidth(), canvas.getHeight())) {
-          layerCache.renderAndCache(canvas, camera, circ, context, hidden, canvas.getWidth(), canvas.getHeight(), tier);
-          layerCache.paintCached(base, camera, canvas.getWidth(), canvas.getHeight());
-        }
-      } else {
-        circ.draw(context, hidden);
-      }
+      circ.draw(context, hidden);
     }
     if (sel != null) sel.draw(context, hidden);
 
@@ -188,12 +182,6 @@ class CanvasPainter implements PropertyChangeListener {
     }
   }
 
-  private final com.cburch.logisim.gui.main.render.SchematicLayerCache layerCache = new com.cburch.logisim.gui.main.render.SchematicLayerCache();
-
-  public void invalidateSchematicCache() {
-    layerCache.invalidate();
-  }
-
   Component getHaloedComponent() {
     return haloedComponent;
   }
@@ -216,12 +204,12 @@ class CanvasPainter implements PropertyChangeListener {
 
     final var gfxScaled = g.create();
     if (gfxScaled instanceof Graphics2D g2d) {
-      g2d.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 10));
+      g2d.setFont(DEFAULT_FONT);
       g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
       g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
-      g2d.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_PURE);
+      g2d.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_NORMALIZE);
       g2d.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
-      g2d.setRenderingHint(RenderingHints.KEY_FRACTIONALMETRICS, RenderingHints.VALUE_FRACTIONALMETRICS_ON);
+      g2d.setRenderingHint(RenderingHints.KEY_FRACTIONALMETRICS, RenderingHints.VALUE_FRACTIONALMETRICS_OFF);
       if (camera != null) {
         double tx = camera.getPanX() + (canvas.getWidth() / 2.0);
         double ty = camera.getPanY() + (canvas.getHeight() / 2.0);

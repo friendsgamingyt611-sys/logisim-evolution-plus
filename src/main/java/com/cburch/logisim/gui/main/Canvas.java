@@ -34,6 +34,7 @@ import com.cburch.logisim.file.LogisimFile;
 import com.cburch.logisim.file.MouseMappings;
 import com.cburch.logisim.file.Options;
 import com.cburch.logisim.gui.generic.BasicZoomModel;
+import com.cburch.logisim.gui.generic.ZoomModel;
 import com.cburch.logisim.gui.generic.CanvasPane;
 import com.cburch.logisim.gui.generic.CanvasPaneContents;
 import com.cburch.logisim.gui.generic.GridPainter;
@@ -126,9 +127,12 @@ public class Canvas extends JPanel implements LocaleListener, CanvasPaneContents
 
   // Frame Scheduler & FPS debug tracking
   private final com.cburch.logisim.gui.main.render.FrameScheduler scheduler;
+  private volatile long lastPanInputNanos = 0;
   private long lastFpsPrintTime = 0;
   private int frameCount = 0;
   private long accumulatedRenderTimeNanos = 0;
+  private long accumulatedIntervalTimeNanos = 0;
+  private long lastFrameCompletionNanos = 0;
   private volatile double lastRenderTimeMs = 0.0;
   private volatile double lastMeasuredFps = 0.0;
 
@@ -144,7 +148,16 @@ public class Canvas extends JPanel implements LocaleListener, CanvasPaneContents
     this.canvasPane = null;
     this.tickCounter = new TickCounter();
 
-    camera.addPropertyChangeListener(e -> repaint());
+    camera.addPropertyChangeListener(e -> {
+      final String prop = e.getPropertyName();
+      if (Camera2D.PROPERTY_PAN.equals(prop)
+          || Camera2D.PROPERTY_TRANSFORM.equals(prop)
+          || ZoomModel.ZOOM.equals(prop)
+          || ZoomModel.CENTER.equals(prop)) {
+        notifyActivity();
+      }
+      repaint();
+    });
 
     setOpaque(true);
     setBackground(AppPreferences.getCanvasBgColor());
@@ -307,13 +320,36 @@ public class Canvas extends JPanel implements LocaleListener, CanvasPaneContents
     setScrollBar(xpos, ypos);
   }
 
+  public void zoomToFit() {
+    if (camera == null) {
+      center();
+      return;
+    }
+    final var g = getGraphics();
+    final var circ = (proj != null) ? proj.getCurrentCircuit() : null;
+    if (circ == null) return;
+    final var bounds = (g != null) ? circ.getBounds(g) : circ.getBounds();
+    if (bounds.getHeight() == 0 || bounds.getWidth() == 0) {
+      camera.resetToCenter();
+      repaint();
+      return;
+    }
+    final double availW = Math.max(10.0, camera.getViewportWidth() - 100);
+    final double availH = Math.max(10.0, camera.getViewportHeight() - 100);
+    final double fitZoom = Math.min(availW / bounds.getWidth(), availH / bounds.getHeight());
+    final double clampedZoom = Math.max(0.05, Math.min(2.0, fitZoom));
+
+    camera.setZoomFactor(clampedZoom);
+    camera.centerOn(bounds.getX() + bounds.getWidth() / 2.0, bounds.getY() + bounds.getHeight() / 2.0);
+    repaint();
+  }
+
   public void closeCanvas() {
     // paintCoordinator.requestStop();
   }
 
   private void completeAction() {
     if (proj.getCurrentCircuit() == null) return;
-    if (painter != null) painter.invalidateSchematicCache();
     computeSize(false);
     // After any interaction, nudge the simulator, which in autoPropagate mode
     // will (if needed) eventually, fire a propagateCompleted event, which will
@@ -409,9 +445,11 @@ public class Canvas extends JPanel implements LocaleListener, CanvasPaneContents
     }
     viewport.setWidthMessage(
         S.get("canvasWidthError") + (exceptions.size() == 1 ? "" : " (" + exceptions.size() + ")"));
-    for (final var ex : exceptions) {
-      final var p = ex.getPoint(0);
-      setArrows(p.getX(), p.getY(), p.getX(), p.getY());
+    if (canvasPane != null) {
+      for (final var ex : exceptions) {
+        final var p = ex.getPoint(0);
+        setArrows(p.getX(), p.getY(), p.getX(), p.getY());
+      }
     }
   }
 
@@ -610,9 +648,9 @@ public class Canvas extends JPanel implements LocaleListener, CanvasPaneContents
     if (g instanceof Graphics2D g2) {
       g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
       g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
-      g2.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_PURE);
+      g2.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_NORMALIZE);
       g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
-      g2.setRenderingHint(RenderingHints.KEY_FRACTIONALMETRICS, RenderingHints.VALUE_FRACTIONALMETRICS_ON);
+      g2.setRenderingHint(RenderingHints.KEY_FRACTIONALMETRICS, RenderingHints.VALUE_FRACTIONALMETRICS_OFF);
     }
 
     inPaint = true; // volatile
@@ -626,20 +664,37 @@ public class Canvas extends JPanel implements LocaleListener, CanvasPaneContents
       }
     } finally {
       final long renderNanos = System.nanoTime() - startNanos;
+      final long nowNanos = System.nanoTime();
+      final double intervalMs = (lastFrameCompletionNanos > 0) ? (nowNanos - lastFrameCompletionNanos) / 1_000_000.0 : 0.0;
+      lastFrameCompletionNanos = nowNanos;
+
+      final long panInputNanos = lastPanInputNanos;
+      if (panInputNanos > 0) {
+        final double inputToFrameMs = (nowNanos - panInputNanos) / 1_000_000.0;
+        final double paintMs = renderNanos / 1_000_000.0;
+        final double dispatchLagMs = Math.max(0.0, inputToFrameMs - paintMs);
+        System.out.printf("[PAN LATENCY] Input-to-Frame: %.2f ms | Dispatch lag: %.2f ms | Paint duration: %.2f ms%n",
+            inputToFrameMs, dispatchLagMs, paintMs);
+        lastPanInputNanos = 0;
+      }
+
       lastRenderTimeMs = renderNanos / 1_000_000.0;
       accumulatedRenderTimeNanos += renderNanos;
+      accumulatedIntervalTimeNanos += (long) (intervalMs * 1_000_000.0);
       frameCount++;
 
       final long now = System.currentTimeMillis();
       if (now - lastFpsPrintTime >= 1000) {
-        final double avgFrameMs = (accumulatedRenderTimeNanos / (double) frameCount) / 1_000_000.0;
-        lastMeasuredFps = avgFrameMs > 0 ? (1000.0 / avgFrameMs) : 0.0;
+        final double avgPaintMs = (accumulatedRenderTimeNanos / (double) frameCount) / 1_000_000.0;
+        final double avgIntervalMs = (accumulatedIntervalTimeNanos / (double) frameCount) / 1_000_000.0;
         final double zoom = (camera != null) ? camera.getZoomFactor() : getZoomFactor();
-        System.out.printf("[DEBUG FPS] Zoom: %.0f%% | Frame Render: %.2f ms | Potential FPS: %.1f%n",
-            zoom * 100.0, avgFrameMs, lastMeasuredFps);
+
+        System.out.printf("[PERF] Zoom: %.0f%% | paint: %.2f ms | frame interval: %.2f ms | paints/sec: %d%n",
+            zoom * 100.0, avgPaintMs, avgIntervalMs, frameCount);
         lastFpsPrintTime = now;
         frameCount = 0;
         accumulatedRenderTimeNanos = 0;
+        accumulatedIntervalTimeNanos = 0;
       }
 
       synchronized (repaintLock) {
@@ -662,10 +717,31 @@ public class Canvas extends JPanel implements LocaleListener, CanvasPaneContents
     return scheduler;
   }
 
+  public CanvasPainter getPainter() {
+    return painter;
+  }
+
   public void flushPendingPan() {
     if (scheduler != null) {
       scheduler.flush();
     }
+  }
+
+  private Runnable activityCallback = null;
+
+  public void setActivityCallback(Runnable callback) {
+    this.activityCallback = callback;
+  }
+
+  public void notifyActivity() {
+    final Runnable cb = activityCallback;
+    if (cb != null) {
+      cb.run();
+    }
+  }
+
+  public void recordPanInputTime() {
+    lastPanInputNanos = System.nanoTime();
   }
 
   public boolean isPanning() {
@@ -688,6 +764,17 @@ public class Canvas extends JPanel implements LocaleListener, CanvasPaneContents
   protected void processMouseMotionEvent(final MouseEvent e) {
     repairMouseEvent(e);
     super.processMouseMotionEvent(e);
+  }
+
+  @Override
+  protected void processMouseWheelEvent(final java.awt.event.MouseWheelEvent e) {
+    notifyActivity(); // Canvas wheel zoom or shift-scroll pan
+    super.processMouseWheelEvent(e);
+  }
+
+  @Override
+  protected void processKeyEvent(final java.awt.event.KeyEvent e) {
+    super.processKeyEvent(e);
   }
 
   @Override
@@ -1010,6 +1097,7 @@ public class Canvas extends JPanel implements LocaleListener, CanvasPaneContents
     @Override
     public void mouseDragged(MouseEvent e) {
       if (isMiddlePanning) {
+        recordPanInputTime();
         final var currentX = e.getXOnScreen();
         final var currentY = e.getYOnScreen();
         final var dx = currentX - panStartX;
@@ -1017,7 +1105,11 @@ public class Canvas extends JPanel implements LocaleListener, CanvasPaneContents
         panStartX = currentX;
         panStartY = currentY;
 
-        scheduler.postPanDelta(dx, dy);
+        if (camera != null) {
+          camera.panBy(dx, dy);
+        } else {
+          scheduler.postPanDelta(dx, dy);
+        }
         return;
       }
       final var worldEvent = toWorldEvent(e);
@@ -1173,6 +1265,7 @@ public class Canvas extends JPanel implements LocaleListener, CanvasPaneContents
         if (canvasPane != null) {
           canvasPane.getHorizontalScrollBar().setValue(scrollValue(canvasPane.getHorizontalScrollBar(), mwe.getWheelRotation()));
         } else if (camera != null) {
+          recordPanInputTime();
           camera.panBy(-mwe.getWheelRotation() * 30, 0);
           repaint();
         }
@@ -1288,9 +1381,6 @@ public class Canvas extends JPanel implements LocaleListener, CanvasPaneContents
 
     @Override
     public void circuitChanged(CircuitEvent event) {
-      if (painter != null) {
-        painter.invalidateSchematicCache();
-      }
       int act = event.getAction();
       if (act == CircuitEvent.ACTION_REMOVE) {
         final var c = (Component) event.getData();
@@ -1509,7 +1599,9 @@ public class Canvas extends JPanel implements LocaleListener, CanvasPaneContents
         msgY = paintString(g, msgY, S.get("canvasExceptionError"));
       }
 
-      computeViewportContents();
+      if (camera == null) {
+        computeViewportContents(); // Only calculate arrows for legacy mode
+      }
       final var sz = getSize();
 
       if (widthMessage != null) {
@@ -1517,14 +1609,15 @@ public class Canvas extends JPanel implements LocaleListener, CanvasPaneContents
         msgY = paintString(g, msgY, widthMessage);
       } else g.setColor(TICK_RATE_COLOR);
 
-      if (isNorth
-          || isSouth
-          || isEast
-          || isWest
-          || isNortheast
-          || isNorthwest
-          || isSoutheast
-          || isSouthwest) {
+      if (canvasPane != null
+          && (isNorth
+              || isSouth
+              || isEast
+              || isWest
+              || isNortheast
+              || isNorthwest
+              || isSoutheast
+              || isSouthwest)) {
         zoomButtonVisible = true;
         paintAutoZoomButton(g, getSize(), zoomButtonColor);
         if (isNorth)

@@ -9,7 +9,6 @@
 
 package com.cburch.logisim.util;
 
-import com.cburch.draw.util.TextMetrics;
 import com.cburch.logisim.circuit.RadixOption;
 import com.cburch.logisim.data.Value;
 
@@ -111,7 +110,9 @@ public final class GraphicsUtil {
 
   public static Rectangle getTextCursor(Graphics g, String text, int x, int y, int pos, int halign, int valign) {
     final var r = getTextBounds(g, text, x, y, halign, valign);
-    if (pos > 0) r.x += new TextMetrics(g, text.substring(0, pos)).width;
+    if (pos > 0 && g != null) {
+      r.x += g.getFontMetrics().stringWidth(text.substring(0, pos));
+    }
     r.width = 1;
     return r;
   }
@@ -120,10 +121,9 @@ public final class GraphicsUtil {
     final var r = getTextBounds(g, text, 0, 0, halign, valign);
     x -= r.x;
     var last = 0;
-    final var font = g.getFont();
-    final var fr = ((Graphics2D) g).getFontRenderContext();
+    final var fm = (g != null) ? g.getFontMetrics() : null;
     for (var i = 0; i < text.length(); i++) {
-      final var cur = (int) font.getStringBounds(text.substring(0, i + 1), fr).getWidth();
+      final var cur = (fm != null) ? fm.stringWidth(text.substring(0, i + 1)) : 0;
       if (x <= (last + cur) / 2) {
         return i;
       }
@@ -157,60 +157,66 @@ public final class GraphicsUtil {
   }
 
   public static void drawText(Graphics g, String text, int x, int y, int halign, int valign) {
-    if (text.length() == 0) return;
+    if (text == null || text.length() == 0 || g == null) return;
     if (g instanceof Graphics2D g2d) {
       final double sy = Math.abs(g2d.getTransform().getScaleY());
       if (g2d.getFont().getSize2D() * sy < 8.0) {
         return; // Semantic Zooming: drop unreadable microscopic text (< 8.0px on screen)
       }
     }
-    final var tm = new TextMetrics(g, text);
+    final var fm = g.getFontMetrics();
+    final int width = fm.stringWidth(text);
+    final int ascent = fm.getAscent();
+    final int height = fm.getHeight();
     int bx = x;
     int by = y;
     switch (halign) {
-      case H_CENTER -> bx -= (tm.width / 2);
-      case H_RIGHT -> bx -= tm.width;
+      case H_CENTER -> bx -= (width / 2);
+      case H_RIGHT -> bx -= width;
       default -> {}
     }
     switch (valign) {
       case V_TOP -> by += 0;
-      case V_CENTER -> by -= (tm.height / 2);
-      case V_BASELINE -> by -= tm.ascent;
-      case V_BOTTOM -> by -= tm.height;
+      case V_CENTER -> by -= (height / 2);
+      case V_BASELINE -> by -= ascent;
+      case V_BOTTOM -> by -= height;
       default -> {}
     }
-    g.drawString(text, bx, by + tm.ascent);
+    g.drawString(text, bx, by + ascent);
   }
 
   public static void drawText(Graphics g, String text, int x, int y, int halign, int valign, Color fg, Color bg) {
-    if (text.length() == 0) return;
+    if (text == null || text.length() == 0 || g == null) return;
     if (g instanceof Graphics2D g2d) {
       final double sy = Math.abs(g2d.getTransform().getScaleY());
       if (g2d.getFont().getSize2D() * sy < 8.0) {
         return; // Semantic Zooming: drop unreadable microscopic text (< 8.0px on screen)
       }
     }
-    final var tm = new TextMetrics(g, text);
+    final var fm = g.getFontMetrics();
+    final int width = fm.stringWidth(text);
+    final int ascent = fm.getAscent();
+    final int height = fm.getHeight();
     int bx = x;
     int by = y;
     switch (halign) {
-      case H_CENTER -> bx -= (tm.width / 2);
-      case H_RIGHT -> bx -= tm.width;
+      case H_CENTER -> bx -= (width / 2);
+      case H_RIGHT -> bx -= width;
       default -> {}
     }
     switch (valign) {
       case V_TOP -> by += 0;
-      case V_CENTER -> by -= (tm.height / 2);
-      case V_BASELINE -> by -= tm.ascent;
-      case V_BOTTOM -> by -= tm.height;
+      case V_CENTER -> by -= (height / 2);
+      case V_BASELINE -> by -= ascent;
+      case V_BOTTOM -> by -= height;
       default -> {}
     }
     if (g instanceof Graphics2D g2d) {
       g2d.setPaint(bg);
-      g.fillRect(bx, by, tm.width, tm.height);
+      g.fillRect(bx, by, width, height);
       g2d.setPaint(fg);
     }
-    g.drawString(text, bx, by + tm.ascent);
+    g.drawString(text, bx, by + ascent);
   }
 
   public static void outlineText(Graphics g, String text, int x, int y, Color fg, Color bg) {
@@ -236,12 +242,12 @@ public final class GraphicsUtil {
   }
 
   public static Rectangle getTextBounds(Graphics g, String text, int x, int y, int halign, int valign) {
-    if (g == null) return new Rectangle(x, y, 0, 0);
+    if (g == null || text == null) return new Rectangle(x, y, 0, 0);
 
-    final var tm = new TextMetrics(g, text);
-    final var width = tm.width;
-    final var ascent = tm.ascent;
-    final var height = tm.height;
+    final var fm = g.getFontMetrics();
+    final var width = fm.stringWidth(text);
+    final var ascent = fm.getAscent();
+    final var height = fm.getHeight();
 
     final var ret = new Rectangle(x, y, width, height);
     switch (halign) {

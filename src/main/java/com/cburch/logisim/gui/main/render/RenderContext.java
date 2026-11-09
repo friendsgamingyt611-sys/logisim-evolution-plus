@@ -15,8 +15,7 @@ public record RenderContext(
     int viewportHeight,
     double deviceScale,
     QualityTier qualityTier,
-    Bounds worldFrustum,
-    DetailPolicy policy
+    Bounds worldFrustum
 ) {
   public static RenderContext of(Camera2D camera, double deviceScale, QualityTier tier) {
     final double z = (camera != null) ? camera.getZoomFactor() : 1.0;
@@ -25,8 +24,7 @@ public record RenderContext(
     final int vw = (camera != null) ? camera.getViewportWidth() : 1920;
     final int vh = (camera != null) ? camera.getViewportHeight() : 1080;
     final Bounds vp = (camera != null) ? camera.getViewportWorldBounds() : Bounds.EMPTY_BOUNDS;
-    final DetailPolicy pol = new DetailPolicy(z, deviceScale, tier);
-    return new RenderContext(px, py, z, vw, vh, deviceScale, tier, vp, pol);
+    return new RenderContext(px, py, z, vw, vh, deviceScale, tier, vp);
   }
 
   public boolean intersectsViewport(Bounds bds) {

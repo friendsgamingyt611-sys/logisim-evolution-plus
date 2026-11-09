@@ -166,12 +166,6 @@ public class GridPainter implements PropertyChangeListener {
     }
 
     final var currentBg = AppPreferences.getGridBgColor();
-    g.setColor(currentBg);
-    if (clip != null) {
-      g.fillRect(clip.x, clip.y, clip.width, clip.height);
-    } else {
-      g.fillRect(0, 0, width, height);
-    }
 
     if (!showGrid) {
       return;
@@ -179,11 +173,19 @@ public class GridPainter implements PropertyChangeListener {
 
     final double effZoom = (camera != null) ? camera.getZoomFactor() : Math.max(0.05, zoomFactor);
 
-    // LOD Decimation: Ensure dots don't clump into a solid texture when zoomed far out
-    int step = BASE_GRID_SIZE;
-    while (step * effZoom < 6.0 && step < 10_000) {
-      step *= 5;
-    }
+    // Desmos 1-2-5 Logarithmic Grid Function:
+    // Mathematically clamps the number of dots on screen between ~500 and 2,000
+    // at every zoom factor from 0.001x to 10,000x.
+    final double targetSpacing = 35.0;
+    final double worldSpacing = targetSpacing / effZoom;
+    final double exponent = Math.floor(Math.log10(worldSpacing / BASE_GRID_SIZE));
+    final double fraction = (worldSpacing / BASE_GRID_SIZE) / Math.pow(10, Math.max(0, exponent));
+    final double niceFraction;
+    if (fraction <= 1.0) niceFraction = 1.0;
+    else if (fraction <= 2.0) niceFraction = 2.0;
+    else if (fraction <= 5.0) niceFraction = 5.0;
+    else niceFraction = 10.0;
+    final int step = BASE_GRID_SIZE * Math.max(1, (int) Math.round(niceFraction * Math.pow(10, Math.max(0, exponent))));
 
     final double dotSpacing = step * effZoom;
     if (dotSpacing <= 0) return;
@@ -205,16 +207,6 @@ public class GridPainter implements PropertyChangeListener {
     final var blendedMinor = blend(currentBg, dotColor, minorAlpha);
     boolean drawMinor = !cheapDraw && (minorAlpha > 0.01f);
     final int majorStep = step * 5;
-
-    // Hard Grid Cutoff at macro zoom levels (<15% zoom):
-    // Minor dots become solid visual noise; drop them entirely.
-    if (camera != null && effZoom < 0.15) {
-      drawMinor = false;
-      // If even major dots become too densely crowded (< 8px screen spacing), abort grid entirely
-      if (majorStep * effZoom < 8.0) {
-        return;
-      }
-    }
 
     // Dot diameter based on zoom
     final double scale = Math.min(1.5, Math.pow(Math.max(1.0, effZoom), 0.35));
@@ -240,6 +232,10 @@ public class GridPainter implements PropertyChangeListener {
     // 1. Draw minor dots in a single batch (only 1 setColor call, zero state flushes)
     if (drawMinor) {
       g.setColor(blendedMinor);
+      final double screenStep = (camera != null) ? (step * camera.getZoomFactor()) : (step * effZoom);
+      final double startScreenX = (camera != null) ? camera.worldToScreenX(startLogX) : (startLogX * effZoom);
+      final int halfMinorD = minorD / 2;
+
       for (long ly = startLogY; ly <= endLogY; ly += step) {
         final int py = (camera != null)
             ? (int) Math.round(camera.worldToScreenY(ly))
@@ -247,13 +243,12 @@ public class GridPainter implements PropertyChangeListener {
         if (py < minScreenY || py >= maxScreenY) continue;
         final boolean isMajorY = (ly % majorStep == 0);
 
-        for (long lx = startLogX; lx <= endLogX; lx += step) {
+        double sx = startScreenX;
+        for (long lx = startLogX; lx <= endLogX; lx += step, sx += screenStep) {
           if (isMajorY && (lx % majorStep == 0)) continue; // major dot drawn in pass 2
-          final int px = (camera != null)
-              ? (int) Math.round(camera.worldToScreenX(lx))
-              : (int) Math.round(lx * effZoom);
+          final int px = (int) Math.round(sx);
           if (px < minScreenX || px >= maxScreenX) continue;
-          g.fillRect(px - minorD / 2, py - minorD / 2, minorD, minorD);
+          g.fillRect(px - halfMinorD, py - halfMinorD, minorD, minorD);
         }
       }
     }
@@ -265,18 +260,21 @@ public class GridPainter implements PropertyChangeListener {
     final long startMajorY = (long) Math.floor(Math.min(topWorldY, bottomWorldY) / majorStep) * majorStep;
     final long endMajorY = (long) Math.ceil(Math.max(topWorldY, bottomWorldY) / majorStep) * majorStep;
 
+    final double majorScreenStep = (camera != null) ? (majorStep * camera.getZoomFactor()) : (majorStep * effZoom);
+    final double startMajorScreenX = (camera != null) ? camera.worldToScreenX(startMajorX) : (startMajorX * effZoom);
+    final int halfMajorD = majorD / 2;
+
     for (long ly = startMajorY; ly <= endMajorY; ly += majorStep) {
       final int py = (camera != null)
           ? (int) Math.round(camera.worldToScreenY(ly))
           : (int) Math.round(ly * effZoom);
       if (py < minScreenY || py >= maxScreenY) continue;
 
-      for (long lx = startMajorX; lx <= endMajorX; lx += majorStep) {
-        final int px = (camera != null)
-            ? (int) Math.round(camera.worldToScreenX(lx))
-            : (int) Math.round(lx * effZoom);
+      double sx = startMajorScreenX;
+      for (long lx = startMajorX; lx <= endMajorX; lx += majorStep, sx += majorScreenStep) {
+        final int px = (int) Math.round(sx);
         if (px < minScreenX || px >= maxScreenX) continue;
-        g.fillRect(px - majorD / 2, py - majorD / 2, majorD, majorD);
+        g.fillRect(px - halfMajorD, py - halfMajorD, majorD, majorD);
       }
     }
   }
